@@ -1,6 +1,7 @@
 {
   "name": "timer-24h-card",
-  "version": "2.1.0",
+  "version": "3.0.0",
+  "type": "module",
   "description": "A 24-hour timer card for Home Assistant with automatic entity control",
   "main": "timer-24h-card.js",
   "scripts": {

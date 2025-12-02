@@ -1,1040 +1,359 @@
-// Timer 24H Card for Home Assistant
-// Version 2.1.1 - YAML Only
-// All documentation/comments are in English. UI labels are localized (EN/HE/ES/FR).
-
-// === i18n: translations & helpers ===
-const TIMER24H_I18N = {
-  en: {
-    title_default: "24 Hour Timer",
-    status_on: "Active",
-    status_off: "Inactive",
-    sync_cloud: "Synced",
-    sync_local: "Local",
-  },
-  he: {
-    title_default: "טיימר 24 שעות",
-    status_on: "מופעל",
-    status_off: "מושבת",
-    sync_cloud: "🌐 מסונכרן",
-    sync_local: "💾 מקומי",
-  },
-  es: {
-    title_default: "Temporizador 24h",
-    status_on: "Activo",
-    status_off: "Inactivo",
-    sync_cloud: "Sincronizado",
-    sync_local: "Local",
-  },
-  fr: {
-    title_default: "Minuteur 24h",
-    status_on: "Actif",
-    status_off: "Inactif",
-    sync_cloud: "Synchronisé",
-    sync_local: "Local",
-  },
-};
-
-function pickLangFromHass(hass) {
-  // Try HA locale → fallback to browser → default to 'en'
-  const cand =
-    hass?.locale?.language ||
-    hass?.language ||
-    (typeof navigator !== "undefined" && navigator.language?.slice(0, 2)) ||
-    "en";
-  const key = (cand || "en").toLowerCase().slice(0, 2);
-  return TIMER24H_I18N[key] ? key : "en";
-}
-
-function t(dict, key) {
-  const lang = dict.__lang__ || "en";
-  const pack = TIMER24H_I18N[lang] || TIMER24H_I18N.en;
-  return pack[key] ?? TIMER24H_I18N.en[key] ?? key;
-}
-
-class Timer24HCard extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this.timeSlots = this.initializeTimeSlots();
-    this.currentTime = new Date();
-    this.isSystemActive = false;
-    this.lastControlledStates = new Map();
-    this.updateInterval = null;
-    this.config = null;
-    this._hass = null;
-    this._layout = null;
-
-    // Initialize layout property immediately
-    this.layout = {
-      grid_rows: 3,
-      grid_columns: 3,
-      grid_min_rows: 3,
-      grid_min_columns: 3
-    };
-
-    // i18n state holder
-    this.__i18n = { __lang__: 'en' };
-  }
-
-  // Home Assistant required methods
-  // GUI editor disabled - use YAML configuration only
-  // static async getConfigElement() {
-  //   return null;
-  // }
-
-  static getStubConfig() {
-    // Generate unique storage entity ID
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    const uniqueId = `timer_24h_card_${timestamp}_${random}`;
-
-    return {
-      title: 'Timer 24H',
-      home_logic: 'OR',
-      entities: [],
-      home_sensors: [],
-      save_state: true, // Always save to server when possible
-      storage_entity_id: `input_text.${uniqueId}`,
-      auto_create_helper: true,
-      allow_local_fallback: true,
-      language: 'en',
-    };
-  }
-
-  // Legacy Masonry layout support
-  getCardSize() {
-    return 3;
-  }
-
-  // Grid layout support - NEW Home Assistant sections
-  static getLayoutOptions() {
-    return {
-      grid_rows: 3,
-      grid_columns: 3,
-      grid_min_rows: 3,
-      grid_min_columns: 3
-    };
-  }
-
-  // Layout property for grid sections
-  get layout() {
-    return {
-      grid_rows: 3,
-      grid_columns: 3,
-      grid_min_rows: 3,
-      grid_min_columns: 3
-    };
-  }
-
-  set layout(value) {
-    // Accept layout changes from Home Assistant
-    if (value && typeof value === 'object') {
-      this._layout = { ...value };
-    } else {
-      // Fallback to default layout
-      this._layout = {
-        grid_rows: 3,
-        grid_columns: 3,
-        grid_min_rows: 3,
-        grid_min_columns: 3
-      };
-    }
-  }
-
-  // Additional layout methods for compatibility
-  getLayoutOptions() {
-    return {
-      grid_rows: 3,
-      grid_columns: 3,
-      grid_min_rows: 3,
-      grid_min_columns: 3
-    };
-  }
-
-  setConfig(config) {
-    if (!config) {
-      throw new Error('Invalid configuration');
-    }
-
-    // Safe config merging with validation
-    this.config = {
-      title: '24 Hour Timer',
-      home_sensors: [],
-      home_logic: 'OR',
-      entities: [],
-      save_state: true,
-      language: 'en',
-    };
-
-    // Safely merge user config
-    try {
-      if (config.title && typeof config.title === 'string') {
-        this.config.title = config.title;
-      }
-      if (config.home_logic === 'AND' || config.home_logic === 'OR') {
-        this.config.home_logic = config.home_logic;
-      }
-      if (config.entities && Array.isArray(config.entities)) {
-        this.config.entities = config.entities.filter(e => e && typeof e === 'string');
-      }
-      if (config.home_sensors && Array.isArray(config.home_sensors)) {
-        this.config.home_sensors = config.home_sensors.filter(s => s && typeof s === 'string');
-      }
-      if (typeof config.save_state === 'boolean') {
-        this.config.save_state = config.save_state;
-      }
-      if (config.storage_entity_id && typeof config.storage_entity_id === 'string') {
-        this.config.storage_entity_id = config.storage_entity_id;
-      }
-      if (typeof config.auto_create_helper === 'boolean') {
-        this.config.auto_create_helper = config.auto_create_helper;
-      }
-      if (typeof config.allow_local_fallback === 'boolean') {
-        this.config.allow_local_fallback = config.allow_local_fallback;
-      }
-      if (typeof config.language === 'string') {
-        this.config.language = config.language;
-      }
-    } catch (e) {
-      console.warn('Timer Card: Config validation error, using defaults:', e);
-    }
-
-    // Initialize i18n language (if hass is not yet available we keep user choice / default)
-    this.__i18n = { __lang__: this.config.language || 'en' };
-
-    // Load saved state asynchronously
-    this.loadSavedState().then(() => {
-      if (this.shadowRoot) {
-        this.render();
-      }
-    }).catch(error => {
-      console.error('Timer Card: Error loading saved state:', error);
-      // Ensure timeSlots is still an array even if loading fails
-      if (!Array.isArray(this.timeSlots)) {
-        this.timeSlots = this.initializeTimeSlots();
-      }
-      if (this.shadowRoot) {
-        this.render();
-      }
-    });
-  }
-
-  set hass(hass) {
-    const wasHassAvailable = !!this._hass;
-    this._hass = hass;
-
-    // If language not explicitly set in config, auto-pick from HA on first hass assignment
-    if (this.config && !this.config.language) {
-      this.__i18n = { __lang__: pickLangFromHass(hass) };
-    }
-
-    if (hass) {
-      const oldSystemStatus = this.isSystemActive;
-      this.checkSystemStatus();
-
-      if (oldSystemStatus !== this.isSystemActive) {
-        this.controlEntities();
-      }
-
-      this.updateCurrentTime();
-
-      // If hass wasn't available before, load saved data now
-      if (!wasHassAvailable && this.config?.save_state) {
-        this.loadSavedState().then(() => {
-          this.render();
-        }).catch(error => {
-          console.error('Timer Card: Error loading saved state on hass update:', error);
-          this.render();
-        });
-      } else {
-        this.render();
-      }
-    }
-  }
-
-  get hass() {
-    return this._hass;
-  }
-
-  connectedCallback() {
-    super.connectedCallback && super.connectedCallback();
-    this.startTimer();
-
-    // Setup automatic synchronization
-    this.setupAutoSync();
-
-    // Ensure layout is set for grid sections
-    if (!this.layout) {
-      this.layout = {
-        grid_rows: 3,
-        grid_columns: 3,
-        grid_min_rows: 3,
-        grid_min_columns: 3
-      };
-    }
-  }
-
-  setupAutoSync() {
-    // Sync with server every minute
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-    }
-
-    this.syncInterval = setInterval(async () => {
-      if (this.config?.save_state && this.hass && this.hass.connection) {
-        try {
-          const storageKey = `timer_24h_card_${this.generateCardId()}`;
-          const result = await this.hass.connection.sendMessagePromise({
-            type: 'frontend/get_user_data',
-            key: storageKey
-          });
-
-          if (result && result.value && result.value.timeSlots) {
-            // Check if there are changes from the server
-            const serverDataStr = JSON.stringify(result.value.timeSlots);
-            const localDataStr = JSON.stringify(this.timeSlots);
-
-            if (serverDataStr !== localDataStr && result.value.timestamp > (this.lastSyncTime || 0)) {
-              console.log('Timer Card: Syncing changes from server...');
-              this.timeSlots = result.value.timeSlots;
-              this.lastSyncTime = result.value.timestamp;
-              this.render();
-            }
-          }
-        } catch (error) {
-          // Silent: no log needed for sync errors
-        }
-      }
-    }, 60000); // every 60 seconds
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback && super.disconnectedCallback();
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-    }
-
-    // Cleanup helper entities when card is removed
-    this._scheduleCleanup();
-  }
-
-  _scheduleCleanup() {
-    // Wait a bit to see if card is reconnected (e.g., during refresh)
-    setTimeout(() => {
-      if (!this.isConnected && this.config?.storage_entity_id && this.hass) {
-        this._cleanupHelperEntity();
-      }
-    }, 5000); // Wait 5 seconds
-  }
-
-  async _cleanupHelperEntity() {
-    try {
-      const entityId = this.config.storage_entity_id;
-
-      // Check if entity still exists and was created by us
-      if (!this.hass.states[entityId]) {
-        return; // Already deleted
-      }
-
-      // Only delete if it's our timer card entity
-      if (!entityId.includes('timer_24h_card_')) {
-        return; // Not our entity
-      }
-
-      console.log(`Timer Card: Cleaning up helper entity: ${entityId}`);
-
-      // Try to delete via WebSocket API
-      try {
-        await this.hass.callWS({
-          type: 'config/input_text/delete',
-          entity_id: entityId.replace('input_text.', '')
-        });
-        console.log(`✅ Timer Card: Successfully deleted helper entity: ${entityId}`);
-      } catch (wsError) {
-        // Try alternative API
-        try {
-          await this.hass.callWS({
-            type: 'config/helpers/delete',
-            entity_id: entityId
-          });
-          console.log(`✅ Timer Card: Successfully deleted helper entity via legacy API: ${entityId}`);
-        } catch (legacyError) {
-          console.warn(`Timer Card: Could not auto-delete helper entity ${entityId}. Please delete manually.`);
-        }
-      }
-
-    } catch (error) {
-      console.warn('Timer Card: Error during cleanup:', error);
-    }
-  }
-
-  initializeTimeSlots() {
-    const slots = [];
-    for (let hour = 0; hour < 24; hour++) {
-      slots.push({ hour, minute: 0, isActive: false });
-      slots.push({ hour, minute: 30, isActive: false });
-    }
-    console.log('Timer Card: Initialized timeSlots with', slots.length, 'slots');
-    return slots;
-  }
-
-  startTimer() {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-
-    this.updateInterval = setInterval(() => {
-      this.updateCurrentTime();
-    }, 120000); // Check every 2 minutes
-  }
-
-  checkSystemStatus() {
-    if (!this.hass || !this.config.home_sensors?.length) {
-      this.isSystemActive = true;
-      return;
-    }
-
-    const logic = this.config.home_logic || 'OR';
-    let systemStatus = logic === 'AND';
-
-    for (const sensorId of this.config.home_sensors) {
-      const sensor = this.hass.states[sensorId];
-      if (!sensor) continue;
-
-      let isTrue;
-
-      if (sensorId === 'binary_sensor.jewish_calendar_issur_melacha_in_effect') {
-        // For this sensor: 'on' means there IS an issur melacha (restriction), so system should be ACTIVE
-        // 'off' means there is NO issur melacha, so system should be INACTIVE
-        isTrue = sensor.state.toLowerCase() === 'on';
-      } else {
-        isTrue = ['on', 'home', 'true', '1', 'yes'].includes(sensor.state.toLowerCase());
-      }
-
-      if (logic === 'OR') {
-        if (isTrue) {
-          systemStatus = true;
-          break;
-        }
-      } else {
-        if (!isTrue) {
-          systemStatus = false;
-          break;
-        }
-      }
-    }
-
-    this.isSystemActive = systemStatus;
-  }
-
-  updateCurrentTime() {
-    const newTime = new Date();
-    const oldHour = this.currentTime.getHours();
-    const oldMinute = Math.floor(this.currentTime.getMinutes() / 30) * 30;
-    const newHour = newTime.getHours();
-    const newMinute = Math.floor(newTime.getMinutes() / 30) * 30;
-
-    this.currentTime = newTime;
-
-    if (oldHour !== newHour || oldMinute !== newMinute) {
-      console.log(`Timer Card: Time segment changed to ${newHour}:${newMinute === 0 ? '00' : '30'}`);
-      this.controlEntities();
-    }
-  }
-
-  controlEntities() {
-    if (!this.hass || !this.config.entities?.length || !this.isSystemActive) {
-      return;
-    }
-
-    // Ensure timeSlots is an array
-    if (!Array.isArray(this.timeSlots)) {
-      this.timeSlots = this.initializeTimeSlots();
-    }
-
-    const currentHour = this.currentTime.getHours();
-    const currentMinute = this.currentTime.getMinutes();
-    const minute = currentMinute < 30 ? 0 : 30;
-
-    const currentSlot = this.timeSlots.find(slot =>
-      slot.hour === currentHour && slot.minute === minute
-    );
-
-    const shouldBeOn = currentSlot?.isActive || false;
-
-    for (const entityId of this.config.entities) {
-      const entity = this.hass.states[entityId];
-      if (!entity) continue;
-
-      const currentState = entity.state === 'on';
-      const lastControlledState = this.lastControlledStates.get(entityId);
-
-      if (currentState !== shouldBeOn && lastControlledState !== shouldBeOn) {
-        try {
-          this.hass.callService('homeassistant', shouldBeOn ? 'turn_on' : 'turn_off', {
-            entity_id: entityId
-          });
-          console.log(`Timer Card: ${shouldBeOn ? 'Turned on' : 'Turned off'} ${entityId}`);
-
-          this.lastControlledStates.set(entityId, shouldBeOn);
-
-          setTimeout(() => {
-            if (this.lastControlledStates.get(entityId) === shouldBeOn) {
-              this.lastControlledStates.delete(entityId);
-            }
-          }, 30000);
-
-        } catch (error) {
-          console.error(`Timer Card: Failed to control ${entityId}:`, error);
-        }
-      }
-    }
-  }
-
-  toggleTimeSlot(hour, minute) {
-    // Ensure timeSlots is an array
-    if (!Array.isArray(this.timeSlots)) {
-      this.timeSlots = this.initializeTimeSlots();
-    }
-
-    const slot = this.timeSlots.find(s => s.hour === hour && s.minute === minute);
-    if (slot) {
-      slot.isActive = !slot.isActive;
-      this.saveState();
-      this.lastControlledStates.clear();
-      this.controlEntities();
-      this.render();
-    }
-  }
-
-  async saveState() {
-    if (!this.config.save_state) return;
-
-    console.log('Timer Card: Saving state...');
-
-    try {
-      // Using Home Assistant Frontend Storage - automatically synced
-      const storageKey = `timer_24h_card_${this.generateCardId()}`;
-      const data = {
-        timeSlots: this.timeSlots,
-        timestamp: Date.now(),
-        version: '2.1.1'
-      };
-
-      // Save via Home Assistant connection (user data)
-      if (this.hass && this.hass.connection) {
-        try {
-          this.lastSyncTime = data.timestamp; // remember last sync time
-          await this.hass.connection.sendMessagePromise({
-            type: 'frontend/set_user_data',
-            key: storageKey,
-            value: data
-          });
-          console.log('✅ Timer Card: State saved to Home Assistant user data (synced across devices)');
-          return;
-        } catch (frontendError) {
-          console.warn('Timer Card: Frontend storage failed, trying alternative method:', frontendError);
-        }
-      }
-
-      // Alternative method: using persistent_notification as storage
-      if (this.hass) {
-        try {
-          const notificationId = `timer_24h_card_data_${this.generateCardId()}`;
-
-          // Delete previous notification if exists
-          try {
-            await this.hass.callService('persistent_notification', 'dismiss', {
-              notification_id: notificationId
-            });
-          } catch (e) {
-            // Not critical if it doesn't exist
-          }
-
-          // Create new notification with data (hidden)
-          await this.hass.callService('persistent_notification', 'create', {
-            notification_id: notificationId,
-            title: `Timer Card Data - ${this.config.title}`,
-            message: JSON.stringify(data),
-            // Metadata to mark internal data
-            data: {
-              timer_card_internal: true,
-              hidden: true
-            }
-          });
-
-          console.log('✅ Timer Card: State saved via persistent notification (synced)');
-          return;
-
-        } catch (notificationError) {
-          console.warn('Timer Card: Notification storage failed:', notificationError);
-        }
-      }
-
-      // Fallback to localStorage
-      localStorage.setItem(`timer-24h-${this.config.title}`, JSON.stringify(this.timeSlots));
-      console.log('💾 Timer Card: Fallback to localStorage (device-only)');
-
-    } catch (error) {
-      console.error('Timer Card: All save methods failed:', error);
-      // Last resort
-      localStorage.setItem(`timer-24h-${this.config.title}`, JSON.stringify(this.timeSlots));
-    }
-  }
-
-  async loadSavedState() {
-    if (!this.config?.save_state) return;
-
-    console.log('Timer Card: Loading saved state...');
-
-    if (this.hass) {
-      try {
-        const storageKey = `timer_24h_card_${this.generateCardId()}`;
-
-        // Try to load from Home Assistant Frontend Storage
-        if (this.hass.connection) {
-          try {
-            const result = await this.hass.connection.sendMessagePromise({
-              type: 'frontend/get_user_data',
-              key: storageKey
-            });
-
-            if (result && result.value && result.value.timeSlots) {
-              this.timeSlots = result.value.timeSlots;
-              console.log(`✅ Timer Card: State loaded from Home Assistant user data (${this.timeSlots.length} slots)`);
-              return;
-            }
-          } catch (frontendError) {
-            console.warn('Timer Card: Frontend storage load failed:', frontendError);
-          }
-        }
-
-        // Alternative method: load from persistent_notification
-        try {
-          const notificationId = `timer_24h_card_data_${this.generateCardId()}`;
-
-          // Check if there's a notification with the data
-          const notifications = this.hass.states['persistent_notification.' + notificationId];
-          if (notifications && notifications.attributes && notifications.attributes.message) {
-            const data = JSON.parse(notifications.attributes.message);
-            if (data.timeSlots && Array.isArray(data.timeSlots)) {
-              this.timeSlots = data.timeSlots;
-              console.log(`✅ Timer Card: State loaded from persistent notification (${this.timeSlots.length} slots)`);
-              return;
-            }
-          }
-        } catch (notificationError) {
-          console.warn('Timer Card: Notification load failed:', notificationError);
-        }
-
-      } catch (error) {
-        console.warn('Timer Card: Home Assistant load failed:', error);
-      }
-    }
-
-    // Fallback to localStorage
-    console.log('Timer Card: Loading from localStorage fallback...');
-    try {
-      const saved = localStorage.getItem(`timer-24h-${this.config.title}`);
-      if (saved) {
-        const parsedData = JSON.parse(saved);
-        if (Array.isArray(parsedData)) {
-          this.timeSlots = parsedData;
-          console.log(`✅ Timer Card: State loaded from localStorage (${this.timeSlots.length} slots)`);
-          return;
-        }
-      }
-    } catch (error) {
-      console.warn('Timer Card: localStorage load failed:', error);
-    }
-
-    console.log('Timer Card: No saved data found, using defaults');
-  }
-
-  generateCardId() {
-    // Generate a stable ID based on the card title/config
-    const title = this.config.title || 'default';
-
-    // Extract only ASCII letters and numbers, ignore other chars
-    const englishOnly = title.match(/[a-zA-Z0-9]/g);
-
-    if (englishOnly && englishOnly.length > 0) {
-      return englishOnly.join('').toLowerCase();
-    }
-
-    // If no English chars found, use a simple hash of the title
-    let hash = 0;
-    for (let i = 0; i < title.length; i++) {
-      const char = title.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-
-    return 'timer_' + Math.abs(hash).toString();
-  }
-
-  createSectorPath(hour, totalSectors, innerRadius, outerRadius, centerX, centerY) {
-    const startAngle = (hour * 360 / totalSectors - 90) * (Math.PI / 180);
-    const endAngle = ((hour + 1) * 360 / totalSectors - 90) * (Math.PI / 180);
-
-    const x1 = centerX + innerRadius * Math.cos(startAngle);
-    const y1 = centerY + innerRadius * Math.sin(startAngle);
-    const x2 = centerX + outerRadius * Math.cos(startAngle);
-    const y2 = centerY + outerRadius * Math.sin(startAngle);
-    const x3 = centerX + outerRadius * Math.cos(endAngle);
-    const y3 = centerY + outerRadius * Math.sin(endAngle);
-    const x4 = centerX + innerRadius * Math.cos(endAngle);
-    const y4 = centerY + innerRadius * Math.sin(endAngle);
-
-    const largeArcFlag = endAngle - startAngle <= Math.PI ? 0 : 1;
-
-    return `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1} ${y1}`;
-  }
-
-  getTextPosition(hour, totalSectors, radius, centerX, centerY) {
-    const angle = ((hour + 0.5) * 360 / totalSectors - 90) * (Math.PI / 180);
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
-    return { x, y };
-  }
-
-  getTimeLabel(hour, minute) {
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-  }
-
-  render() {
-    if (!this.config) return;
-
-    // Ensure timeSlots is always an array
-    if (!Array.isArray(this.timeSlots)) {
-      this.timeSlots = this.initializeTimeSlots();
-    }
-
-    const centerX = 200;
-    const centerY = 200;
-    const outerRadius = 180;
-    const innerRadius = 50;
-
-    // Check if timer is currently active (center indicator uses sensors)
-    const currentHour = this.currentTime.getHours();
-    const currentMinute = this.currentTime.getMinutes();
-    const minute = currentMinute < 30 ? 0 : 30;
-
-    const currentSlot = this.timeSlots.find(slot =>
-      slot.hour === currentHour && slot.minute === minute
-    );
-
-    const isCurrentlyActive = (currentSlot?.isActive || false) && this.isSystemActive;
-
-    const sectors = Array.from({ length: 24 }, (_, hour) => {
-      const middleRadius = (innerRadius + outerRadius) / 2;
-
-      // Outer half (full hour - 00)
-      const outerSectorPath = this.createSectorPath(hour, 24, middleRadius, outerRadius, centerX, centerY);
-      const outerTextPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
-      const outerSlot = this.timeSlots.find(s => s.hour === hour && s.minute === 0);
-      const outerIsActive = outerSlot?.isActive || false; // buttons show user settings
-      const outerIsCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() < 30;
-
-      // Inner half (half hour - 30)
-      const innerSectorPath = this.createSectorPath(hour, 24, innerRadius, middleRadius, centerX, centerY);
-      const innerTextPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
-      const innerSlot = this.timeSlots.find(s => s.hour === hour && s.minute === 30);
-      const innerIsActive = innerSlot?.isActive || false; // buttons show user settings
-      const innerIsCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() >= 30;
-
-      // Current hour indicator (animated dot outside the ring)
-      let currentTimeIndicator = '';
-      if (outerIsCurrent || innerIsCurrent) {
-        const indicatorAngle = ((hour + 0.5) * 360 / 24 - 90) * (Math.PI / 180);
-        const indicatorX = centerX + (outerRadius + 10) * Math.cos(indicatorAngle);
-        const indicatorY = centerY + (outerRadius + 10) * Math.sin(indicatorAngle);
-
-        currentTimeIndicator = `
-          <circle cx="${indicatorX}" cy="${indicatorY}" r="4" 
-                  fill="#ff6b6b" stroke="#ffffff" stroke-width="2">
-            <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/>
-          </circle>
-        `;
-      }
-
-      return `
-        <!-- Outer half (full hour) -->
-        <path d="${outerSectorPath}" 
-              fill="${outerIsActive ? '#10b981' : '#ffffff'}"
-              stroke="${outerIsCurrent ? '#ff6b6b' : '#e5e7eb'}"
-              stroke-width="${outerIsCurrent ? '3' : '1'}"
-              style="cursor: pointer; transition: all 0.2s;"
-              onclick="this.getRootNode().host.toggleTimeSlot(${hour}, 0)"/>
-        <text x="${outerTextPos.x}" y="${outerTextPos.y + 2}" 
-              text-anchor="middle" font-size="9" font-weight="bold"
-              style="pointer-events: none; user-select: none;"
-              fill="${outerIsActive ? '#ffffff' : '#374151'}">
-          ${this.getTimeLabel(hour, 0)}
-        </text>
-        
-        <!-- Inner half (half hour - 30) -->
-        <path d="${innerSectorPath}" 
-              fill="${innerIsActive ? '#10b981' : '#f8f9fa'}"
-              stroke="${innerIsCurrent ? '#ff6b6b' : '#e5e7eb'}"
-              stroke-width="${innerIsCurrent ? '3' : '1'}"
-              style="cursor: pointer; transition: all 0.2s;"
-              onclick="this.getRootNode().host.toggleTimeSlot(${hour}, 30)"/>
-        <text x="${innerTextPos.x}" y="${innerTextPos.y + 1}" 
-              text-anchor="middle" font-size="7" font-weight="bold"
-              style="pointer-events: none; user-select: none;"
-              fill="${innerIsActive ? '#ffffff' : '#6b7280'}">
-          ${this.getTimeLabel(hour, 30)}
-        </text>
-        
-        ${currentTimeIndicator}
-      `;
-    }).join('');
-
-    // Hour divider lines
-    const dividerLines = Array.from({ length: 24 }, (_, i) => {
-      const angle = (i * 360 / 24 - 90) * (Math.PI / 180);
-      const xInner = centerX + innerRadius * Math.cos(angle);
-      const yInner = centerY + innerRadius * Math.sin(angle);
-      const xOuter = centerX + outerRadius * Math.cos(angle);
-      const yOuter = centerY + outerRadius * Math.sin(angle);
-      return `<line x1="${xInner}" y1="${yInner}" x2="${xOuter}" y2="${yOuter}" stroke="#e5e7eb" stroke-width="1"/>`;
-    }).join('');
-
-    const titleText = this.config.title || t(this.__i18n, 'title_default');
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          font-family: var(--primary-font-family, sans-serif);
-          position: relative;
-          contain: layout style paint;
-          margin: 8px;
-        }
-        
-        .card {
-          background: var(--card-background-color, #ffffff);
-          border-radius: var(--ha-card-border-radius, 12px);
-          box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,0.1));
-          padding: 0;
-          overflow: hidden;
-          height: calc(100% - 16px);
-          min-height: 200px;
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          z-index: 1;
-          isolation: isolate;
-          margin: 8px;
-        }
-        
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 4px;
-          padding: 4px 8px 0 8px;
-        }
-        
-        .title {
-          font-size: 1rem;
-          font-weight: bold;
-          color: var(--primary-text-color, #212121);
-          display: flex;
-          align-items: center;
-        }
-        
-        .status-container {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 2px;
-        }
-        
-        .system-status {
-          font-size: 0.7rem;
-          text-align: center;
-          margin: 0;
-        }
-         
-        .sync-status {
-          font-size: 0.6rem;
-          text-align: center;
-          margin: 0;
-          opacity: 0.8;
-          color: var(--secondary-text-color, #666);
-        }
-         
-        .system-status.active {
-          color: #10b981;
-        }
-         
-        .system-status.inactive {
-          color: #f59e0b;
-        }
-        
-        .timer-container {
-          display: flex;
-          justify-content: center;
-          margin: 0;
-          padding: 0;
-          flex: 1;
-          min-height: 0;
-        }
-        
-        .timer-svg {
-          width: 100%;
-          height: 100%;
-          max-width: 100%;
-          max-height: 100%;
-          display: block;
-        }
-      </style>
-      
-      <div class="card">
-        <div class="header">
-          <div class="title">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" 
-                 style="margin-right: 8px; vertical-align: middle;" role="img" aria-label="Home timer icon" 
-                 fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 11l8-6 8 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" fill="#41BDF5" stroke="#41BDF5"/>
-              <path d="M11 9h2" stroke="white" stroke-width="1.6"/>
-              <circle cx="12" cy="15" r="3.5" stroke="white" stroke-width="1.6" fill="none"/>
-              <path d="M12 15l2-2" stroke="white" stroke-width="1.6"/>
-            </svg>
-            ${titleText}
+function t(t,e,i,s){var r,o=arguments.length,n=o<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(t,e,i,s);else for(var a=t.length-1;a>=0;a--)(r=t[a])&&(n=(o<3?r(n):o>3?r(e,i,n):r(e,i))||n);return o>3&&n&&Object.defineProperty(e,i,n),n}"function"==typeof SuppressedError&&SuppressedError;const e=globalThis,i=e.ShadowRoot&&(void 0===e.ShadyCSS||e.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),r=new WeakMap;let o=class{constructor(t,e,i){if(this._$cssResult$=!0,i!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const e=this.t;if(i&&void 0===t){const i=void 0!==e&&1===e.length;i&&(t=r.get(e)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),i&&r.set(e,t))}return t}toString(){return this.cssText}};const n=(t,...e)=>{const i=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new o(i,t,s)},a=i?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new o("string"==typeof t?t:t+"",void 0,s))(e)})(t):t,{is:c,defineProperty:h,getOwnPropertyDescriptor:l,getOwnPropertyNames:d,getOwnPropertySymbols:p,getPrototypeOf:u}=Object,g=globalThis,f=g.trustedTypes,m=f?f.emptyScript:"",$=g.reactiveElementPolyfillSupport,y=(t,e)=>t,v={toAttribute(t,e){switch(e){case Boolean:t=t?m:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},_=(t,e)=>!c(t,e),b={attribute:!0,type:String,converter:v,reflect:!1,useDefault:!1,hasChanged:_};Symbol.metadata??=Symbol("metadata"),g.litPropertyMetadata??=new WeakMap;let w=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=b){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&h(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:r}=l(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const o=s?.call(this);r?.call(this,e),this.requestUpdate(t,o,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??b}static _$Ei(){if(this.hasOwnProperty(y("elementProperties")))return;const t=u(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(y("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(y("properties"))){const t=this.properties,e=[...d(t),...p(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(a(t))}else void 0!==t&&e.push(a(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((t,s)=>{if(i)t.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const i of s){const s=document.createElement("style"),r=e.litNonce;void 0!==r&&s.setAttribute("nonce",r),s.textContent=i.cssText,t.appendChild(s)}})(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const r=(void 0!==i.converter?.toAttribute?i.converter:v).toAttribute(e,i.type);this._$Em=t,null==r?this.removeAttribute(s):this.setAttribute(s,r),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),r="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:v;this._$Em=s;const o=r.fromAttribute(e,t.type);this[s]=o??this._$Ej?.get(s)??o,this._$Em=null}}requestUpdate(t,e,i){if(void 0!==t){const s=this.constructor,r=this[t];if(i??=s.getPropertyOptions(t),!((i.hasChanged??_)(r,e)||i.useDefault&&i.reflect&&r===this._$Ej?.get(t)&&!this.hasAttribute(s._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:r},o){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),!0!==r||void 0!==o)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};w.elementStyles=[],w.shadowRootOptions={mode:"open"},w[y("elementProperties")]=new Map,w[y("finalized")]=new Map,$?.({ReactiveElement:w}),(g.reactiveElementVersions??=[]).push("2.1.1");const A=globalThis,x=A.trustedTypes,S=x?x.createPolicy("lit-html",{createHTML:t=>t}):void 0,E="$lit$",C=`lit$${Math.random().toFixed(9).slice(2)}$`,T="?"+C,P=`<${T}>`,k=document,M=()=>k.createComment(""),H=t=>null===t||"object"!=typeof t&&"function"!=typeof t,U=Array.isArray,O="[ \t\n\f\r]",R=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,N=/-->/g,z=/>/g,I=RegExp(`>|${O}(?:([^\\s"'>=/]+)(${O}*=${O}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),j=/'/g,D=/"/g,L=/^(?:script|style|textarea|title)$/i,B=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),q=Symbol.for("lit-noChange"),W=Symbol.for("lit-nothing"),V=new WeakMap,F=k.createTreeWalker(k,129);function J(t,e){if(!U(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==S?S.createHTML(e):e}const K=(t,e)=>{const i=t.length-1,s=[];let r,o=2===e?"<svg>":3===e?"<math>":"",n=R;for(let e=0;e<i;e++){const i=t[e];let a,c,h=-1,l=0;for(;l<i.length&&(n.lastIndex=l,c=n.exec(i),null!==c);)l=n.lastIndex,n===R?"!--"===c[1]?n=N:void 0!==c[1]?n=z:void 0!==c[2]?(L.test(c[2])&&(r=RegExp("</"+c[2],"g")),n=I):void 0!==c[3]&&(n=I):n===I?">"===c[0]?(n=r??R,h=-1):void 0===c[1]?h=-2:(h=n.lastIndex-c[2].length,a=c[1],n=void 0===c[3]?I:'"'===c[3]?D:j):n===D||n===j?n=I:n===N||n===z?n=R:(n=I,r=void 0);const d=n===I&&t[e+1].startsWith("/>")?" ":"";o+=n===R?i+P:h>=0?(s.push(a),i.slice(0,h)+E+i.slice(h)+C+d):i+C+(-2===h?e:d)}return[J(t,o+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class Z{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let r=0,o=0;const n=t.length-1,a=this.parts,[c,h]=K(t,e);if(this.el=Z.createElement(c,i),F.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=F.nextNode())&&a.length<n;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(E)){const e=h[o++],i=s.getAttribute(t).split(C),n=/([.?@])?(.*)/.exec(e);a.push({type:1,index:r,name:n[2],strings:i,ctor:"."===n[1]?tt:"?"===n[1]?et:"@"===n[1]?it:Y}),s.removeAttribute(t)}else t.startsWith(C)&&(a.push({type:6,index:r}),s.removeAttribute(t));if(L.test(s.tagName)){const t=s.textContent.split(C),e=t.length-1;if(e>0){s.textContent=x?x.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],M()),F.nextNode(),a.push({type:2,index:++r});s.append(t[e],M())}}}else if(8===s.nodeType)if(s.data===T)a.push({type:2,index:r});else{let t=-1;for(;-1!==(t=s.data.indexOf(C,t+1));)a.push({type:7,index:r}),t+=C.length-1}r++}}static createElement(t,e){const i=k.createElement("template");return i.innerHTML=t,i}}function G(t,e,i=t,s){if(e===q)return e;let r=void 0!==s?i._$Co?.[s]:i._$Cl;const o=H(e)?void 0:e._$litDirective$;return r?.constructor!==o&&(r?._$AO?.(!1),void 0===o?r=void 0:(r=new o(t),r._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=r:i._$Cl=r),void 0!==r&&(e=G(t,r._$AS(t,e.values),r,s)),e}class Q{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??k).importNode(e,!0);F.currentNode=s;let r=F.nextNode(),o=0,n=0,a=i[0];for(;void 0!==a;){if(o===a.index){let e;2===a.type?e=new X(r,r.nextSibling,this,t):1===a.type?e=new a.ctor(r,a.name,a.strings,this,t):6===a.type&&(e=new st(r,this,t)),this._$AV.push(e),a=i[++n]}o!==a?.index&&(r=F.nextNode(),o++)}return F.currentNode=k,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class X{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=W,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=G(this,t,e),H(t)?t===W||null==t||""===t?(this._$AH!==W&&this._$AR(),this._$AH=W):t!==this._$AH&&t!==q&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>U(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==W&&H(this._$AH)?this._$AA.nextSibling.data=t:this.T(k.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=Z.createElement(J(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new Q(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=V.get(t.strings);return void 0===e&&V.set(t.strings,e=new Z(t)),e}k(t){U(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const r of t)s===e.length?e.push(i=new X(this.O(M()),this.O(M()),this,this.options)):i=e[s],i._$AI(r),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class Y{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,r){this.type=1,this._$AH=W,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=r,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=W}_$AI(t,e=this,i,s){const r=this.strings;let o=!1;if(void 0===r)t=G(this,t,e,0),o=!H(t)||t!==this._$AH&&t!==q,o&&(this._$AH=t);else{const s=t;let n,a;for(t=r[0],n=0;n<r.length-1;n++)a=G(this,s[i+n],e,n),a===q&&(a=this._$AH[n]),o||=!H(a)||a!==this._$AH[n],a===W?t=W:t!==W&&(t+=(a??"")+r[n+1]),this._$AH[n]=a}o&&!s&&this.j(t)}j(t){t===W?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class tt extends Y{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===W?void 0:t}}class et extends Y{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==W)}}class it extends Y{constructor(t,e,i,s,r){super(t,e,i,s,r),this.type=5}_$AI(t,e=this){if((t=G(this,t,e,0)??W)===q)return;const i=this._$AH,s=t===W&&i!==W||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,r=t!==W&&(i===W||s);s&&this.element.removeEventListener(this.name,this,i),r&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class st{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){G(this,t)}}const rt=A.litHtmlPolyfillSupport;rt?.(Z,X),(A.litHtmlVersions??=[]).push("3.3.1");const ot=globalThis;class nt extends w{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let r=s._$litPart$;if(void 0===r){const t=i?.renderBefore??null;s._$litPart$=r=new X(e.insertBefore(M(),t),t,void 0,i??{})}return r._$AI(t),r})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return q}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const at=ot.litElementPolyfillSupport;at?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.1");const ct=t=>(e,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(t,e)}):customElements.define(t,e)},ht={attribute:!0,type:String,converter:v,reflect:!1,hasChanged:_},lt=(t=ht,e,i)=>{const{kind:s,metadata:r}=i;let o=globalThis.litPropertyMetadata.get(r);if(void 0===o&&globalThis.litPropertyMetadata.set(r,o=new Map),"setter"===s&&((t=Object.create(t)).wrapped=!0),o.set(i.name,t),"accessor"===s){const{name:s}=i;return{set(i){const r=e.get.call(this);e.set.call(this,i),this.requestUpdate(s,r,t)},init(e){return void 0!==e&&this.C(s,void 0,t,e),e}}}if("setter"===s){const{name:s}=i;return function(i){const r=this[s];e.call(this,i),this.requestUpdate(s,r,t)}}throw Error("Unsupported decorator location: "+s)};function dt(t){return(e,i)=>"object"==typeof i?lt(t,e,i):((t,e,i)=>{const s=e.hasOwnProperty(i);return e.constructor.createProperty(i,t),s?Object.getOwnPropertyDescriptor(e,i):void 0})(t,e,i)}function pt(t){return dt({...t,state:!0,attribute:!1})}let ut=class extends nt{static getLayoutOptions(){return{grid_rows:2,grid_columns:6,grid_min_rows:2,grid_min_columns:3}}getCardSize(){return 3}static async getConfigElement(){return await Promise.resolve().then(function(){return ft}),document.createElement("timer-24h-card-editor")}static getStubConfig(){return{entity:"",show_title:!0}}constructor(){super(),this.currentTime=new Date}setConfig(t){if(!t)throw new Error("Invalid configuration: config is required");if(!t.entity)throw new Error("Invalid configuration: entity is required");this.config={show_title:!0,...t}}updated(t){super.updated(t),t.has("hass")&&this.hass&&this.updateCurrentTime()}connectedCallback(){super.connectedCallback(),this.startTimer()}disconnectedCallback(){super.disconnectedCallback(),this.updateInterval&&clearInterval(this.updateInterval)}startTimer(){this.updateInterval&&clearInterval(this.updateInterval),this.updateInterval=window.setInterval(()=>{this.updateCurrentTime()},3e4)}updateCurrentTime(){this.currentTime=new Date,this.requestUpdate()}getEntityState(){return this.hass&&this.config.entity?this.hass.states[this.config.entity]:null}getTimeSlots(){const t=this.getEntityState();if(!t||!t.attributes.time_slots){const t=[];for(let e=0;e<24;e++)t.push({hour:e,minute:0,isActive:!1}),t.push({hour:e,minute:30,isActive:!1});return t}return t.attributes.time_slots}getHomeStatus(){const t=this.getEntityState();return!t||!1!==t.attributes.home_status}getEntityName(){const t=this.getEntityState();return t&&t.attributes.friendly_name||"Timer 24H"}async toggleTimeSlot(t,e){if(this.hass&&this.config.entity)try{await this.hass.callService("timer_24h","toggle_slot",{entity_id:this.config.entity,hour:t,minute:e})}catch(t){console.error("Failed to toggle time slot:",t)}}createSectorPath(t,e,i,s,r,o){const n=(360*t/e-90)*(Math.PI/180),a=(360*(t+1)/e-90)*(Math.PI/180),c=r+i*Math.cos(n),h=o+i*Math.sin(n),l=r+s*Math.cos(n),d=o+s*Math.sin(n),p=r+s*Math.cos(a),u=o+s*Math.sin(a),g=r+i*Math.cos(a),f=o+i*Math.sin(a),m=a-n<=Math.PI?0:1;return`M ${c} ${h} L ${l} ${d} A ${s} ${s} 0 ${m} 1 ${p} ${u} L ${g} ${f} A ${i} ${i} 0 ${m} 0 ${c} ${h}`}getTextPosition(t,e,i,s,r){const o=(360*(t+.5)/e-90)*(Math.PI/180);return{x:s+i*Math.cos(o),y:r+i*Math.sin(o)}}getTimeLabel(t,e){return`${t.toString().padStart(2,"0")}:${e.toString().padStart(2,"0")}`}render(){if(!this.hass||!this.config.entity)return B`
+        <ha-card>
+          <div class="warning">
+            Please configure the timer entity in card settings
           </div>
-          <div class="status-container">
-            <div class="system-status ${this.isSystemActive ? 'active' : 'inactive'}">
-              ${this.isSystemActive ? t(this.__i18n, 'status_on') : t(this.__i18n, 'status_off')}
+        </ha-card>
+      `;const t=this.getEntityState();if(!t)return B`
+        <ha-card>
+          <div class="warning">
+            Entity "${this.config.entity}" not found. Please check your configuration.
+          </div>
+        </ha-card>
+      `;const e=this.getTimeSlots(),i=this.getHomeStatus(),s=this.getEntityName();t.state;const r=200,o=200,n=180,a=50;return B`
+      <ha-card>
+        ${!1!==this.config.show_title?B`
+          <div class="header">
+            <div class="title">${s}</div>
+            <div class="system-status ${i?"active":"inactive"}">
+              ${i?"מופעל":"מושבת"}
             </div>
           </div>
-        </div>
+        `:""}
         
         <div class="timer-container">
           <svg class="timer-svg" viewBox="0 0 400 400">
-            <!-- Outer circles -->
-            <circle cx="${centerX}" cy="${centerY}" r="${outerRadius}" 
-                    fill="none" stroke="#e5e7eb" stroke-width="2"/>
-            <circle cx="${centerX}" cy="${centerY}" r="${innerRadius}" 
-                    fill="none" stroke="#e5e7eb" stroke-width="2"/>
-            <!-- Middle ring separating inner/outer halves -->
-            <circle cx="${centerX}" cy="${centerY}" r="${(innerRadius + outerRadius) / 2}" 
-                    fill="none" stroke="#d1d5db" stroke-width="1.5"/>
+            <!-- Border circles -->
+            <circle cx="${r}" cy="${o}" r="${n}" 
+                    fill="none" stroke="var(--divider-color)" stroke-width="2"/>
+            <circle cx="${r}" cy="${o}" r="${a}" 
+                    fill="none" stroke="var(--divider-color)" stroke-width="2"/>
             
-            ${dividerLines}
-            ${sectors}
+            <!-- Dividing lines -->
+            ${Array.from({length:24},(t,e)=>{const i=(360*e/24-90)*(Math.PI/180),s=r+a*Math.cos(i),c=o+a*Math.sin(i),h=r+n*Math.cos(i),l=o+n*Math.sin(i);return B`<line x1="${s}" y1="${c}" x2="${h}" y2="${l}" 
+                               stroke="var(--divider-color)" stroke-width="1"/>`})}
             
-            <!-- Center indicator (shows current active/inactive status considering sensors) -->
-            <circle cx="${centerX}" cy="${centerY}" r="45" 
-                    fill="${isCurrentlyActive ? 'rgba(239, 68, 68, 0.1)' : 'rgba(107, 114, 128, 0.05)'}" 
-                    stroke="${isCurrentlyActive ? 'rgba(239, 68, 68, 0.3)' : 'rgba(107, 114, 128, 0.2)'}" 
-                    stroke-width="1"/>
+            <!-- Outer sectors (full hours) -->
+            ${Array.from({length:24},(t,i)=>{const s=this.createSectorPath(i,24,a,n,r,o),c=this.getTextPosition(i,24,115,r,o),h=e.find(t=>t.hour===i&&0===t.minute),l=h?.isActive||!1,d=this.currentTime.getHours()===i&&this.currentTime.getMinutes()<30;return B`
+                <path d="${s}" 
+                      fill="${l?"var(--primary-color)":"var(--card-background-color)"}"
+                      stroke="${d?"var(--accent-color)":"var(--divider-color)"}"
+                      stroke-width="${d?"3":"1"}"
+                      style="cursor: pointer; transition: opacity 0.2s;"
+                      @click="${()=>this.toggleTimeSlot(i,0)}"/>
+                <text x="${c.x}" y="${c.y+3}" 
+                      text-anchor="middle" font-size="10" font-weight="bold"
+                      style="pointer-events: none; user-select: none; font-weight: bold;"
+                      fill="${l?"var(--text-primary-color)":"var(--primary-text-color)"}">
+                  ${this.getTimeLabel(i,0)}
+                </text>
+              `})}
             
-            <text x="${centerX}" y="${centerY - 8}" 
-                  text-anchor="middle" font-size="14" font-weight="bold"
-                  fill="${isCurrentlyActive ? '#ef4444' : '#6b7280'}">
-              ${isCurrentlyActive ? t(this.__i18n, 'status_on') : t(this.__i18n, 'status_off')}
-            </text>
-            
-            <text x="${centerX}" y="${centerY + 8}" 
-                  text-anchor="middle" font-size="10"
-                  fill="${isCurrentlyActive ? '#ef4444' : '#6b7280'}">
-              ${this.currentTime.getHours().toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}
-            </text>
+            <!-- Inner sectors (half hours) -->
+            ${Array.from({length:24},(t,i)=>{const s=this.createSectorPath(i,24,50,a,r,o),n=this.getTextPosition(i,24,50,r,o),c=e.find(t=>t.hour===i&&30===t.minute),h=c?.isActive||!1,l=this.currentTime.getHours()===i&&this.currentTime.getMinutes()>=30;return B`
+                <path d="${s}" 
+                      fill="${h?"var(--primary-color)":"var(--card-background-color)"}"
+                      stroke="${l?"var(--accent-color)":"var(--divider-color)"}"
+                      stroke-width="${l?"3":"1"}"
+                      style="cursor: pointer; transition: opacity 0.2s;"
+                      @click="${()=>this.toggleTimeSlot(i,30)}"/>
+                <text x="${n.x}" y="${n.y+2}" 
+                      text-anchor="middle" font-size="8" font-weight="bold"
+                      style="pointer-events: none; user-select: none; font-weight: bold;"
+                      fill="${h?"var(--text-primary-color)":"var(--primary-text-color)"}">
+                  ${this.getTimeLabel(i,30)}
+                </text>
+              `})}
           </svg>
         </div>
-      </div>
-    `;
-  }
-}
-
-// Register the custom element
-customElements.define('timer-24h-card', Timer24HCard);
-
-// Register card for HACS and Home Assistant UI
-window.customCards = window.customCards || [];
-window.customCards.push({
-  type: 'timer-24h-card',
-  name: 'Timer 24H Card',
-  description: '24h timer with YAML configuration only (EN/HE/ES/FR supported via `language` option)',
-  preview: true,
-  documentationURL: 'https://github.com/davidss20/home-assistant-timer-card',
-  // configurable: true, // GUI editor disabled - YAML only
-  // Custom icon for HACS and card picker
-  icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" role="img" aria-label="Home timer icon" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4 11l8-6 8 6v9a1 1 0 0 1-1 1H5a 1 1 0 0 1-1-1z" fill="#41BDF5" stroke="#41BDF5"/>
-    <path d="M11 9h2" stroke="white" stroke-width="1.6"/>
-    <circle cx="12" cy="15" r="3.5" stroke="white" stroke-width="1.6" fill="none"/>
-    <path d="M12 15l2-2" stroke="white" stroke-width="1.6"/>
-  </svg>`,
-  // Alternative PNG icon for HACS
-  iconUrl: './icon.png',
-  // Grid layout support
-  grid_options: {
-    rows: 3,
-    columns: 3,
-    min_rows: 3,
-    min_columns: 3
-  }
-});
-
-// Ensure layout compatibility with Home Assistant grid sections
-if (Timer24HCard && Timer24HCard.prototype) {
-  Timer24HCard.prototype.getLayoutOptions = Timer24HCard.prototype.getLayoutOptions || function() {
-    return {
-      grid_rows: 3,
-      grid_columns: 3,
-      grid_min_rows: 3,
-      grid_min_columns: 3
-    };
-  };
-
-  // Static layout options for Home Assistant
-  Timer24HCard.getLayoutOptions = Timer24HCard.getLayoutOptions || function() {
-    return {
-      grid_rows: 3,
-      grid_columns: 3,
-      grid_min_rows: 3,
-      grid_min_columns: 3
-    };
-  };
-
-  // Ensure layout property exists
-  if (!Timer24HCard.prototype.hasOwnProperty('layout')) {
-    Object.defineProperty(Timer24HCard.prototype, 'layout', {
-      get: function() {
-        return this._layout || {
-          grid_rows: 3,
-          grid_columns: 3,
-          grid_min_rows: 3,
-          grid_min_columns: 3
-        };
-      },
-      set: function(value) {
-        if (value && typeof value === 'object') {
-          this._layout = { ...value };
-        } else {
-          this._layout = {
-            grid_rows: 3,
-            grid_columns: 3,
-            grid_min_rows: 3,
-            grid_min_columns: 3
-          };
+      </ha-card>
+    `}static get styles(){return n`
+      :host {
+        display: block;
+        font-family: var(--primary-font-family, sans-serif);
+      }
+      
+      ha-card {
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        container-type: inline-size;
+      }
+      
+      .warning {
+        padding: 16px;
+        color: var(--error-color);
+        text-align: center;
+      }
+      
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+        padding: 4px 8px 0 8px;
+      }
+      
+      .title {
+        font-size: 1rem;
+        font-weight: bold;
+        color: var(--primary-text-color);
+      }
+      
+      .system-status {
+        font-size: 0.7rem;
+        text-align: center;
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
+      
+      .system-status.active {
+        color: var(--success-color, #10b981);
+        background-color: var(--success-color-alpha, rgba(16, 185, 129, 0.1));
+      }
+      
+      .system-status.inactive {
+        color: var(--warning-color, #f59e0b);
+        background-color: var(--warning-color-alpha, rgba(245, 158, 11, 0.1));
+      }
+      
+      .timer-container {
+        display: flex;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        flex: 1;
+        min-height: 0;
+      }
+      
+      .timer-svg {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+      
+      /* Responsive adjustments */
+      @container (max-width: 250px) {
+        .header {
+          padding: 1px 2px 0 2px;
+          margin-bottom: 1px;
         }
-      },
-      enumerable: true,
-      configurable: true
-    });
-  }
-}
+        
+        .title {
+          font-size: 0.8rem;
+        }
+        
+        .system-status {
+          font-size: 0.6rem;
+        }
+      }
+      
+      @container (min-width: 400px) {
+        .title {
+          font-size: 1.1rem;
+        }
+        
+        .system-status {
+          font-size: 0.8rem;
+        }
+        
+        .header {
+          padding: 6px 10px 0 10px;
+        }
+      }
+      
+      @container (min-width: 600px) {
+        .title {
+          font-size: 1.3rem;
+        }
+        
+        .system-status {
+          font-size: 0.9rem;
+        }
+        
+        .header {
+          padding: 8px 12px 0 12px;
+        }
+      }
+    `}};t([dt({attribute:!1})],ut.prototype,"hass",void 0),t([pt()],ut.prototype,"config",void 0),t([pt()],ut.prototype,"currentTime",void 0),ut=t([ct("timer-24h-card")],ut),console.info("%c  TIMER-24H-CARD  %c  Version 2.1.0  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),window.customCards=window.customCards||[],window.customCards.push({type:"timer-24h-card",name:"Timer 24H Card",description:"24 Hour Timer Card with automatic entity control",preview:!0,documentationURL:"https://github.com/davidss20/home-assistant-24h-timer-integration"});let gt=class extends nt{setConfig(t){this.config={...t}}render(){if(!this.hass)return B`<div class="loading">Loading...</div>`;const t=Object.keys(this.hass.states).filter(t=>{const e=this.hass.states[t];return t.startsWith("sensor.")&&void 0!==e?.attributes?.time_slots}).sort();return B`
+      <div class="card-config">
+        <div class="config-header">
+          <h2>Timer 24H Card Configuration</h2>
+          <p>Select a timer entity created by the Timer 24H integration</p>
+        </div>
 
-console.info(
-  '%c  TIMER-24H-CARD  %c  Version 2.1.1 - YAML Only  ',
-  'color: orange; font-weight: bold; background: black',
-  'color: white; font-weight: bold; background: dimgray'
-);
+        ${0===t.length?B`
+          <div class="warning">
+            <p>⚠️ No timer entities found!</p>
+            <p>Please add a Timer 24H integration instance first:</p>
+            <ol>
+              <li>Go to Settings → Devices & Services</li>
+              <li>Click "+ Add Integration"</li>
+              <li>Search for "Timer 24H"</li>
+              <li>Follow the setup wizard</li>
+            </ol>
+          </div>
+        `:""}
+
+        <div class="config-row">
+          <label for="entity">Timer Entity</label>
+          <select
+            id="entity"
+            .value="${this.config.entity||""}"
+            @change="${this.handleEntityChange}"
+          >
+            <option value="">-- Select a timer entity --</option>
+            ${t.map(t=>{const e=this.hass.states[t].attributes.friendly_name||t;return B`
+                <option value="${t}" ?selected="${this.config.entity===t}">
+                  ${e}
+                </option>
+              `})}
+          </select>
+          <div class="help-text">
+            The timer entity to display and control
+          </div>
+        </div>
+
+        <div class="config-row">
+          <label>
+            <input
+              type="checkbox"
+              .checked="${!1!==this.config.show_title}"
+              @change="${this.handleShowTitleChange}"
+            />
+            Show entity name as title
+          </label>
+          <div class="help-text">
+            Display the timer name at the top of the card
+          </div>
+        </div>
+
+        ${this.config.entity&&this.hass.states[this.config.entity]?B`
+          <div class="preview-info">
+            <h3>Selected Timer Details</h3>
+            <div class="detail-row">
+              <strong>Entity ID:</strong> ${this.config.entity}
+            </div>
+            <div class="detail-row">
+              <strong>Name:</strong> ${this.hass.states[this.config.entity]?.attributes?.friendly_name||"Unknown"}
+            </div>
+            <div class="detail-row">
+              <strong>State:</strong> ${this.hass.states[this.config.entity]?.state||"Unknown"}
+            </div>
+            <div class="detail-row">
+              <strong>Home Status:</strong> ${this.hass.states[this.config.entity]?.attributes?.home_status?"At Home":"Away"}
+            </div>
+          </div>
+        `:""}
+      </div>
+    `}handleEntityChange(t){const e=t.target;this.config={...this.config,entity:e.value},this.configChanged()}handleShowTitleChange(t){const e=t.target;this.config={...this.config,show_title:e.checked},this.configChanged()}configChanged(){const t=new CustomEvent("config-changed",{detail:{config:this.config},bubbles:!0,composed:!0});this.dispatchEvent(t)}static get styles(){return n`
+      .card-config {
+        padding: 16px;
+      }
+
+      .config-header {
+        margin-bottom: 24px;
+      }
+
+      .config-header h2 {
+        margin: 0 0 8px 0;
+        font-size: 1.5em;
+        color: var(--primary-text-color);
+      }
+
+      .config-header p {
+        margin: 0;
+        color: var(--secondary-text-color);
+        font-size: 0.9em;
+      }
+
+      .config-row {
+        margin-bottom: 20px;
+      }
+
+      .config-row label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--primary-text-color);
+      }
+
+      .config-row input[type="checkbox"] {
+        margin-right: 8px;
+      }
+
+      .config-row select,
+      .config-row input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--divider-color);
+        border-radius: 4px;
+        background-color: var(--card-background-color);
+        color: var(--primary-text-color);
+        font-family: inherit;
+        font-size: 14px;
+      }
+
+      .help-text {
+        margin-top: 4px;
+        font-size: 0.85em;
+        color: var(--secondary-text-color);
+        font-style: italic;
+      }
+
+      .warning {
+        background-color: var(--warning-color-alpha, rgba(245, 158, 11, 0.1));
+        border: 1px solid var(--warning-color, #f59e0b);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+
+      .warning p {
+        margin: 8px 0;
+        color: var(--primary-text-color);
+      }
+
+      .warning ol {
+        margin: 8px 0;
+        padding-left: 24px;
+        color: var(--primary-text-color);
+      }
+
+      .preview-info {
+        background-color: var(--primary-color-alpha, rgba(3, 169, 244, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 20px;
+      }
+
+      .preview-info h3 {
+        margin: 0 0 12px 0;
+        font-size: 1.1em;
+        color: var(--primary-text-color);
+      }
+
+      .detail-row {
+        margin: 8px 0;
+        color: var(--primary-text-color);
+      }
+
+      .detail-row strong {
+        display: inline-block;
+        min-width: 120px;
+        color: var(--secondary-text-color);
+      }
+
+      .loading {
+        padding: 20px;
+        text-align: center;
+        color: var(--secondary-text-color);
+      }
+    `}};t([dt({attribute:!1})],gt.prototype,"hass",void 0),t([pt()],gt.prototype,"config",void 0),gt=t([ct("timer-24h-card-editor")],gt);var ft=Object.freeze({__proto__:null,get Timer24HCardEditor(){return gt}});export{ut as Timer24HCard};

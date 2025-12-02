@@ -11,6 +11,7 @@ export default [{
     file: 'timer-24h-card.js',
     format: 'es',
     sourcemap: dev ? true : false,
+    inlineDynamicImports: true,
   },
   plugins: [
     resolve({
@@ -20,6 +21,7 @@ export default [{
     commonjs(),
     typescript({
       declaration: false,
+      declarationMap: false,
       outDir: 'dist',
       rootDir: '.',
     }),
@@ -36,6 +38,7 @@ export default [{
     file: 'timer-24h-card-editor.js',
     format: 'es',
     sourcemap: dev ? true : false,
+    inlineDynamicImports: true,
   },
   plugins: [
     resolve({
@@ -45,6 +48,7 @@ export default [{
     commonjs(),
     typescript({
       declaration: false,
+      declarationMap: false,
       outDir: '.',
       rootDir: '.',
     }),
