@@ -1,0 +1,22 @@
+<!-- Home + Timer, house filled blue, timer white -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 24 24"
+     width="10em" height="10em"
+     role="img" aria-label="Home timer icon"
+     fill="none"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+  <!-- House filled in HA blue -->
+  <path d="M4 11l8-6 8 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"
+        fill="#41BDF5" stroke="#41BDF5"/>
+
+  <!-- Timer top button -->
+  <path d="M11 9h2" stroke="white" stroke-width="1.6"/>
+
+  <!-- Timer dial -->
+  <circle cx="12" cy="15" r="3.5" stroke="white" stroke-width="1.6" fill="none"/>
+
+  <!-- Timer hand -->
+  <path d="M12 15l2-2" stroke="white" stroke-width="1.6"/>
+</svg>

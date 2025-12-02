@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "הוספת טיימר 24 שעות",
+        "description": "הגדרת טיימר 24 שעות",
+        "data": {
+          "name": "שם הטיימר",
+          "entities": "ישויות לשליטה",
+          "home_sensors": "חיישני נוכחות בבית (אופציונלי)",
+          "home_logic": "לוגיקת חיישנים"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "שם טיימר זה כבר קיים במערכת"
+    },
+    "abort": {
+      "already_configured": "טיימר זה כבר מוגדר"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "הגדרות טיימר 24 שעות",
+        "description": "עדכון הגדרות הטיימר",
+        "data": {
+          "name": "שם הטיימר",
+          "entities": "ישויות לשליטה",
+          "home_sensors": "חיישני נוכחות בבית (אופציונלי)",
+          "home_logic": "לוגיקת חיישנים"
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle_slot": {
+      "name": "החלפת מצב משבצת זמן",
+      "description": "החלפת מצב משבצת זמן ספציפית",
+      "fields": {
+        "entity_id": {
+          "name": "ישות",
+          "description": "ישות הטיימר לשליטה"
+        },
+        "hour": {
+          "name": "שעה",
+          "description": "שעה (0-23)"
+        },
+        "minute": {
+          "name": "דקה",
+          "description": "דקה (0 או 30)"
+        }
+      }
+    },
+    "set_slots": {
+      "name": "הגדרת משבצות זמן",
+      "description": "הגדרת מספר משבצות זמן בבת אחת",
+      "fields": {
+        "entity_id": {
+          "name": "ישות",
+          "description": "ישות הטיימר לשליטה"
+        },
+        "slots": {
+          "name": "משבצות",
+          "description": "רשימת משבצות להגדרה"
+        }
+      }
+    },
+    "clear_all": {
+      "name": "ניקוי כל המשבצות",
+      "description": "ניקוי כל משבצות הזמן",
+      "fields": {
+        "entity_id": {
+          "name": "ישות",
+          "description": "ישות הטיימר לשליטה"
+        }
+      }
+    }
+  }
+}
+

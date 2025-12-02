@@ -1,0 +1,38 @@
+{
+  "name": "timer-24h-card",
+  "version": "2.1.0",
+  "description": "A 24-hour timer card for Home Assistant with automatic entity control",
+  "main": "timer-24h-card.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "lint": "eslint *.ts",
+    "format": "prettier --write *.ts"
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "custom-card",
+    "timer",
+    "automation"
+  ],
+  "author": "davidss20",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "rollup": "^3.0.0",
+    "rollup-plugin-terser": "^7.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "custom-card-helpers": "^1.9.0",
+    "lit": "^3.0.0"
+  }
+}

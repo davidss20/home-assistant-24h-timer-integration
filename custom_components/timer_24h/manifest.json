@@ -1,0 +1,13 @@
+{
+  "domain": "timer_24h",
+  "name": "Timer 24H",
+  "codeowners": ["@davidss20"],
+  "config_flow": true,
+  "documentation": "https://github.com/davidss20/home-assistant-24h-timer-integration",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/davidss20/home-assistant-24h-timer-integration/issues",
+  "requirements": [],
+  "version": "3.0.0"
+}
+

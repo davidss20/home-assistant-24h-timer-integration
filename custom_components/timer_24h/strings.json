@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Timer 24H",
+        "description": "Configure your 24-hour timer",
+        "data": {
+          "name": "Timer Name",
+          "entities": "Entities to Control",
+          "home_sensors": "Home Presence Sensors (optional)",
+          "home_logic": "Sensor Logic"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "This timer name is already configured"
+    },
+    "abort": {
+      "already_configured": "This timer is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Timer 24H",
+        "description": "Update timer settings",
+        "data": {
+          "name": "Timer Name",
+          "entities": "Entities to Control",
+          "home_sensors": "Home Presence Sensors (optional)",
+          "home_logic": "Sensor Logic"
+        }
+      }
+    }
+  }
+}
+
