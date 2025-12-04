@@ -7,5 +7,7 @@
   "iot_class": "local_polling",
   "homeassistant": "2024.1.0",
   "zip_release": false,
-  "persistent_directory": false
+  "persistent_directory": false,
+  "filename": "timer_24h",
+  "logo": "icon.png"
 } 
