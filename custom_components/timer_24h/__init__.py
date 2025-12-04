@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     ATTR_HOUR,
@@ -92,7 +93,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 coordinator = data["coordinator"]
                 
                 # Get all sensor entities for this integration instance
-                entity_registry = hass.helpers.entity_registry.async_get(hass)
+                entity_registry = er.async_get(hass)
                 for entity_entry in entity_registry.entities.values():
                     if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
                         and entity_entry.entity_id == entity_id):
@@ -111,7 +112,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             if isinstance(data, dict) and "coordinator" in data:
                 coordinator = data["coordinator"]
                 
-                entity_registry = hass.helpers.entity_registry.async_get(hass)
+                entity_registry = er.async_get(hass)
                 for entity_entry in entity_registry.entities.values():
                     if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
                         and entity_entry.entity_id == entity_id):
@@ -126,7 +127,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             if isinstance(data, dict) and "coordinator" in data:
                 coordinator = data["coordinator"]
                 
-                entity_registry = hass.helpers.entity_registry.async_get(hass)
+                entity_registry = er.async_get(hass)
                 for entity_entry in entity_registry.entities.values():
                     if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
                         and entity_entry.entity_id == entity_id):
