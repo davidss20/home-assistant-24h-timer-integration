@@ -74,6 +74,34 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     };
   }
 
+  protected shouldUpdate(changedProps: PropertyValues): boolean {
+    if (changedProps.has('config')) {
+      return true;
+    }
+    
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
+      if (!oldHass || !this.config?.entity) {
+        return true;
+      }
+      
+      const oldState = oldHass.states[this.config.entity];
+      const newState = this.hass.states[this.config.entity];
+      
+      // Check if the entity state has changed
+      if (oldState !== newState) {
+        return true;
+      }
+      
+      // Check if time_slots attribute has changed
+      if (oldState?.attributes.time_slots !== newState?.attributes.time_slots) {
+        return true;
+      }
+    }
+    
+    return changedProps.has('currentTime');
+  }
+
   protected updated(changedProps: PropertyValues): void {
     super.updated(changedProps);
     
@@ -150,6 +178,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         hour: hour,
         minute: minute,
       });
+      
+      // Wait a bit for the state to update, then force a re-render
+      setTimeout(() => {
+        this.requestUpdate();
+      }, 100);
     } catch (error) {
       console.error('Failed to toggle time slot:', error);
     }
