@@ -84,17 +84,23 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         hour = call.data.get(ATTR_HOUR)
         minute = call.data.get(ATTR_MINUTE)
 
+        _LOGGER.debug("Toggle slot called for entity_id=%s, hour=%s, minute=%s", entity_id, hour, minute)
+
         # Find the coordinator for this entity
         for entry_id, data in hass.data[DOMAIN].items():
             if isinstance(data, dict) and "coordinator" in data:
                 coordinator = data["coordinator"]
-                entity_entry_id = coordinator.config_entry.entry_id
                 
-                # Check if this is the right coordinator
-                timer_entity_id = f"sensor.{coordinator.config_entry.options.get('name', 'timer_24h').lower().replace(' ', '_')}"
-                if entity_id == timer_entity_id or entity_id == entity_entry_id:
-                    await coordinator.async_toggle_slot(hour, minute)
-                    break
+                # Get all sensor entities for this integration instance
+                entity_registry = hass.helpers.entity_registry.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
+                        and entity_entry.entity_id == entity_id):
+                        _LOGGER.debug("Found matching coordinator for entity_id=%s", entity_id)
+                        await coordinator.async_toggle_slot(hour, minute)
+                        return
+        
+        _LOGGER.warning("No coordinator found for entity_id=%s", entity_id)
 
     async def handle_set_slots(call: ServiceCall) -> None:
         """Handle the set_slots service call."""
@@ -104,12 +110,13 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         for entry_id, data in hass.data[DOMAIN].items():
             if isinstance(data, dict) and "coordinator" in data:
                 coordinator = data["coordinator"]
-                entity_entry_id = coordinator.config_entry.entry_id
                 
-                timer_entity_id = f"sensor.{coordinator.config_entry.options.get('name', 'timer_24h').lower().replace(' ', '_')}"
-                if entity_id == timer_entity_id or entity_id == entity_entry_id:
-                    await coordinator.async_set_slots(slots)
-                    break
+                entity_registry = hass.helpers.entity_registry.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
+                        and entity_entry.entity_id == entity_id):
+                        await coordinator.async_set_slots(slots)
+                        return
 
     async def handle_clear_all(call: ServiceCall) -> None:
         """Handle the clear_all service call."""
@@ -118,12 +125,13 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         for entry_id, data in hass.data[DOMAIN].items():
             if isinstance(data, dict) and "coordinator" in data:
                 coordinator = data["coordinator"]
-                entity_entry_id = coordinator.config_entry.entry_id
                 
-                timer_entity_id = f"sensor.{coordinator.config_entry.options.get('name', 'timer_24h').lower().replace(' ', '_')}"
-                if entity_id == timer_entity_id or entity_id == entity_entry_id:
-                    await coordinator.async_clear_all()
-                    break
+                entity_registry = hass.helpers.entity_registry.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
+                        and entity_entry.entity_id == entity_id):
+                        await coordinator.async_clear_all()
+                        return
 
     # Register services if not already registered
     if not hass.services.has_service(DOMAIN, SERVICE_TOGGLE_SLOT):

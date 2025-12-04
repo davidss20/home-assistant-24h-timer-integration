@@ -6,7 +6,6 @@ import {
   TemplateResult,
   PropertyValues,
 } from 'lit';
-import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
 import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistant, LovelaceCard, LovelaceCardConfig } from 'custom-card-helpers';
 
@@ -204,7 +203,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           y1="${yInner}" 
           x2="${xOuter}" 
           y2="${yOuter}" 
-          stroke="#e5e7eb" 
+          stroke="var(--divider-color, #BDBDBD)" 
           stroke-width="1">
         </line>
       `);
@@ -231,8 +230,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       sectors.push(html`
         <path 
           d="${sectorPath}" 
-          fill="${isActive ? '#10b981' : '#ffffff'}"
-          stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
+          fill="${isActive ? 'var(--primary-color, #03A9F4)' : 'rgba(128, 128, 128, 0.05)'}"
+          stroke="${isCurrent ? 'var(--accent-color, #FF9800)' : 'var(--divider-color, #BDBDBD)'}"
           stroke-width="${isCurrent ? '3' : '1'}"
           style="cursor: pointer; transition: all 0.2s;"
           @click="${() => this.toggleTimeSlot(hour, 0)}">
@@ -244,7 +243,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           font-size="10" 
           font-weight="bold"
           style="pointer-events: none; user-select: none; font-weight: bold;"
-          fill="${isActive ? '#ffffff' : '#374151'}">
+          fill="${isActive ? 'var(--text-primary-color, #FFFFFF)' : 'var(--primary-text-color, #212121)'}">
           ${this.getTimeLabel(hour, 0)}
         </text>
       `);
@@ -270,8 +269,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       sectors.push(html`
         <path 
           d="${sectorPath}" 
-          fill="${isActive ? '#10b981' : '#f8f9fa'}"
-          stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
+          fill="${isActive ? 'var(--primary-color, #03A9F4)' : 'rgba(128, 128, 128, 0.05)'}"
+          stroke="${isCurrent ? 'var(--accent-color, #FF9800)' : 'var(--divider-color, #BDBDBD)'}"
           stroke-width="${isCurrent ? '3' : '1'}"
           style="cursor: pointer; transition: all 0.2s;"
           @click="${() => this.toggleTimeSlot(hour, 30)}">
@@ -283,7 +282,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           font-size="8" 
           font-weight="bold"
           style="pointer-events: none; user-select: none; font-weight: bold;"
-          fill="${isActive ? '#ffffff' : '#6b7280'}">
+          fill="${isActive ? 'var(--text-primary-color, #FFFFFF)' : 'var(--primary-text-color, #212121)'}">
           ${this.getTimeLabel(hour, 30)}
         </text>
       `);
@@ -316,71 +315,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
     const homeStatus = this.getHomeStatus();
     const entityName = this.getEntityName();
-    const timeSlots = this.getTimeSlots();
 
     const centerX = 200;
     const centerY = 200;
     const outerRadius = 180;
     const innerRadius = 50;
-    const middleRadius = (innerRadius + outerRadius) / 2; // 115
-
-    // Generate dividing lines
-    const divLines = Array.from({ length: 24 }, (_, i) => {
-      const angle = (i * 360 / 24 - 90) * (Math.PI / 180);
-      const xInner = centerX + innerRadius * Math.cos(angle);
-      const yInner = centerY + innerRadius * Math.sin(angle);
-      const xOuter = centerX + outerRadius * Math.cos(angle);
-      const yOuter = centerY + outerRadius * Math.sin(angle);
-      return `<line x1="${xInner}" y1="${yInner}" x2="${xOuter}" y2="${yOuter}" stroke="#e5e7eb" stroke-width="1"/>`;
-    }).join('');
-
-    // Generate outer sectors (full hours - outer half)
-    const outerSectors = Array.from({ length: 24 }, (_, hour) => {
-      const sectorPath = this.createSectorPath(hour, 24, middleRadius, outerRadius, centerX, centerY);
-      const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
-      const slot = timeSlots.find(s => s.hour === hour && s.minute === 0);
-      const isActive = slot?.isActive || false;
-      const isCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() < 30;
-      
-      return `
-        <path d="${sectorPath}" 
-              fill="${isActive ? '#10b981' : '#ffffff'}"
-              stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
-              stroke-width="${isCurrent ? '3' : '1'}"
-              style="cursor: pointer; transition: all 0.2s;"
-              onclick="this.getRootNode().host.toggleTimeSlot(${hour}, 0)"/>
-        <text x="${textPos.x}" y="${textPos.y + 3}" 
-              text-anchor="middle" font-size="10" font-weight="bold"
-              style="pointer-events: none; user-select: none; font-weight: bold;"
-              fill="${isActive ? '#ffffff' : '#374151'}">
-          ${this.getTimeLabel(hour, 0)}
-        </text>
-      `;
-    }).join('');
-
-    // Generate inner sectors (half hours - inner half)
-    const innerSectors = Array.from({ length: 24 }, (_, hour) => {
-      const sectorPath = this.createSectorPath(hour, 24, innerRadius, middleRadius, centerX, centerY);
-      const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
-      const slot = timeSlots.find(s => s.hour === hour && s.minute === 30);
-      const isActive = slot?.isActive || false;
-      const isCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() >= 30;
-      
-      return `
-        <path d="${sectorPath}" 
-              fill="${isActive ? '#10b981' : '#f8f9fa'}"
-              stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
-              stroke-width="${isCurrent ? '3' : '1'}"
-              style="cursor: pointer; transition: all 0.2s;"
-              onclick="this.getRootNode().host.toggleTimeSlot(${hour}, 30)"/>
-        <text x="${textPos.x}" y="${textPos.y + 2}" 
-              text-anchor="middle" font-size="8" font-weight="bold"
-              style="pointer-events: none; user-select: none; font-weight: bold;"
-              fill="${isActive ? '#ffffff' : '#6b7280'}">
-          ${this.getTimeLabel(hour, 30)}
-        </text>
-      `;
-    }).join('');
 
     return html`
       <ha-card>
@@ -400,29 +339,21 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               cy="${centerY}" 
               r="${outerRadius}" 
               fill="none" 
-              stroke="#e5e7eb" 
+              stroke="var(--divider-color, #BDBDBD)" 
               stroke-width="2">
-            </circle>
-            <circle 
-              cx="${centerX}" 
-              cy="${centerY}" 
-              r="${(innerRadius + outerRadius) / 2}" 
-              fill="none" 
-              stroke="#d1d5db" 
-              stroke-width="1.5">
             </circle>
             <circle 
               cx="${centerX}" 
               cy="${centerY}" 
               r="${innerRadius}" 
               fill="none" 
-              stroke="#e5e7eb" 
+              stroke="var(--divider-color, #BDBDBD)" 
               stroke-width="2">
             </circle>
             
-            ${unsafeSVG(divLines)}
-            ${unsafeSVG(outerSectors)}
-            ${unsafeSVG(innerSectors)}
+            ${this.renderDividingLines()}
+            ${this.renderOuterSectors()}
+            ${this.renderInnerSectors()}
           </svg>
         </div>
       </ha-card>
@@ -548,7 +479,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 4.5.0 - SERVICE FIX  ',
+  '%c  TIMER-24H-CARD  %c  Version 3.5.0 - RADICAL FIX  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

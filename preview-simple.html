@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer 24H Card - Simple Preview</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        
+        /* Define all CSS variables that the card needs */
+        :root {
+            --primary-color: #03a9f4;
+            --accent-color: #ff9800;
+            --divider-color: #bdbdbd;
+            --primary-text-color: #212121;
+            --text-primary-color: #ffffff;
+            --card-background-color: #ffffff;
+            --success-color: #10b981;
+            --success-color-alpha: rgba(16, 185, 129, 0.1);
+            --warning-color: #f59e0b;
+            --warning-color-alpha: rgba(245, 158, 11, 0.1);
+            --error-color: #f44336;
+            --primary-font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: var(--primary-text-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        timer-24h-card {
+            display: block;
+            margin: 20px auto;
+            max-width: 600px;
+            height: 500px;
+        }
+        
+        .debug {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            direction: ltr;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 Timer 24H Card - Preview</h1>
+        
+        <div class="info">
+            <h3>מצב: <span id="load-status">טוען...</span></h3>
+            <p>אם אתה רואה את המסך הזה אבל לא את הכרטיס, פתח Console (F12) לבדיקת שגיאות.</p>
+        </div>
+        
+        <!-- The card will be rendered here -->
+        <timer-24h-card id="timer-card"></timer-24h-card>
+        
+        <div class="debug" id="debug">
+            Debug info will appear here...
+        </div>
+    </div>
+    
+    <!-- Load the card as a module -->
+    <script type="module">
+        console.log('🚀 Starting to load Timer 24H Card...');
+        
+        // Create mock time slots
+        function createTimeSlots() {
+            const slots = [];
+            for (let hour = 0; hour < 24; hour++) {
+                slots.push({ hour, minute: 0, isActive: false });
+                slots.push({ hour, minute: 30, isActive: false });
+            }
+            // Set some active slots for demo
+            const activeHours = [8, 9, 12, 15, 18, 20];
+            activeHours.forEach(h => {
+                const slot = slots.find(s => s.hour === h && s.minute === 0);
+                if (slot) slot.isActive = true;
+            });
+            return slots;
+        }
+        
+        const timeSlots = createTimeSlots();
+        
+        // Mock Home Assistant object
+        window.mockHass = {
+            states: {
+                'sensor.timer_24h_preview': {
+                    state: 'on',
+                    attributes: {
+                        friendly_name: 'טיימר תצוגה מקדימה',
+                        home_status: true,
+                        time_slots: timeSlots
+                    }
+                }
+            },
+            callService: (domain, service, data) => {
+                console.log('🔧 Service called:', domain, service, data);
+                updateDebug(`Called: ${domain}.${service} - Hour: ${data.hour}:${String(data.minute).padStart(2, '0')}`);
+                
+                // Toggle the slot
+                if (domain === 'timer_24h' && service === 'toggle_slot') {
+                    const slot = timeSlots.find(s => s.hour === data.hour && s.minute === data.minute);
+                    if (slot) {
+                        slot.isActive = !slot.isActive;
+                        console.log(`✅ Toggled slot ${data.hour}:${data.minute} to ${slot.isActive}`);
+                        
+                        // Update the card
+                        const card = document.getElementById('timer-card');
+                        if (card && card.hass) {
+                            card.hass = {...window.mockHass};
+                            card.requestUpdate();
+                        }
+                    }
+                }
+                
+                return Promise.resolve();
+            }
+        };
+        
+        function updateDebug(message) {
+            const debugEl = document.getElementById('debug');
+            const time = new Date().toLocaleTimeString('he-IL');
+            debugEl.innerHTML = `[${time}] ${message}\n` + debugEl.innerHTML;
+        }
+        
+        function updateStatus(message, isError = false) {
+            const statusEl = document.getElementById('load-status');
+            statusEl.textContent = message;
+            statusEl.style.color = isError ? '#f44336' : '#10b981';
+        }
+        
+        // Import the card
+        try {
+            console.log('📦 Importing timer-24h-card.js...');
+            const cacheBuster = '?v=' + Date.now();
+            import('./timer-24h-card.js' + cacheBuster)
+                .then(() => {
+                    console.log('✅ timer-24h-card.js imported successfully');
+                    updateStatus('✅ קובץ נטען');
+                    updateDebug('Card JS file loaded successfully');
+                    
+                    // Wait for custom element to be defined
+                    return customElements.whenDefined('timer-24h-card');
+                })
+                .then(() => {
+                    console.log('✅ timer-24h-card element defined');
+                    updateStatus('✅ אלמנט הוגדר');
+                    updateDebug('Custom element "timer-24h-card" is defined');
+                    
+                    // Get the card element
+                    const card = document.getElementById('timer-card');
+                    
+                    if (!card) {
+                        throw new Error('Card element not found in DOM');
+                    }
+                    
+                    console.log('📌 Card element:', card);
+                    updateDebug('Card element found: ' + card.tagName);
+                    
+                    // Configure the card
+                    console.log('⚙️ Configuring card...');
+                    card.setConfig({
+                        entity: 'sensor.timer_24h_preview',
+                        show_title: true
+                    });
+                    updateDebug('Card configured with entity: sensor.timer_24h_preview');
+                    
+                    // Set mock hass
+                    console.log('🏠 Setting mock Home Assistant...');
+                    card.hass = window.mockHass;
+                    updateDebug('Mock Home Assistant object attached');
+                    
+                    updateStatus('✅ הכרטיס מוכן!');
+                    console.log('✅ Card is ready!');
+                    console.log('Card state:', {
+                        hass: !!card.hass,
+                        config: card.config,
+                        hasUpdate: typeof card.requestUpdate === 'function'
+                    });
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    updateStatus('❌ שגיאה: ' + err.message, true);
+                    updateDebug('ERROR: ' + err.message + '\n' + err.stack);
+                });
+        } catch (err) {
+            console.error('❌ Failed to start:', err);
+            updateStatus('❌ כשל בטעינה', true);
+            updateDebug('CRITICAL ERROR: ' + err.message);
+        }
+    </script>
+</body>
+</html>
+

@@ -16,7 +16,7 @@ interface Timer24HCardConfig {
 @customElement('timer-24h-card-editor')
 export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) public hass!: HomeAssistant;
-  @state() private config!: Timer24HCardConfig;
+  @state() private config: Timer24HCardConfig = { entity: '', show_title: true };
 
   public setConfig(config: Timer24HCardConfig): void {
     this.config = { ...config };

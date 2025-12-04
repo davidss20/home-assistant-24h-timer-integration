@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer 24H Card - Preview</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 0;
+            
+            /* Home Assistant CSS Variables - Light Theme */
+            --primary-color: #03a9f4;
+            --accent-color: #ff9800;
+            --divider-color: #bdbdbd;
+            --primary-text-color: #212121;
+            --text-primary-color: #ffffff;
+            --card-background-color: #ffffff;
+            --success-color: #10b981;
+            --success-color-alpha: rgba(16, 185, 129, 0.1);
+            --warning-color: #f59e0b;
+            --warning-color-alpha: rgba(245, 158, 11, 0.1);
+            --error-color: #f44336;
+            --primary-font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: var(--primary-text-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .info {
+            background: var(--card-background-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .info code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        timer-24h-card {
+            display: block;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        
+        .controls {
+            background: var(--card-background-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .controls h3 {
+            margin-top: 0;
+            color: var(--primary-text-color);
+        }
+        
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 Timer 24H Card - Preview</h1>
+        
+        <div class="info">
+            <h3>גרסה: 3.3.0 - COLOR FIX</h3>
+            <p>תצוגה מקדימה של הכרטיס. לחץ על הסקטורים כדי לבדוק אינטראקציה.</p>
+            <p><strong>טיפ:</strong> פתח את ה-Console (F12) כדי לראות הודעות.</p>
+        </div>
+        
+        <timer-24h-card></timer-24h-card>
+        
+        <div class="controls">
+            <h3>🎮 בקרות בדיקה</h3>
+            <button onclick="toggleHomeStatus()">שנה סטטוס בית</button>
+            <button onclick="toggleSlot(9, 0)">שנה שעה 9:00</button>
+            <button onclick="toggleSlot(15, 30)">שנה שעה 15:30</button>
+            <button onclick="randomSlots()">מצב אקראי</button>
+            <div class="status" id="status">לחץ על כפתור או על הכרטיס...</div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Import the card
+        import './timer-24h-card.js';
+        
+        console.log('🚀 Loading Timer 24H Card...');
+        
+        // Create mock time slots
+        function createTimeSlots() {
+            const slots = [];
+            for (let hour = 0; hour < 24; hour++) {
+                slots.push({ hour, minute: 0, isActive: false });
+                slots.push({ hour, minute: 30, isActive: false });
+            }
+            // Set some initial active slots
+            slots.find(s => s.hour === 8 && s.minute === 0).isActive = true;
+            slots.find(s => s.hour === 9 && s.minute === 0).isActive = true;
+            slots.find(s => s.hour === 15 && s.minute === 30).isActive = true;
+            slots.find(s => s.hour === 20 && s.minute === 0).isActive = true;
+            return slots;
+        }
+        
+        let timeSlots = createTimeSlots();
+        let homeStatus = true;
+        
+        // Mock Home Assistant
+        const mockHass = {
+            states: {
+                'sensor.timer_24h_test': {
+                    state: 'on',
+                    attributes: {
+                        friendly_name: 'טיימר 24 שעות - תצוגה מקדימה',
+                        home_status: homeStatus,
+                        time_slots: timeSlots
+                    }
+                }
+            },
+            callService: (domain, service, data) => {
+                console.log('🔧 Service called:', domain, service, data);
+                updateStatus(`שירות נקרא: ${domain}.${service} - שעה: ${data.hour}:${String(data.minute).padStart(2, '0')}`);
+                
+                // Toggle the slot
+                if (domain === 'timer_24h' && service === 'toggle_slot') {
+                    const slot = timeSlots.find(s => s.hour === data.hour && s.minute === data.minute);
+                    if (slot) {
+                        slot.isActive = !slot.isActive;
+                        updateCard();
+                    }
+                }
+                
+                return Promise.resolve();
+            }
+        };
+        
+        let card;
+        
+        // Wait for card to load
+        customElements.whenDefined('timer-24h-card').then(() => {
+            card = document.querySelector('timer-24h-card');
+            card.setConfig({
+                entity: 'sensor.timer_24h_test',
+                show_title: true
+            });
+            card.hass = mockHass;
+            
+            updateStatus('✅ הכרטיס נטען בהצלחה! גרסה 3.3.0');
+            console.log('✅ Card loaded successfully!');
+            console.log('Card element:', card);
+        }).catch(err => {
+            updateStatus('❌ שגיאה בטעינת הכרטיס: ' + err.message);
+            console.error('Error loading card:', err);
+        });
+        
+        function updateCard() {
+            if (card) {
+                // Force update
+                card.hass = {...mockHass};
+                card.requestUpdate();
+            }
+        }
+        
+        function updateStatus(message) {
+            const statusEl = document.getElementById('status');
+            const time = new Date().toLocaleTimeString('he-IL');
+            statusEl.textContent = `[${time}] ${message}`;
+        }
+        
+        function toggleHomeStatus() {
+            homeStatus = !homeStatus;
+            mockHass.states['sensor.timer_24h_test'].attributes.home_status = homeStatus;
+            updateCard();
+            updateStatus(`סטטוס בית: ${homeStatus ? 'בבית ✅' : 'לא בבית ❌'}`);
+        }
+        
+        function toggleSlot(hour, minute) {
+            const slot = timeSlots.find(s => s.hour === hour && s.minute === minute);
+            if (slot) {
+                slot.isActive = !slot.isActive;
+                updateCard();
+                updateStatus(`שעה ${hour}:${String(minute).padStart(2, '0')} - ${slot.isActive ? 'פעיל ✅' : 'לא פעיל ❌'}`);
+            }
+        }
+        
+        function randomSlots() {
+            timeSlots.forEach(slot => {
+                slot.isActive = Math.random() > 0.7;
+            });
+            updateCard();
+            updateStatus('🎲 נוצרו שעות אקראיות');
+        }
+    </script>
+</body>
+</html>
+
