@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.5] - 2024-12-05
+
+### Fixed
+- **Key Format Consistency** - Fixed misleading warning logs when clicking slots
+- Standardized time slot key format to always use zero-padded minutes (e.g., "5:00" instead of "5:0")
+- Eliminated false "UNEXPECTED SLOTS" warnings in console
+
+### Technical Details
+- Updated `toggleTimeSlot` to use consistent key format: `${hour}:${String(minute).padStart(2, '0')}`
+- This ensures the key format matches throughout the codebase for accurate state tracking
+
 ## [4.7.4] - 2024-12-05
 
 ### Fixed

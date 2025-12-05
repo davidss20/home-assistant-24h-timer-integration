@@ -250,7 +250,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   private async toggleTimeSlot(hour: number, minute: number): Promise<void> {
     if (!this.hass || !this.config.entity) return;
 
-    const key = `${hour}:${minute}`;
+    const key = `${hour}:${String(minute).padStart(2, '0')}`;
     
     try {
       // Get current slot state BEFORE any changes
