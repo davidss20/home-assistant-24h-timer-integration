@@ -494,13 +494,20 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             })}
             
             <!-- Outer sectors (full hours) -->
-            ${Array.from({ length: 24 }, (_, hour) => {
+            ${Array.from({ length: 24 }, (_, index) => {
+              const hour = index;  // Explicitly capture the index value
               const slot = timeSlots.find(s => s.hour === hour && s.minute === 0);
               const isActive = slot?.isActive || false;
               const isCurrent = this.currentTime.getHours() === hour && 
                                this.currentTime.getMinutes() < 30;
               const sectorPath = this.createSectorPath(hour, 24, middleRadius, outerRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
+              
+              // Create a bound handler with explicit parameters
+              const clickHandler = (e: Event) => {
+                console.log(`🎯 Outer sector clicked: index=${index}, hour=${hour}`);
+                this.handleSlotClick(e, hour, 0);
+              };
               
               return svg`
                 <path 
@@ -509,7 +516,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                   stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
                   stroke-width="${isCurrent ? '3' : '1'}"
                   style="cursor: pointer; transition: all 0.2s;"
-                  @click="${(e: Event) => this.handleSlotClick(e, hour, 0)}">
+                  @click="${clickHandler}">
                 </path>
                 <text 
                   x="${textPos.x}" 
@@ -525,13 +532,20 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             })}
             
             <!-- Inner sectors (half hours) -->
-            ${Array.from({ length: 24 }, (_, hour) => {
+            ${Array.from({ length: 24 }, (_, index) => {
+              const hour = index;  // Explicitly capture the index value
               const slot = timeSlots.find(s => s.hour === hour && s.minute === 30);
               const isActive = slot?.isActive || false;
               const isCurrent = this.currentTime.getHours() === hour && 
                                this.currentTime.getMinutes() >= 30;
               const sectorPath = this.createSectorPath(hour, 24, innerRadius, middleRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
+              
+              // Create a bound handler with explicit parameters
+              const clickHandler = (e: Event) => {
+                console.log(`🎯 Inner sector clicked: index=${index}, hour=${hour}`);
+                this.handleSlotClick(e, hour, 30);
+              };
               
               return svg`
                 <path 
@@ -540,7 +554,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                   stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
                   stroke-width="${isCurrent ? '3' : '1'}"
                   style="cursor: pointer; transition: all 0.2s;"
-                  @click="${(e: Event) => this.handleSlotClick(e, hour, 30)}">
+                  @click="${clickHandler}">
                 </path>
                 <text 
                   x="${textPos.x}" 

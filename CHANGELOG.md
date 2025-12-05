@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.9.1] - 2024-12-05
+
+### Fixed
+- **CRITICAL FIX: JavaScript Closure Bug** - Fixed event handlers capturing wrong slot values
+- Buttons now toggle the correct slots - no more random activation!
+- Issue: Event handlers in loop were not properly capturing the hour/minute values
+- Solution: Explicitly create bound handlers with captured parameters
+
+### Technical Details
+- Changed from inline arrow functions to explicitly bound click handlers
+- Added `const hour = index` to capture the value correctly
+- Added debug log in click handler to verify correct parameters
+- This was a classic JavaScript closure bug in the render loop
+
+### Root Cause
+When using `Array.from({ length: 24 }, (_, hour) =>`, the `hour` variable in the event handler
+was not properly captured. All handlers ended up referencing the same variable, causing
+clicks to trigger wrong slots.
+
 ## [4.9.0] - 2024-12-05
 
 ### Added
