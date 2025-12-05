@@ -122,6 +122,35 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           const newSlots = JSON.stringify(newEntity.attributes.time_slots);
           
           if (oldSlots !== newSlots) {
+            console.group('🔄 SERVER STATE CHANGED');
+            
+            const oldSlotsArray = oldEntity.attributes.time_slots || [];
+            const newSlotsArray = newEntity.attributes.time_slots || [];
+            
+            const oldActive = oldSlotsArray.filter((s: any) => s.isActive).map((s: any) => `${s.hour}:${String(s.minute).padStart(2, '0')}`);
+            const newActive = newSlotsArray.filter((s: any) => s.isActive).map((s: any) => `${s.hour}:${String(s.minute).padStart(2, '0')}`);
+            
+            console.log('📋 OLD SERVER STATE:');
+            console.log(`   Active (${oldActive.length}):`, oldActive.join(', ') || 'None');
+            console.log('📋 NEW SERVER STATE:');
+            console.log(`   Active (${newActive.length}):`, newActive.join(', ') || 'None');
+            
+            // Find differences
+            const oldSet = new Set(oldActive);
+            const newSet = new Set(newActive);
+            const turnedOn = Array.from(newSet).filter(s => !oldSet.has(s));
+            const turnedOff = Array.from(oldSet).filter(s => !newSet.has(s));
+            
+            if (turnedOn.length > 0) {
+              console.log('✅ Slots turned ON by server:', turnedOn.join(', '));
+            }
+            if (turnedOff.length > 0) {
+              console.log('❌ Slots turned OFF by server:', turnedOff.join(', '));
+            }
+            
+            console.log('🧹 Clearing optimistic cache and forcing re-render');
+            console.groupEnd();
+            
             // Clear optimistic cache and force re-render for sync across multiple instances
             this.optimisticSlots.clear();
             this.requestUpdate();
@@ -224,16 +253,51 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     const key = `${hour}:${minute}`;
     
     try {
-      // Get current slot state
-      const slots = this.getTimeSlots();
-      const slot = slots.find(s => s.hour === hour && s.minute === minute);
-      const newState = slot ? !slot.isActive : true;
+      // Get current slot state BEFORE any changes
+      const slotsBeforeToggle = this.getTimeSlots();
+      const slot = slotsBeforeToggle.find(s => s.hour === hour && s.minute === minute);
+      const oldState = slot ? slot.isActive : false;
+      const newState = !oldState;
+      
+      console.group(`🎯 CLICK: ${hour}:${String(minute).padStart(2, '0')}`);
+      console.log(`📊 Clicked slot: ${hour}:${String(minute).padStart(2, '0')} | Old: ${oldState ? '🟢 ON' : '⚪ OFF'} → New: ${newState ? '🟢 ON' : '⚪ OFF'}`);
+      
+      // Log ALL slots BEFORE change
+      console.log('📋 ALL SLOTS BEFORE:');
+      const activeBefore = slotsBeforeToggle.filter(s => s.isActive).map(s => `${s.hour}:${String(s.minute).padStart(2, '0')}`);
+      console.log(`   Active (${activeBefore.length}):`, activeBefore.join(', ') || 'None');
+      
+      // Log optimistic cache BEFORE
+      console.log('💾 Optimistic cache BEFORE:', Array.from(this.optimisticSlots.entries()).map(([k, v]) => `${k}=${v ? 'ON' : 'OFF'}`).join(', ') || 'Empty');
       
       // Optimistic update - immediate UI feedback
       this.optimisticSlots.set(key, newState);
       this.requestUpdate();
       
-      console.log(`🔄 Toggle slot ${hour}:${String(minute).padStart(2, '0')} to ${newState ? 'ON' : 'OFF'}`);
+      // Get slots AFTER optimistic update
+      const slotsAfterOptimistic = this.getTimeSlots();
+      const activeAfter = slotsAfterOptimistic.filter(s => s.isActive).map(s => `${s.hour}:${String(s.minute).padStart(2, '0')}`);
+      console.log('📋 ALL SLOTS AFTER OPTIMISTIC:');
+      console.log(`   Active (${activeAfter.length}):`, activeAfter.join(', ') || 'None');
+      
+      // Log optimistic cache AFTER
+      console.log('💾 Optimistic cache AFTER:', Array.from(this.optimisticSlots.entries()).map(([k, v]) => `${k}=${v ? 'ON' : 'OFF'}`).join(', '));
+      
+      // Check for unexpected changes
+      const beforeSet = new Set(activeBefore);
+      const afterSet = new Set(activeAfter);
+      const unexpected = Array.from(afterSet).filter(s => !beforeSet.has(s) && s !== key);
+      const unexpectedOff = Array.from(beforeSet).filter(s => !afterSet.has(s) && s !== key);
+      
+      if (unexpected.length > 0) {
+        console.warn('⚠️ UNEXPECTED SLOTS TURNED ON:', unexpected.join(', '));
+      }
+      if (unexpectedOff.length > 0) {
+        console.warn('⚠️ UNEXPECTED SLOTS TURNED OFF:', unexpectedOff.join(', '));
+      }
+      
+      console.log(`📤 Calling service: timer_24h.toggle_slot(${hour}, ${minute})`);
+      console.groupEnd();
       
       // Call service
       await this.hass.callService('timer_24h', 'toggle_slot', {
@@ -244,6 +308,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       
       // Clear optimistic state after server confirms (reduced to 1 second)
       setTimeout(() => {
+        console.log(`🧹 Clearing optimistic cache for ${key}`);
         this.optimisticSlots.delete(key);
         this.requestUpdate();
       }, 1000);

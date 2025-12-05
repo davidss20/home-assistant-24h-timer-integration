@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.4] - 2024-12-05
+
+### Fixed
+- **SVG Event Handlers** - Fixed event handlers not working properly in SVG elements
+- Improved click handling for time slot toggles
+
 ## [4.7.3] - 2024-12-05
 
 ### Fixed
