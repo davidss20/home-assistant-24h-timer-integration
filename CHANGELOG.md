@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.2] - 2024-12-05
+
+### Fixed
+- **Multi-Instance Synchronization** - Fixed issue where multiple dashboard instances didn't sync when toggling slots
+- **Random Slot Activation Bug** - Fixed critical bug where clicking one slot would sometimes activate random other slots
+- **Click Event Handling** - Replaced unsafe onclick with proper @click event handlers
+- **Event Propagation** - Added proper event.stopPropagation() to prevent event bubbling issues
+- **Debouncing** - Added 300ms debounce to prevent rapid multiple clicks
+
+### Changed
+- Replaced `unsafeSVG` with native `html` templates for better event handling
+- Improved optimistic state clearing - now clears immediately when server state changes
+- Enhanced logging with emojis for better debugging (🔄 toggle, ❌ error)
+- Reduced optimistic state timeout from 3s to 1s for faster sync
+
+### Technical Details
+- Added `clickTimeout` property for debouncing
+- Added `handleSlotClick()` method for proper event handling
+- Modified `updated()` lifecycle to force re-render on state changes
+- Removed unused `renderDividingLines`, `renderOuterSectors`, `renderInnerSectors` methods
+
 ## [4.7.1] - 2024-12-05
 
 ### Fixed
