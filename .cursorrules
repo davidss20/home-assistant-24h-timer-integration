@@ -1,0 +1,338 @@
+# Timer 24H Integration - Cursor Rules
+
+## Project Context
+
+This is a Home Assistant custom integration that provides a 24-hour timer with automatic entity control.
+The project includes both a Python backend (Home Assistant integration) and a TypeScript/Lit frontend (Lovelace card).
+
+## Languages & Frameworks
+
+- **Backend**: Python 3.11+, Home Assistant Integration
+- **Frontend**: TypeScript, Lit (Web Components), Rollup
+- **Documentation**: Hebrew and English
+
+## Project Structure
+
+```
+home-assistant-24h-timer-integration/
+├── custom_components/timer_24h/     # Backend integration
+│   ├── __init__.py                  # Main integration logic + card installation
+│   ├── config_flow.py               # Configuration flow
+│   ├── coordinator.py               # Data coordinator
+│   ├── sensor.py                    # Sensor entity
+│   ├── const.py                     # Constants
+│   ├── manifest.json                # Integration manifest
+│   └── dist/                        # Built frontend files
+│       ├── timer-24h-card.js
+│       └── timer-24h-card-editor.js
+├── timer-24h-card.ts                # Frontend card source
+├── timer-24h-card-editor.ts         # Frontend editor source
+└── README.md                        # Documentation
+```
+
+## Code Style & Standards
+
+### Python (Backend)
+
+1. **Follow Home Assistant standards**:
+   - Use type hints for all function parameters and return values
+   - Use `async`/`await` for all I/O operations
+   - Use Home Assistant's logger (`_LOGGER`)
+   - Follow Home Assistant's naming conventions
+
+2. **Imports**:
+   - Group imports: standard library, third-party, Home Assistant, local
+   - Use `from __future__ import annotations` at the top
+
+3. **Error Handling**:
+   - Always use try-except blocks for external operations
+   - Log errors with appropriate severity
+   - Provide user-friendly error messages
+
+4. **Example**:
+   ```python
+   async def async_example(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+       """Example function with proper type hints."""
+       try:
+           result = await some_async_operation()
+           _LOGGER.info("Operation successful: %s", result)
+           return True
+       except Exception as err:
+           _LOGGER.error("Operation failed: %s", err)
+           return False
+   ```
+
+### TypeScript (Frontend)
+
+1. **Use Lit Web Components**:
+   - Extend `LitElement` for custom elements
+   - Use decorators: `@customElement`, `@property`, `@state`
+   - Use `html` template literal for rendering
+
+2. **Naming**:
+   - Classes: PascalCase (e.g., `Timer24HCard`)
+   - Properties: camelCase (e.g., `timeSlots`)
+   - CSS classes: kebab-case (e.g., `timer-container`)
+
+3. **Type Safety**:
+   - Always define interfaces for complex objects
+   - Use proper types, avoid `any`
+   - Define HomeAssistant types properly
+
+4. **Example**:
+   ```typescript
+   @customElement('timer-24h-card')
+   export class Timer24HCard extends LitElement {
+     @property({ attribute: false }) hass?: HomeAssistant;
+     @state() private config?: CardConfig;
+   }
+   ```
+
+## Critical Features & Behaviors
+
+### 1. Cache Busting (IMPORTANT!)
+
+**Always maintain cache busting logic in `__init__.py`**:
+- Resource URL must include version parameter: `?v=X.X.X`
+- Version must be read from `manifest.json`
+- Update resource URL when version changes
+
+```python
+url = f"/local/timer-24h-card/timer-24h-card.js?v={version}"
+```
+
+### 2. Resource Registration
+
+**The integration automatically**:
+- Copies card files to `www/timer-24h-card/`
+- Registers Lovelace resource with version parameter
+- Updates resource on version change
+
+**Never remove or modify** the `_async_register_lovelace_resource()` function without careful consideration.
+
+### 3. Time Slots
+
+- Always use 48 slots (24 hours × 2 half-hour segments)
+- Format: `{hour: 0-23, minute: 0|30, isActive: boolean}`
+- Persist in coordinator's data
+
+### 4. Home Presence
+
+- Check sensors according to logic (OR/AND)
+- Only activate entities when "at home"
+- Update every minute via coordinator
+
+## Version Management
+
+### When Updating Version:
+
+1. **Update `manifest.json`**: Change `"version": "X.X.X"`
+2. **Update `VERSION` file**: Change version number
+3. **Update `CHANGELOG.md`**: Document changes
+4. **Build frontend**: Run `npm run build`
+5. **Copy to dist**: Ensure files in `custom_components/timer_24h/dist/`
+6. **Test**: Install in Home Assistant and verify
+
+### Semantic Versioning:
+
+- **Major (X.0.0)**: Breaking changes
+- **Minor (0.X.0)**: New features, backward compatible
+- **Patch (0.0.X)**: Bug fixes
+
+## Testing Guidelines
+
+### Before Commit:
+
+1. **Python Linting**: No errors in `__init__.py`, `coordinator.py`, etc.
+2. **TypeScript Build**: `npm run build` succeeds
+3. **File Structure**: All files in correct locations
+4. **Version Consistency**: Same version in `manifest.json` and `VERSION`
+
+### Manual Testing:
+
+1. Install in Home Assistant test instance
+2. Check logs for proper resource registration
+3. Verify card loads without errors
+4. Test time slot toggling
+5. Test entity control
+6. Test home presence detection
+
+## Common Tasks
+
+### Adding a New Service:
+
+1. Add service name to `const.py`: `SERVICE_NAME = "service_name"`
+2. Add handler in `__init__.py`: `async def handle_service_name(call):`
+3. Register service with schema
+4. Update `services.yaml` (if exists)
+5. Document in `README.md`
+
+### Modifying Frontend:
+
+1. Edit `.ts` files (not `.js` files!)
+2. Run `npm run build`
+3. Copy from root to `custom_components/timer_24h/dist/`
+4. Update version if user-facing change
+5. Test in browser with hard refresh (`Ctrl+Shift+R`)
+
+### Fixing Cache Issues:
+
+1. Ensure version parameter in URL
+2. Check `_async_register_lovelace_resource()` function
+3. Verify version read from `manifest.json`
+4. Log resource URL for debugging
+
+## Documentation Standards
+
+### Code Comments:
+
+- **Hebrew**: User-facing messages, error descriptions
+- **English**: Code comments, docstrings, technical documentation
+
+### Docstrings:
+
+```python
+async def function_name(param: type) -> return_type:
+    """Short description in English.
+    
+    Longer description if needed.
+    
+    Args:
+        param: Description of parameter
+        
+    Returns:
+        Description of return value
+        
+    Raises:
+        ExceptionType: When and why it's raised
+    """
+```
+
+### README:
+
+- Keep both English and Hebrew sections synchronized
+- Include examples for all features
+- Update troubleshooting section when fixing bugs
+
+## Files to NEVER Modify Directly
+
+- `timer-24h-card.js` (generated from `.ts`)
+- `timer-24h-card-editor.js` (generated from `.ts`)
+- Files in `node_modules/`
+- `.hass/` directory (if present)
+
+## Files to Always Update Together
+
+When changing version:
+- `manifest.json`
+- `VERSION`
+- `CHANGELOG.md`
+
+When modifying frontend:
+- `timer-24h-card.ts` (source)
+- `custom_components/timer_24h/dist/timer-24h-card.js` (built)
+
+## Git Workflow
+
+### Commit Messages:
+
+Use format: `[type] description`
+
+Types:
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation
+- `style:` Code style (formatting)
+- `refactor:` Code refactoring
+- `test:` Tests
+- `chore:` Maintenance
+
+Examples:
+- `feat: add automatic cache busting`
+- `fix: resolve resource registration issue`
+- `docs: update upgrade instructions`
+
+### Branching:
+
+- `main`: Stable, production-ready
+- `develop`: Integration branch (if used)
+- `feature/name`: New features
+- `fix/name`: Bug fixes
+
+## Special Considerations
+
+### Home Assistant Compatibility:
+
+- Minimum version: 2024.1.0 (check `manifest.json`)
+- Test with latest HA version
+- Avoid deprecated HA APIs
+
+### Browser Compatibility:
+
+- Support modern browsers (Chrome, Firefox, Safari, Edge)
+- Use standard Web Components APIs
+- Test on mobile devices
+
+### HACS Compatibility:
+
+- Follow HACS requirements
+- Maintain `hacs.json`
+- Use proper GitHub releases
+
+## Troubleshooting Common Issues
+
+### Card Not Updating:
+
+1. Check cache busting: URL should have `?v=` parameter
+2. Verify resource registered: Settings → Dashboards → Resources
+3. Hard refresh browser: `Ctrl+Shift+R`
+4. Check Home Assistant logs
+
+### Integration Not Loading:
+
+1. Check Python syntax errors
+2. Verify all required files present
+3. Check Home Assistant logs
+4. Restart Home Assistant
+
+### Build Errors:
+
+1. Run `npm install` to ensure dependencies
+2. Check `tsconfig.json` for errors
+3. Verify source files have no syntax errors
+4. Clear `node_modules` and reinstall if needed
+
+## Performance Guidelines
+
+### Backend:
+
+- Use `coordinator` for data updates (not direct polling)
+- Update entities only when data changes
+- Use async operations for all I/O
+- Avoid blocking operations
+
+### Frontend:
+
+- Minimize re-renders with `shouldUpdate()`
+- Use `@state()` for internal state
+- Use `@property()` for external properties
+- Implement efficient rendering logic
+
+## Security Considerations
+
+- Never store sensitive data in state
+- Validate all user inputs
+- Use Home Assistant's built-in authentication
+- Follow Home Assistant security best practices
+
+## Getting Help
+
+- Home Assistant Developer Docs: https://developers.home-assistant.io/
+- Lit Documentation: https://lit.dev/
+- Project Issues: https://github.com/davidss20/home-assistant-24h-timer-integration/issues
+
+---
+
+**Remember**: Always test changes locally before committing!
+**Priority**: Cache busting must work - it's critical for user experience!
+
