@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.1] - 2024-12-05
+
+### Fixed
+- **Instant UI Updates** - Implemented optimistic UI updates for immediate visual feedback when toggling time slots
+- UI now updates instantly when clicking on time slots, no need to wait for server response or manual refresh
+- Added automatic state synchronization when server confirms the change
+- Improved error handling with automatic rollback on service call failures
+
+### Technical Details
+- Added optimistic state cache (`optimisticSlots`) that updates UI immediately
+- Server state syncs automatically after 3 seconds
+- Optimistic updates are cleared when entity state changes from server
+- On error, optimistic state is immediately removed and UI reverts
+
 ## [4.7.0] - 2024-12-05
 
 ### Added

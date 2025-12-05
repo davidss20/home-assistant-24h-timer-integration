@@ -27,6 +27,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: Timer24HCardConfig;
   @state() private currentTime: Date = new Date();
+  @state() private optimisticSlots: Map<string, boolean> = new Map();
   
   private updateInterval?: number;
 
@@ -107,6 +108,19 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     
     if (changedProps.has('hass') && this.hass) {
       this.updateCurrentTime();
+      
+      // Clear optimistic updates when entity state changes from server
+      if (this.config?.entity) {
+        const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
+        const oldEntity = oldHass?.states[this.config.entity];
+        const newEntity = this.hass?.states[this.config.entity];
+        
+        // If entity time_slots changed, clear all optimistic updates
+        if (oldEntity && newEntity && 
+            JSON.stringify(oldEntity.attributes.time_slots) !== JSON.stringify(newEntity.attributes.time_slots)) {
+          this.optimisticSlots.clear();
+        }
+      }
     }
   }
 
@@ -154,7 +168,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       }
       return slots;
     }
-    return entity.attributes.time_slots;
+    
+    // Apply optimistic updates for immediate UI feedback
+    const slots = entity.attributes.time_slots.map((slot: TimeSlot) => {
+      const key = `${slot.hour}:${slot.minute}`;
+      if (this.optimisticSlots.has(key)) {
+        return { ...slot, isActive: this.optimisticSlots.get(key)! };
+      }
+      return slot;
+    });
+    
+    return slots;
   }
 
   private getHomeStatus(): boolean {
@@ -173,18 +197,35 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     if (!this.hass || !this.config.entity) return;
 
     try {
+      // Get current slot state
+      const slots = this.getTimeSlots();
+      const slot = slots.find(s => s.hour === hour && s.minute === minute);
+      const newState = slot ? !slot.isActive : true;
+      
+      // Optimistic update - immediate UI feedback
+      const key = `${hour}:${minute}`;
+      this.optimisticSlots.set(key, newState);
+      this.requestUpdate();
+      
+      // Call service
       await this.hass.callService('timer_24h', 'toggle_slot', {
         entity_id: this.config.entity,
         hour: hour,
         minute: minute,
       });
       
-      // Wait a bit for the state to update, then force a re-render
+      // Clear optimistic state after server confirms (3 seconds timeout)
       setTimeout(() => {
+        this.optimisticSlots.delete(key);
         this.requestUpdate();
-      }, 100);
+      }, 3000);
+      
     } catch (error) {
       console.error('Failed to toggle time slot:', error);
+      // On error, remove optimistic update immediately
+      const key = `${hour}:${minute}`;
+      this.optimisticSlots.delete(key);
+      this.requestUpdate();
     }
   }
 
