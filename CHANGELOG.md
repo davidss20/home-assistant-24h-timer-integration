@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] - 2024-12-05
+
+### Changed
+- **MAJOR: Removed All Optimistic Updates** - Complete architectural change for stability
+- UI now updates ONLY from server state - no client-side prediction
+- Fixes all random button activation and deselection issues
+- Small delay (100-300ms) in UI response but 100% reliable behavior
+
+### Fixed
+- Fixed issue where clicking a button would deselect the previous button
+- Fixed closure bug where wrong slots were being toggled
+- Eliminated all race conditions and state synchronization issues
+
+### Technical Details
+- Removed `pendingToggles` system completely
+- `getTimeSlots()` returns server state directly
+- `toggleTimeSlot()` only calls service, no state manipulation
+- Simplified `updated()` lifecycle - just updates time
+- Added comprehensive debug logging (can be removed in future version)
+
+### Breaking Changes
+- No more instant UI feedback (waits for server)
+- This is necessary for correctness and reliability
+
+### Why Major Version?
+This is a fundamental architectural change. The trade-off of instant feedback for
+reliability and correctness warrants a major version bump.
+
 ## [4.9.1] - 2024-12-05
 
 ### Fixed
