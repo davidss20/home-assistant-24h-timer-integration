@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cache Busting** - Version parameter (`?v=X.X.X`) automatically added to card URL to prevent browser caching issues
 - **Automatic Resource Updates** - Card resource URL updates automatically when integration version changes
 - Detailed logging for resource registration process
-- Comprehensive documentation: CACHE_BUSTING_INFO.md, UPGRADE_INSTRUCTIONS.md, SUMMARY_OF_CHANGES.md
+- Enhanced troubleshooting documentation in README.md
 
 ### Changed
 - Card installation now includes automatic resource registration

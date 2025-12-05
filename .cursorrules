@@ -1,5 +1,36 @@
 # Timer 24H Integration - Cursor Rules
 
+## ⚠️ CRITICAL RULES - READ FIRST
+
+### Documentation Files Policy
+
+**NEVER create additional documentation/guide files (*.md) unless explicitly requested!**
+
+**Allowed documentation files ONLY:**
+- ✅ `README.md` - Main project documentation (can be updated)
+- ✅ `CHANGELOG.md` - Version history (can be updated)
+
+**FORBIDDEN to create:**
+- ❌ Any other `.md` files (guides, tutorials, info files, etc.)
+- ❌ `CONTRIBUTING.md`
+- ❌ `UPGRADE_INSTRUCTIONS.md`
+- ❌ `CACHE_BUSTING_INFO.md`
+- ❌ `SUMMARY_OF_CHANGES.md`
+- ❌ Any other documentation files
+
+**Rationale:**
+- Keep documentation centralized in README.md
+- Avoid documentation sprawl
+- Maintain single source of truth
+- Reduce maintenance burden
+
+**When user asks for documentation:**
+1. Update existing `README.md` or `CHANGELOG.md`
+2. Add to code comments/docstrings
+3. Only create new `.md` file if user **explicitly** requests it by name
+
+---
+
 ## Project Context
 
 This is a Home Assistant custom integration that provides a 24-hour timer with automatic entity control.
@@ -220,6 +251,20 @@ async def function_name(param: type) -> return_type:
 - `timer-24h-card-editor.js` (generated from `.ts`)
 - Files in `node_modules/`
 - `.hass/` directory (if present)
+
+## Files to NEVER Create (Unless Explicitly Requested)
+
+**❌ Do NOT create additional `.md` documentation files!**
+
+Allowed documentation files ONLY:
+- ✅ `README.md` (update this instead)
+- ✅ `CHANGELOG.md` (update this for versions)
+
+If user needs documentation:
+1. Add to `README.md` (preferred)
+2. Add to `CHANGELOG.md` (for version changes)
+3. Add to code comments/docstrings
+4. Only create new `.md` if user explicitly asks for it by name
 
 ## Files to Always Update Together
 
