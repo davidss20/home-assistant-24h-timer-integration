@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.9.0] - 2024-12-05
+
+### Added
+- **Comprehensive Debugging Logs** - Added extensive logging to diagnose random button activation issue
+- Frontend logs: Click detection, debouncing, pending toggles, state flips
+- Backend logs: Service calls, slot toggles, before/after states, slot validation
+- Duplicate slot detection during initialization
+
+### Purpose
+This is a diagnostic version to identify the root cause of random button activations.
+Please check Home Assistant logs after testing for detailed information.
+
+### What to Look For
+- Check Home Assistant logs (Settings → System → Logs)
+- Look for lines starting with 🎯, 📋, ✅, ❌
+- Check browser console for frontend logs
+- Report any unexpected patterns you see
+
 ## [4.8.1] - 2024-12-05
 
 ### Fixed

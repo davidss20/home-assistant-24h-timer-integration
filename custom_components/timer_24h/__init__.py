@@ -102,7 +102,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         hour = call.data.get(ATTR_HOUR)
         minute = call.data.get(ATTR_MINUTE)
 
-        _LOGGER.debug("Toggle slot called for entity_id=%s, hour=%s, minute=%s", entity_id, hour, minute)
+        _LOGGER.info("🔵 SERVICE CALLED: toggle_slot(entity=%s, hour=%s, minute=%s)", entity_id, hour, minute)
 
         # Find the coordinator for this entity
         for entry_id, data in hass.data[DOMAIN].items():
@@ -114,11 +114,11 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 for entity_entry in entity_registry.entities.values():
                     if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
                         and entity_entry.entity_id == entity_id):
-                        _LOGGER.debug("Found matching coordinator for entity_id=%s", entity_id)
+                        _LOGGER.info("✅ Found matching coordinator for entity_id=%s", entity_id)
                         await coordinator.async_toggle_slot(hour, minute)
                         return
         
-        _LOGGER.warning("No coordinator found for entity_id=%s", entity_id)
+        _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
 
     async def handle_set_slots(call: ServiceCall) -> None:
         """Handle the set_slots service call."""

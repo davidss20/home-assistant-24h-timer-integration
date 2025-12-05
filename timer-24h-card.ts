@@ -177,11 +177,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     }
     
     // Apply optimistic toggle for pending slots
-    const slots = entity.attributes.time_slots.map((slot: TimeSlot) => {
+    const serverSlots = entity.attributes.time_slots;
+    const slots = serverSlots.map((slot: TimeSlot, index: number) => {
       const key = `${slot.hour}:${String(slot.minute).padStart(2, '0')}`;
       if (this.pendingToggles.has(key)) {
         // Flip the state for pending toggles
-        return { ...slot, isActive: !slot.isActive };
+        const flipped = !slot.isActive;
+        if (index < 3 || index > serverSlots.length - 3) {
+          // Log only first and last few slots to avoid spam
+          console.log(`🔄 Slot ${key}: Server=${slot.isActive ? 'ON' : 'OFF'}, Flipped=${flipped ? 'ON' : 'OFF'} (pending)`);
+        }
+        return { ...slot, isActive: flipped };
       }
       return slot;
     });
@@ -206,8 +212,12 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     event.stopPropagation();
     event.preventDefault();
     
+    const key = `${hour}:${String(minute).padStart(2, '0')}`;
+    console.log(`👆 Click detected on ${key}`);
+    
     // Debounce - prevent multiple rapid clicks
     if (this.clickTimeout) {
+      console.log(`⏸️ Debounced - ignoring click on ${key}`);
       return; // Ignore if already processing a click
     }
     
@@ -216,6 +226,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     }, 300); // 300ms debounce
     
     // Call the toggle function
+    console.log(`✅ Processing click on ${key}`);
     this.toggleTimeSlot(hour, minute);
   }
 

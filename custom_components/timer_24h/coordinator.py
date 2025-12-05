@@ -49,6 +49,14 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         for hour in range(24):
             slots.append({"hour": hour, "minute": 0, "isActive": False})
             slots.append({"hour": hour, "minute": 30, "isActive": False})
+        
+        # Validate no duplicates
+        keys = [f"{s['hour']}:{s['minute']}" for s in slots]
+        if len(keys) != len(set(keys)):
+            _LOGGER.error("❌ DUPLICATE SLOTS DETECTED IN INITIALIZATION!")
+        else:
+            _LOGGER.info("✅ Initialized %d unique time slots", len(slots))
+        
         return slots
 
     @property
@@ -171,10 +179,28 @@ class Timer24HCoordinator(DataUpdateCoordinator):
 
     async def async_toggle_slot(self, hour: int, minute: int) -> None:
         """Toggle a time slot."""
+        _LOGGER.info("🎯 Toggle slot called: hour=%s, minute=%s", hour, minute)
+        
+        # Log BEFORE state
+        active_before = [f"{s['hour']}:{s['minute']:02d}" for s in self._time_slots if s["isActive"]]
+        _LOGGER.info("📋 Active slots BEFORE toggle: %s", ", ".join(active_before) if active_before else "None")
+        
+        slot_found = False
         for slot in self._time_slots:
             if slot["hour"] == hour and slot["minute"] == minute:
+                old_state = slot["isActive"]
                 slot["isActive"] = not slot["isActive"]
+                _LOGGER.info("✅ Found and toggled slot %s:%02d: %s → %s", 
+                           hour, minute, old_state, slot["isActive"])
+                slot_found = True
                 break
+        
+        if not slot_found:
+            _LOGGER.error("❌ Slot %s:%02d NOT FOUND in time_slots!", hour, minute)
+        
+        # Log AFTER state
+        active_after = [f"{s['hour']}:{s['minute']:02d}" for s in self._time_slots if s["isActive"]]
+        _LOGGER.info("📋 Active slots AFTER toggle: %s", ", ".join(active_after) if active_after else "None")
 
         # Save to config entry options
         await self._save_time_slots()
@@ -192,6 +218,8 @@ class Timer24HCoordinator(DataUpdateCoordinator):
                 "home_status": self._home_status,
             }
         )
+        
+        _LOGGER.info("✅ Toggle slot completed for %s:%02d", hour, minute)
 
     async def async_set_slots(self, slots: list[dict[str, Any]]) -> None:
         """Set multiple time slots."""
