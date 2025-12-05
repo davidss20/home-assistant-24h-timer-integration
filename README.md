@@ -29,6 +29,7 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 - **💾 Automatic State Persistence** - settings saved automatically
 - **🌍 Multi-Language Support** with RTL support
 - **⚙️ Easy Installation** - one installation includes everything
+- **🔄 Automatic Updates** - card resources with built-in cache busting
 
 ## 📥 Installation
 
@@ -41,11 +42,18 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 5. Click "Install"
 6. **Restart Home Assistant**
 
+**✨ That's it!** The card files and Lovelace resources are automatically installed and registered.
+
 ### Manual Installation
 
 1. Download the latest release from [GitHub Releases](https://github.com/davidss20/home-assistant-24h-timer-integration/releases)
 2. Extract the `custom_components/timer_24h` folder into your `config/custom_components/` directory
 3. **Restart Home Assistant**
+
+**✨ The integration automatically:**
+- Copies card files to `www/timer-24h-card/`
+- Registers the Lovelace resource with cache busting
+- Updates the resource version on each integration update
 
 ## 🚀 Usage
 
@@ -249,6 +257,28 @@ The integration includes full Hebrew support:
 1. Ensure installation was done via HACS or manually
 2. Restart Home Assistant
 3. Clear browser cache (Ctrl+F5)
+4. Check that the resource was registered: Settings → Dashboards → Resources
+   - Should see: `/local/timer-24h-card/timer-24h-card.js?v=X.X.X`
+
+### Card Not Updating After Integration Update
+
+**🎯 Automatic Solution**: The integration now includes automatic cache busting!
+
+- The card resource is automatically registered with a version parameter
+- Each update to `manifest.json` triggers a new version
+- The browser will automatically load the new version
+
+**Manual Steps** (if needed):
+1. Go to: Settings → Dashboards → Resources
+2. Delete the old `timer-24h-card` resource (if exists without `?v=` parameter)
+3. Restart Home Assistant
+4. The resource will be re-registered automatically with cache busting
+5. Clear browser cache: `Ctrl + Shift + R` or `Ctrl + F5`
+
+**How it works**:
+- Old URL: `/local/timer-24h-card/timer-24h-card.js` ❌
+- New URL: `/local/timer-24h-card/timer-24h-card.js?v=4.6.7` ✅
+- Each version change forces browser to reload the file
 
 ### Timer Not Activating
 

@@ -1,6 +1,7 @@
 """The Timer 24H integration."""
 from __future__ import annotations
 
+import json
 import logging
 import os
 import shutil
@@ -181,6 +182,16 @@ async def _async_install_card(hass: HomeAssistant) -> None:
         # Get the integration path
         integration_path = Path(__file__).parent
         
+        # Get version from manifest
+        manifest_path = integration_path / "manifest.json"
+        version = "1.0.0"
+        try:
+            with open(manifest_path) as f:
+                manifest = json.load(f)
+                version = manifest.get("version", "1.0.0")
+        except Exception as err:
+            _LOGGER.warning("Could not read version from manifest: %s", err)
+        
         # Source files
         card_js_source = integration_path / "dist" / "timer-24h-card.js"
         editor_js_source = integration_path / "dist" / "timer-24h-card-editor.js"
@@ -205,12 +216,75 @@ async def _async_install_card(hass: HomeAssistant) -> None:
             
         if editor_js_source.exists():
             shutil.copy2(editor_js_source, card_dir / "timer-24h-card-editor.js")
-            
+        
+        # Register the resource automatically with version for cache busting
+        await _async_register_lovelace_resource(hass, version)
+        
         _LOGGER.info(
-            "Timer 24H Card installed successfully. "
-            "Please add the card resource manually or clear your browser cache."
+            "Timer 24H Card v%s installed successfully. "
+            "Clear your browser cache (Ctrl+Shift+R) to see updates.",
+            version
         )
         
     except Exception as err:
         _LOGGER.error("Failed to install Timer 24H Card: %s", err)
+
+
+async def _async_register_lovelace_resource(hass: HomeAssistant, version: str) -> None:
+    """Register the Lovelace resource automatically."""
+    try:
+        from homeassistant.components.lovelace import DOMAIN as LOVELACE_DOMAIN
+        from homeassistant.components.lovelace.resources import (
+            ResourceStorageCollection,
+        )
+        
+        url = f"/local/timer-24h-card/timer-24h-card.js?v={version}"
+        
+        # Get the resource storage collection
+        if LOVELACE_DOMAIN in hass.data:
+            lovelace_config = hass.data[LOVELACE_DOMAIN]
+            
+            # Try to access resources
+            if hasattr(lovelace_config, "get") and "resources" in lovelace_config:
+                resources: ResourceStorageCollection = lovelace_config["resources"]
+                
+                # Check if resource already exists
+                existing_resource = None
+                for item in resources.async_items():
+                    if "timer-24h-card" in item.get("url", ""):
+                        existing_resource = item
+                        break
+                
+                # Update or create resource
+                if existing_resource:
+                    # Update existing resource with new version
+                    if existing_resource.get("url") != url:
+                        await resources.async_update_item(
+                            existing_resource["id"],
+                            {"url": url, "type": "module"}
+                        )
+                        _LOGGER.info("Updated Timer 24H Card resource to version %s", version)
+                else:
+                    # Create new resource
+                    await resources.async_create_item(
+                        {"url": url, "type": "module"}
+                    )
+                    _LOGGER.info("Registered Timer 24H Card resource version %s", version)
+                
+                return
+        
+        _LOGGER.info(
+            "Lovelace not fully loaded yet. Resource will be registered on next restart. "
+            "Alternatively, add manually: %s",
+            url
+        )
+        
+    except Exception as err:
+        _LOGGER.warning(
+            "Could not auto-register Lovelace resource: %s. "
+            "Please add manually to Settings → Dashboards → Resources: "
+            "/local/timer-24h-card/timer-24h-card.js?v=%s",
+            err,
+            version
+        )
 
