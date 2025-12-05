@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.8.0] - 2024-12-05
+
+### Changed
+- **Removed Optimistic Updates** - Completely removed optimistic UI updates to fix random button activation issues
+- UI now updates only when server confirms changes (no more instant feedback)
+- This solves the critical bug where clicking one button would affect other buttons randomly
+- Simpler, more reliable state management
+
+### Technical Details
+- Removed `optimisticSlots` Map completely
+- `getTimeSlots()` now returns server state directly without local modifications
+- `toggleTimeSlot()` simplified to just call the service without state manipulation
+- Removed complex state synchronization logic in `updated()` lifecycle
+
+### Why This Change?
+- The optimistic update system was causing state inconsistencies
+- Multiple instances of the card would get out of sync
+- Server state and client state would conflict, causing random button behavior
+- **Trade-off**: Slight delay in UI response (waits for server) but guaranteed correctness
+
 ## [4.7.6] - 2024-12-05
 
 ### Fixed
