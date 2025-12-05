@@ -41,19 +41,31 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 4. Search for "Timer 24H Integration"
 5. Click "Install"
 6. **Restart Home Assistant**
+7. **Add the Lovelace Resource** (one-time setup):
+   - Go to: `Settings → Dashboards → Resources`
+   - Click: `+ Add Resource`
+   - **URL**: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
+   - **Type**: `JavaScript Module`
+   - Click: `Create`
 
-**✨ That's it!** The card files and Lovelace resources are automatically installed and registered.
+**✨ That's it!** Future updates will work automatically thanks to cache busting!
 
 ### Manual Installation
 
 1. Download the latest release from [GitHub Releases](https://github.com/davidss20/home-assistant-24h-timer-integration/releases)
 2. Extract the `custom_components/timer_24h` folder into your `config/custom_components/` directory
 3. **Restart Home Assistant**
+4. **Add the Lovelace Resource** (one-time setup):
+   - Go to: `Settings → Dashboards → Resources`
+   - Click: `+ Add Resource`
+   - **URL**: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
+   - **Type**: `JavaScript Module`
+   - Click: `Create`
 
 **✨ The integration automatically:**
 - Copies card files to `www/timer-24h-card/`
-- Registers the Lovelace resource with cache busting
-- Updates the resource version on each integration update
+- Updates with cache busting on each version change
+- No more browser caching issues!
 
 ## 🚀 Usage
 
@@ -254,31 +266,37 @@ The integration includes full Hebrew support:
 
 ### Card Not Appearing
 
-1. Ensure installation was done via HACS or manually
-2. Restart Home Assistant
-3. Clear browser cache (Ctrl+F5)
-4. Check that the resource was registered: Settings → Dashboards → Resources
-   - Should see: `/local/timer-24h-card/timer-24h-card.js?v=X.X.X`
+**Did you add the Lovelace resource?** This is a **one-time setup** required:
+
+1. Go to: `Settings → Dashboards → Resources`
+2. Click: `+ Add Resource`
+3. **URL**: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
+4. **Type**: `JavaScript Module`
+5. Click: `Create`
+6. Refresh browser: `Ctrl + Shift + R`
+
+**To verify:**
+- Go to: `Settings → Dashboards → Resources`
+- You should see: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
 
 ### Card Not Updating After Integration Update
 
-**🎯 Automatic Solution**: The integration now includes automatic cache busting!
+**🎯 Cache Busting is Built-In!** Once you've added the resource, updates work automatically.
 
-- The card resource is automatically registered with a version parameter
-- Each update to `manifest.json` triggers a new version
-- The browser will automatically load the new version
+**How it works:**
+- You add resource **once**: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
+- Integration updates → version changes to `v=4.7.1`, `v=4.7.2`, etc.
+- Browser sees new URL → loads new file automatically!
 
-**Manual Steps** (if needed):
-1. Go to: Settings → Dashboards → Resources
-2. Delete the old `timer-24h-card` resource (if exists without `?v=` parameter)
-3. Restart Home Assistant
-4. The resource will be re-registered automatically with cache busting
-5. Clear browser cache: `Ctrl + Shift + R` or `Ctrl + F5`
+**If you added the resource WITHOUT `?v=` parameter:**
+1. Go to: `Settings → Dashboards → Resources`
+2. **Delete** the old resource: `/local/timer-24h-card/timer-24h-card.js` (without `?v=`)
+3. **Add** new resource: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0` (with `?v=`)
+4. Hard refresh browser: `Ctrl + Shift + R`
 
-**How it works**:
-- Old URL: `/local/timer-24h-card/timer-24h-card.js` ❌
-- New URL: `/local/timer-24h-card/timer-24h-card.js?v=4.6.7` ✅
-- Each version change forces browser to reload the file
+**After each integration update:**
+- Just hard refresh: `Ctrl + Shift + R`
+- Browser loads the new version automatically!
 
 ### Timer Not Activating
 

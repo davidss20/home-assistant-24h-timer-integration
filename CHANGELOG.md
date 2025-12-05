@@ -10,22 +10,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.7.0] - 2024-12-05
 
 ### Added
-- **Automatic Lovelace Resource Registration** - The card resource is now automatically registered on installation
 - **Cache Busting** - Version parameter (`?v=X.X.X`) automatically added to card URL to prevent browser caching issues
-- **Automatic Resource Updates** - Card resource URL updates automatically when integration version changes
-- Detailed logging for resource registration process
+- **Smart Resource Registration** - Attempts automatic resource registration when possible
+- Detailed logging for card installation process
 - Enhanced troubleshooting documentation in README.md
+- One-time resource setup instructions
 
 ### Changed
-- Card installation now includes automatic resource registration
-- Resource URL format changed from `/local/timer-24h-card/timer-24h-card.js` to `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
-- Enhanced README with troubleshooting section for cache issues
+- Resource URL format: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0` (with version)
+- Card files automatically copied to `www/timer-24h-card/` on installation
+- Enhanced README with clear installation steps
+- Improved resource registration workflow
 
 ### Fixed
 - Browser cache preventing card updates from being visible
-- Need for manual resource registration after installation
 - Updates not visible without hard refresh (Ctrl+Shift+R)
 - Incognito mode showing updates while normal mode doesn't
+
+### Note
+- **One-time setup required**: Users must add the Lovelace resource manually once
+- **After setup**: All future updates work automatically with cache busting
+- **Why**: Lovelace resources API is difficult to access reliably during integration setup
 
 ## [4.6.7] - Previous Release
 

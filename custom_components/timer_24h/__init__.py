@@ -38,6 +38,22 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     # Install card files automatically
     await _async_install_card(hass)
     
+    # Register resource after Home Assistant starts
+    async def _register_on_start(event):
+        """Register resource when Home Assistant starts."""
+        integration_path = Path(__file__).parent
+        manifest_path = integration_path / "manifest.json"
+        version = "1.0.0"
+        try:
+            with open(manifest_path) as f:
+                manifest = json.load(f)
+                version = manifest.get("version", "1.0.0")
+        except Exception:
+            pass
+        await _async_register_lovelace_resource(hass, version)
+    
+    hass.bus.async_listen_once("homeassistant_started", _register_on_start)
+    
     return True
 
 
@@ -217,12 +233,8 @@ async def _async_install_card(hass: HomeAssistant) -> None:
         if editor_js_source.exists():
             shutil.copy2(editor_js_source, card_dir / "timer-24h-card-editor.js")
         
-        # Register the resource automatically with version for cache busting
-        await _async_register_lovelace_resource(hass, version)
-        
         _LOGGER.info(
-            "Timer 24H Card v%s installed successfully. "
-            "Clear your browser cache (Ctrl+Shift+R) to see updates.",
+            "✅ Timer 24H Card v%s files installed successfully to www/timer-24h-card/",
             version
         )
         
@@ -232,59 +244,65 @@ async def _async_install_card(hass: HomeAssistant) -> None:
 
 async def _async_register_lovelace_resource(hass: HomeAssistant, version: str) -> None:
     """Register the Lovelace resource automatically."""
+    url = f"/local/timer-24h-card/timer-24h-card.js?v={version}"
+    
     try:
-        from homeassistant.components.lovelace import DOMAIN as LOVELACE_DOMAIN
-        from homeassistant.components.lovelace.resources import (
-            ResourceStorageCollection,
-        )
+        # Try to use the lovelace resources API
+        lovelace_resources = hass.data.get("lovelace", {}).get("resources")
         
-        url = f"/local/timer-24h-card/timer-24h-card.js?v={version}"
-        
-        # Get the resource storage collection
-        if LOVELACE_DOMAIN in hass.data:
-            lovelace_config = hass.data[LOVELACE_DOMAIN]
-            
-            # Try to access resources
-            if hasattr(lovelace_config, "get") and "resources" in lovelace_config:
-                resources: ResourceStorageCollection = lovelace_config["resources"]
-                
-                # Check if resource already exists
-                existing_resource = None
-                for item in resources.async_items():
+        if lovelace_resources is not None:
+            # Check if resource already exists
+            existing_resource = None
+            try:
+                for item in lovelace_resources.async_items():
                     if "timer-24h-card" in item.get("url", ""):
                         existing_resource = item
                         break
-                
+            except Exception:
+                pass
+            
+            try:
                 # Update or create resource
                 if existing_resource:
                     # Update existing resource with new version
                     if existing_resource.get("url") != url:
-                        await resources.async_update_item(
+                        await lovelace_resources.async_update_item(
                             existing_resource["id"],
                             {"url": url, "type": "module"}
                         )
-                        _LOGGER.info("Updated Timer 24H Card resource to version %s", version)
+                        _LOGGER.info("✅ Updated Timer 24H Card resource to version %s", version)
+                        return
+                    else:
+                        _LOGGER.info("✅ Timer 24H Card resource already up to date (v%s)", version)
+                        return
                 else:
                     # Create new resource
-                    await resources.async_create_item(
+                    await lovelace_resources.async_create_item(
                         {"url": url, "type": "module"}
                     )
-                    _LOGGER.info("Registered Timer 24H Card resource version %s", version)
-                
-                return
+                    _LOGGER.info("✅ Registered Timer 24H Card resource version %s", version)
+                    return
+            except Exception as create_err:
+                _LOGGER.debug("Could not create/update resource automatically: %s", create_err)
         
-        _LOGGER.info(
-            "Lovelace not fully loaded yet. Resource will be registered on next restart. "
-            "Alternatively, add manually: %s",
+        # If automatic registration didn't work, inform the user
+        _LOGGER.warning(
+            "⚠️ Could not auto-register Lovelace resource. "
+            "Please add manually:\n"
+            "   Settings → Dashboards → Resources → Add Resource\n"
+            "   URL: %s\n"
+            "   Type: JavaScript Module",
             url
         )
         
     except Exception as err:
         _LOGGER.warning(
-            "Could not auto-register Lovelace resource: %s. "
-            "Please add manually to Settings → Dashboards → Resources: "
-            "/local/timer-24h-card/timer-24h-card.js?v=%s",
+            "⚠️ Could not auto-register Lovelace resource (%s). "
+            "Please add manually:\n"
+            "   Settings → Dashboards → Resources → Add Resource\n"
+            "   URL: %s\n"
+            "   Type: JavaScript Module",
             err,
-            version
+            url
         )
 
