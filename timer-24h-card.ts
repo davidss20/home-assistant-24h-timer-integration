@@ -1,6 +1,7 @@
 import {
   LitElement,
   html,
+  svg,
   css,
   CSSResultGroup,
   TemplateResult,
@@ -470,7 +471,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               const yInner = centerY + innerRadius * Math.sin(angle);
               const xOuter = centerX + outerRadius * Math.cos(angle);
               const yOuter = centerY + outerRadius * Math.sin(angle);
-              return html`
+              return svg`
                 <line 
                   x1="${xInner}" 
                   y1="${yInner}" 
@@ -491,7 +492,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               const sectorPath = this.createSectorPath(hour, 24, middleRadius, outerRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
               
-              return html`
+              return svg`
                 <path 
                   d="${sectorPath}" 
                   fill="${isActive ? '#10b981' : '#ffffff'}"
@@ -522,7 +523,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               const sectorPath = this.createSectorPath(hour, 24, innerRadius, middleRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
               
-              return html`
+              return svg`
                 <path 
                   d="${sectorPath}" 
                   fill="${isActive ? '#10b981' : '#f8f9fa'}"

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.3] - 2024-12-05
+
+### Fixed
+- **Critical SVG Rendering Bug** - Fixed sectors not appearing due to incorrect template usage
+- Changed from `html` to `svg` template literals for proper SVG rendering
+- All timer slots now render correctly again
+
+### Technical Details
+- Import `svg` from lit alongside `html`
+- Use `svg` template for all SVG child elements (paths, text, lines)
+- This ensures proper rendering of SVG elements with event handlers
+
 ## [4.7.2] - 2024-12-05
 
 ### Fixed
