@@ -207,7 +207,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     
     // Apply optimistic updates for immediate UI feedback
     const slots = entity.attributes.time_slots.map((slot: TimeSlot) => {
-      const key = `${slot.hour}:${slot.minute}`;
+      const key = `${slot.hour}:${String(slot.minute).padStart(2, '0')}`;
       if (this.optimisticSlots.has(key)) {
         return { ...slot, isActive: this.optimisticSlots.get(key)! };
       }

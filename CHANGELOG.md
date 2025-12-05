@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.6] - 2024-12-05
+
+### Fixed
+- **Critical: Complete Key Format Fix** - Fixed all key format inconsistencies causing buttons to malfunction
+- Outer circle buttons (full hours, minute=0) now work correctly
+- Inner circle buttons (half hours, minute=30) no longer affect random other buttons
+- Standardized key format in BOTH `toggleTimeSlot()` AND `getTimeSlots()` methods
+
+### Technical Details
+- Updated `getTimeSlots()` line 210 to use: `${slot.hour}:${String(slot.minute).padStart(2, '0')}`
+- Now matches `toggleTimeSlot()` key format for consistent state mapping
+- This was the root cause of the button malfunction issue
+
 ## [4.7.5] - 2024-12-05
 
 ### Fixed
