@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.8.1] - 2024-12-05
+
+### Fixed
+- **Immediate UI Feedback Restored** - Added lightweight optimistic toggle system
+- UI now updates instantly when clicking buttons AND syncs correctly with server
+- No more need to refresh to see changes
+- Fixed issue where state only updated after manual refresh
+
+### Technical Details
+- Uses `pendingToggles` Set instead of storing specific states
+- Simply flips the current state for pending slots (toggle logic)
+- Automatically clears when server confirms or after 500ms timeout
+- Much simpler than previous optimistic update system - only tracks "is this slot being toggled?"
+
+### How It Works
+1. Click button → add to pendingToggles → UI flips immediately
+2. Server processes → state updates → clears pendingToggles
+3. If server state doesn't arrive, auto-clear after 500ms
+
+This approach avoids state conflicts because we only store "flip this" not "set to this value"
+
 ## [4.8.0] - 2024-12-05
 
 ### Changed

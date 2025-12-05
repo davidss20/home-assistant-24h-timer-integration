@@ -27,6 +27,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: Timer24HCardConfig;
   @state() private currentTime: Date = new Date();
+  @state() private pendingToggles: Set<string> = new Set();
   
   private updateInterval?: number;
   private clickTimeout?: number;
@@ -108,6 +109,25 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     
     if (changedProps.has('hass') && this.hass) {
       this.updateCurrentTime();
+      
+      // Clear pending toggles when server state updates
+      if (this.config?.entity) {
+        const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
+        const oldEntity = oldHass?.states[this.config.entity];
+        const newEntity = this.hass?.states[this.config.entity];
+        
+        // If time_slots changed, clear all pending toggles
+        if (oldEntity && newEntity) {
+          const oldSlots = JSON.stringify(oldEntity.attributes.time_slots);
+          const newSlots = JSON.stringify(newEntity.attributes.time_slots);
+          
+          if (oldSlots !== newSlots && this.pendingToggles.size > 0) {
+            console.log('🔄 Server state changed, clearing pending toggles');
+            this.pendingToggles.clear();
+            this.requestUpdate();
+          }
+        }
+      }
     }
   }
 
@@ -156,7 +176,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       return slots;
     }
     
-    return entity.attributes.time_slots;
+    // Apply optimistic toggle for pending slots
+    const slots = entity.attributes.time_slots.map((slot: TimeSlot) => {
+      const key = `${slot.hour}:${String(slot.minute).padStart(2, '0')}`;
+      if (this.pendingToggles.has(key)) {
+        // Flip the state for pending toggles
+        return { ...slot, isActive: !slot.isActive };
+      }
+      return slot;
+    });
+    
+    return slots;
   }
 
   private getHomeStatus(): boolean {
@@ -192,8 +222,14 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   private async toggleTimeSlot(hour: number, minute: number): Promise<void> {
     if (!this.hass || !this.config.entity) return;
 
+    const key = `${hour}:${String(minute).padStart(2, '0')}`;
+    
     try {
-      console.log(`🎯 Toggle slot: ${hour}:${String(minute).padStart(2, '0')}`);
+      console.log(`🎯 Toggle slot: ${key}`);
+      
+      // Mark as pending for immediate UI feedback
+      this.pendingToggles.add(key);
+      this.requestUpdate();
       
       // Call service and wait for response
       await this.hass.callService('timer_24h', 'toggle_slot', {
@@ -202,10 +238,20 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         minute: minute,
       });
       
-      console.log(`✅ Service call completed`);
+      console.log(`✅ Service call completed for ${key}`);
+      
+      // Wait a bit for the state to update, then remove pending flag
+      setTimeout(() => {
+        this.pendingToggles.delete(key);
+        this.requestUpdate();
+        console.log(`🧹 Cleared pending flag for ${key}`);
+      }, 500);
       
     } catch (error) {
-      console.error(`❌ Failed to toggle time slot ${hour}:${String(minute).padStart(2, '0')}:`, error);
+      console.error(`❌ Failed to toggle time slot ${key}:`, error);
+      // On error, immediately remove pending flag
+      this.pendingToggles.delete(key);
+      this.requestUpdate();
     }
   }
 
