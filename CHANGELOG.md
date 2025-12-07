@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.0] - 2024-12-07
+
+### Added
+- **Center Circle Indicator** - Visual status indicator in the center of the timer circle
+- Real-time display of controlled entities status
+- Color-coded feedback: Green (all on), Red (all off), Orange (partial), Gray (inactive/no entities)
+- Entity count display showing active vs. total entities
+
+### Features
+- **Green Circle** 🟢 + "ON" - All controlled entities are turned on
+- **Red Circle** 🔴 + "OFF" - All controlled entities are turned off
+- **Orange Circle** 🟠 + "2/5" - Partial activation (shows count)
+- **Gray Circle** ⚪ + "—" - System inactive or no entities configured
+
+### Technical Details
+- Added `getControlledEntitiesStatus()` method to track entity states
+- Center indicator updates in real-time with entity state changes
+- Responsive design with glow effect and drop shadow
+- Shows entity count below status text
+- Integrates seamlessly with existing timer visualization
+
+### User Experience
+- Immediate visual feedback of system status at a glance
+- No need to check individual entities - see overall status instantly
+- Color coding matches common conventions (green=good, red=off, orange=partial)
+
 ## [5.4.0] - 2024-12-07
 
 ### Added

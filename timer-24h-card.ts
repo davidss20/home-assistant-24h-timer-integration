@@ -183,6 +183,33 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return entity.attributes.friendly_name || 'Timer 24H';
   }
 
+  private getControlledEntitiesStatus(): { 
+    total: number; 
+    active: number; 
+    entities: string[];
+  } {
+    const entity = this.getEntityState();
+    if (!entity) {
+      return { total: 0, active: 0, entities: [] };
+    }
+    
+    const controlledEntities = entity.attributes.controlled_entities || [];
+    let activeCount = 0;
+    
+    for (const entityId of controlledEntities) {
+      const entityState = this.hass.states[entityId];
+      if (entityState && entityState.state === 'on') {
+        activeCount++;
+      }
+    }
+    
+    return {
+      total: controlledEntities.length,
+      active: activeCount,
+      entities: controlledEntities
+    };
+  }
+
   private handleSlotClick(event: Event, hour: number, minute: number): void {
     // Stop event propagation to prevent multiple triggers
     event.stopPropagation();
@@ -455,6 +482,86 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               `;
             })}
             
+            <!-- Center indicator for controlled entities -->
+            ${(() => {
+              const status = this.getControlledEntitiesStatus();
+              const homeStatus = this.getHomeStatus();
+              
+              // Determine indicator color and status
+              let indicatorColor = '#9ca3af'; // Gray - default
+              let statusText = '—';
+              
+              if (!homeStatus) {
+                // Inactive - gray
+                indicatorColor = '#9ca3af';
+                statusText = '—';
+              } else if (status.total === 0) {
+                // No entities configured - gray
+                indicatorColor = '#d1d5db';
+                statusText = '—';
+              } else if (status.active === 0) {
+                // All off - red
+                indicatorColor = '#ef4444';
+                statusText = 'OFF';
+              } else if (status.active === status.total) {
+                // All on - green
+                indicatorColor = '#10b981';
+                statusText = 'ON';
+              } else {
+                // Partial - orange/yellow
+                indicatorColor = '#f59e0b';
+                statusText = `${status.active}/${status.total}`;
+              }
+              
+              return svg`
+                <!-- Outer glow circle -->
+                <circle 
+                  cx="${centerX}" 
+                  cy="${centerY}" 
+                  r="35" 
+                  fill="${indicatorColor}"
+                  opacity="0.1">
+                </circle>
+                
+                <!-- Main indicator circle -->
+                <circle 
+                  cx="${centerX}" 
+                  cy="${centerY}" 
+                  r="25" 
+                  fill="${indicatorColor}"
+                  stroke="#ffffff"
+                  stroke-width="3"
+                  style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                </circle>
+                
+                <!-- Status text -->
+                <text 
+                  x="${centerX}" 
+                  y="${centerY + 5}" 
+                  text-anchor="middle" 
+                  font-size="12" 
+                  font-weight="bold"
+                  fill="#ffffff"
+                  style="pointer-events: none; user-select: none;">
+                  ${statusText}
+                </text>
+                
+                <!-- Entity count (small text below) -->
+                ${status.total > 0 ? svg`
+                  <text 
+                    x="${centerX}" 
+                    y="${centerY + 18}" 
+                    text-anchor="middle" 
+                    font-size="7" 
+                    fill="#ffffff"
+                    opacity="0.8"
+                    style="pointer-events: none; user-select: none;">
+                    ${status.total} ${status.total === 1 ? 'entity' : 'entities'}
+                  </text>
+                ` : ''}
+              `;
+            })()}
+            
             <!-- Outer sectors (full hours) -->
             ${Array.from({ length: 24 }, (_, index) => {
               const hour = index;  // Explicitly capture the index value
@@ -655,7 +762,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.4.0 - REAL-TIME RESPONSE  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.5.0 - CENTER INDICATOR  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
