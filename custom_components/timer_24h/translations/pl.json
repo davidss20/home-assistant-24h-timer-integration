@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dodaj Timer 24H",
+        "description": "Skonfiguruj swój 24-godzinny timer z automatyczną kontrolą encji",
+        "data": {
+          "name": "Nazwa Timera",
+          "entities": "Encje do Kontroli",
+          "home_sensors": "Warunki Aktywacji (opcjonalnie)",
+          "home_logic": "Logika Warunków"
+        },
+        "data_description": {
+          "name": "Nadaj timerowi opisową nazwę",
+          "entities": "Wybierz encje, które będą automatycznie kontrolowane przez ten timer",
+          "home_sensors": "Wybierz czujniki/encje określające, kiedy timer powinien się aktywować (np: obecność w domu, tryb Szabatu, tryb wakacyjny, temperatura). Pozostaw puste, aby zawsze aktywować.",
+          "home_logic": "OR: Timer aktywuje się, gdy KTÓRYKOLWIEK warunek jest spełniony. AND: Timer aktywuje się tylko gdy WSZYSTKIE warunki są spełnione."
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Ta nazwa timera jest już skonfigurowana"
+    },
+    "abort": {
+      "already_configured": "Ten timer jest już skonfigurowany"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Konfiguruj Timer 24H",
+        "description": "Zaktualizuj ustawienia i zachowanie timera",
+        "data": {
+          "name": "Nazwa Timera",
+          "entities": "Encje do Kontroli",
+          "home_sensors": "Warunki Aktywacji (opcjonalnie)",
+          "home_logic": "Logika Warunków"
+        },
+        "data_description": {
+          "name": "Nadaj timerowi opisową nazwę",
+          "entities": "Wybierz encje, które będą automatycznie kontrolowane przez ten timer",
+          "home_sensors": "Wybierz czujniki/encje określające, kiedy timer powinien się aktywować (np: obecność w domu, tryb Szabatu, tryb wakacyjny, temperatura). Pozostaw puste, aby zawsze aktywować.",
+          "home_logic": "OR: Timer aktywuje się, gdy KTÓRYKOLWIEK warunek jest spełniony. AND: Timer aktywuje się tylko gdy WSZYSTKIE warunki są spełnione."
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle_slot": {
+      "name": "Przełącz Przedział Czasowy",
+      "description": "Przełącz konkretny przedział czasowy",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja timera do kontroli"
+        },
+        "hour": {
+          "name": "Godzina",
+          "description": "Godzina (0-23)"
+        },
+        "minute": {
+          "name": "Minuta",
+          "description": "Minuta (0 lub 30)"
+        }
+      }
+    },
+    "set_slots": {
+      "name": "Ustaw Przedziały Czasowe",
+      "description": "Ustaw wiele przedziałów czasowych na raz",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja timera do kontroli"
+        },
+        "slots": {
+          "name": "Przedziały",
+          "description": "Lista przedziałów do ustawienia z właściwościami hour, minute i isActive"
+        }
+      }
+    },
+    "clear_all": {
+      "name": "Wyczyść Wszystkie Przedziały",
+      "description": "Wyczyść wszystkie przedziały czasowe",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja timera do kontroli"
+        }
+      }
+    }
+  }
+}
+

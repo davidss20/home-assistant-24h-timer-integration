@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ajouter Minuteur 24H",
+        "description": "Configurez votre minuteur de 24 heures avec contrôle automatique des entités",
+        "data": {
+          "name": "Nom du Minuteur",
+          "entities": "Entités à Contrôler",
+          "home_sensors": "Conditions d'Activation (facultatif)",
+          "home_logic": "Logique des Conditions"
+        },
+        "data_description": {
+          "name": "Donnez un nom descriptif à votre minuteur",
+          "entities": "Sélectionnez les entités qui seront contrôlées automatiquement par ce minuteur",
+          "home_sensors": "Sélectionnez les capteurs/entités qui déterminent quand le minuteur doit s'activer (ex: présence à domicile, mode Shabbat, mode vacances, température). Laissez vide pour toujours activer.",
+          "home_logic": "OR: Le minuteur s'active si N'IMPORTE QUELLE condition est remplie. AND: Le minuteur s'active uniquement si TOUTES les conditions sont remplies."
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Ce nom de minuteur est déjà configuré"
+    },
+    "abort": {
+      "already_configured": "Ce minuteur est déjà configuré"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configurer Minuteur 24H",
+        "description": "Mettre à jour les paramètres et le comportement du minuteur",
+        "data": {
+          "name": "Nom du Minuteur",
+          "entities": "Entités à Contrôler",
+          "home_sensors": "Conditions d'Activation (facultatif)",
+          "home_logic": "Logique des Conditions"
+        },
+        "data_description": {
+          "name": "Donnez un nom descriptif à votre minuteur",
+          "entities": "Sélectionnez les entités qui seront contrôlées automatiquement par ce minuteur",
+          "home_sensors": "Sélectionnez les capteurs/entités qui déterminent quand le minuteur doit s'activer (ex: présence à domicile, mode Shabbat, mode vacances, température). Laissez vide pour toujours activer.",
+          "home_logic": "OR: Le minuteur s'active si N'IMPORTE QUELLE condition est remplie. AND: Le minuteur s'active uniquement si TOUTES les conditions sont remplies."
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle_slot": {
+      "name": "Basculer Créneau Horaire",
+      "description": "Basculer un créneau horaire spécifique",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "L'entité du minuteur à contrôler"
+        },
+        "hour": {
+          "name": "Heure",
+          "description": "Heure (0-23)"
+        },
+        "minute": {
+          "name": "Minute",
+          "description": "Minute (0 ou 30)"
+        }
+      }
+    },
+    "set_slots": {
+      "name": "Définir Créneaux Horaires",
+      "description": "Définir plusieurs créneaux horaires en une fois",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "L'entité du minuteur à contrôler"
+        },
+        "slots": {
+          "name": "Créneaux",
+          "description": "Liste des créneaux à définir avec les propriétés hour, minute et isActive"
+        }
+      }
+    },
+    "clear_all": {
+      "name": "Effacer Tous les Créneaux",
+      "description": "Effacer tous les créneaux horaires",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "L'entité du minuteur à contrôler"
+        }
+      }
+    }
+  }
+}
+

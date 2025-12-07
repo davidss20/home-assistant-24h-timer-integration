@@ -403,7 +403,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           <div class="header">
             <div class="title">${entityName}</div>
             <div class="system-status ${homeStatus ? 'active' : 'inactive'}">
-              ${homeStatus ? 'מופעל' : 'מושבת'}
+              ${homeStatus ? 'Active' : 'Inactive'}
             </div>
           </div>
         ` : ''}
@@ -655,7 +655,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.2.0 - CUSTOM TITLE  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.3.0 - ACTIVATION CONDITIONS  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.3.0] - 2024-12-07
+
+### Changed
+- **Terminology Update: "Home Presence" → "Activation Conditions"**
+- Renamed "Home Presence Sensors" to "Activation Conditions" for more flexibility
+- Renamed "Sensor Logic" to "Condition Logic"
+- Updated all UI text to reflect that conditions can be anything (home presence, Shabbat mode, vacation mode, temperature, etc.)
+- Card status now shows "Active/Inactive" instead of Hebrew text
+- Updated all documentation with clearer examples
+
+### Added
+- **6 New Language Translations**: Spanish (es), French (fr), German (de), Italian (it), Dutch (nl), Polish (pl)
+- Full translation coverage including descriptions and help text
+- Enhanced descriptions explaining activation conditions with examples
+
+### Improved
+- Better understanding that sensors aren't limited to home presence
+- Examples now include: home presence, Shabbat mode, vacation mode, temperature sensors
+- Clearer explanation of OR/AND logic in all languages
+
+### Technical Details
+- Updated `strings.json` with new terminology
+- Updated all translation files (en, he, es, fr, de, it, nl, pl)
+- Updated `coordinator.py` comments and logs
+- Updated `timer-24h-card.ts` status display
+- Updated `README.md` with comprehensive examples
+
+### Migration
+No action needed - this is a terminology change only. All existing configurations continue to work without modification.
+
 ## [5.2.0] - 2024-12-07
 
 ### Added

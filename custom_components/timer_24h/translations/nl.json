@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Timer 24H toevoegen",
+        "description": "Configureer uw 24-uurs timer met automatische entity-besturing",
+        "data": {
+          "name": "Timer Naam",
+          "entities": "Te Besturen Entities",
+          "home_sensors": "Activeringsvoorwaarden (optioneel)",
+          "home_logic": "Voorwaardenlogica"
+        },
+        "data_description": {
+          "name": "Geef uw timer een beschrijvende naam",
+          "entities": "Selecteer entities die automatisch door deze timer worden bestuurd",
+          "home_sensors": "Selecteer sensoren/entities die bepalen wanneer de timer moet activeren (bijv: aanwezigheid thuis, Sabbat-modus, vakantiemodus, temperatuur). Laat leeg om altijd te activeren.",
+          "home_logic": "OR: Timer activeert als ELKE voorwaarde voldaan is. AND: Timer activeert alleen als ALLE voorwaarden voldaan zijn."
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Deze timer naam is al geconfigureerd"
+    },
+    "abort": {
+      "already_configured": "Deze timer is al geconfigureerd"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Timer 24H configureren",
+        "description": "Timer instellingen en gedrag bijwerken",
+        "data": {
+          "name": "Timer Naam",
+          "entities": "Te Besturen Entities",
+          "home_sensors": "Activeringsvoorwaarden (optioneel)",
+          "home_logic": "Voorwaardenlogica"
+        },
+        "data_description": {
+          "name": "Geef uw timer een beschrijvende naam",
+          "entities": "Selecteer entities die automatisch door deze timer worden bestuurd",
+          "home_sensors": "Selecteer sensoren/entities die bepalen wanneer de timer moet activeren (bijv: aanwezigheid thuis, Sabbat-modus, vakantiemodus, temperatuur). Laat leeg om altijd te activeren.",
+          "home_logic": "OR: Timer activeert als ELKE voorwaarde voldaan is. AND: Timer activeert alleen als ALLE voorwaarden voldaan zijn."
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle_slot": {
+      "name": "Tijdslot Schakelen",
+      "description": "Een specifiek tijdslot in- of uitschakelen",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "De timer entity om te besturen"
+        },
+        "hour": {
+          "name": "Uur",
+          "description": "Uur (0-23)"
+        },
+        "minute": {
+          "name": "Minuut",
+          "description": "Minuut (0 of 30)"
+        }
+      }
+    },
+    "set_slots": {
+      "name": "Tijdslots Instellen",
+      "description": "Meerdere tijdslots tegelijk instellen",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "De timer entity om te besturen"
+        },
+        "slots": {
+          "name": "Tijdslots",
+          "description": "Lijst van in te stellen slots met hour, minute en isActive eigenschappen"
+        }
+      }
+    },
+    "clear_all": {
+      "name": "Alle Tijdslots Wissen",
+      "description": "Alle tijdslots wissen",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "De timer entity om te besturen"
+        }
+      }
+    }
+  }
+}
+

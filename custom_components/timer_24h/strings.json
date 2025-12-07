@@ -7,8 +7,8 @@
         "data": {
           "name": "Timer Name",
           "entities": "Entities to Control",
-          "home_sensors": "Home Presence Sensors (optional)",
-          "home_logic": "Sensor Logic"
+          "home_sensors": "Activation Conditions (optional)",
+          "home_logic": "Condition Logic"
         }
       }
     },
@@ -27,8 +27,8 @@
         "data": {
           "name": "Timer Name",
           "entities": "Entities to Control",
-          "home_sensors": "Home Presence Sensors (optional)",
-          "home_logic": "Sensor Logic"
+          "home_sensors": "Activation Conditions (optional)",
+          "home_logic": "Condition Logic"
         }
       }
     }

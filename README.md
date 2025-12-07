@@ -16,14 +16,14 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 ![Timer 24H Preview](https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/images/preview.jpg)
 
-*24-hour circular timer with automatic entity control and home presence detection*
+*24-hour circular timer with automatic entity control and flexible activation conditions*
 
 </div>
 
 ## ✨ Key Features
 
 - **🕐 24-Hour Circular Timer** with half-hour segments
-- **🏠 Home Presence Detection** - entities will only activate when you're home
+- **🎯 Activation Conditions** - control when entities activate based on any sensor/state
 - **🔧 Automatic Entity Control** according to schedule
 - **🎯 Multiple Instances** - create as many timers as you need
 - **💾 Automatic State Persistence** - settings saved automatically
@@ -81,8 +81,8 @@ Use this link to open the repository in HACS and click on Download
 4. Enter the details:
    - **Timer Name** (e.g., "Lighting", "Water Heater")
    - **Select Entities to Control** (lights, switches, fans, etc.)
-   - **Home Presence Sensors** (optional)
-   - **Sensor Logic** (OR/AND)
+   - **Activation Conditions** (optional) - Sensors that determine when timer activates entities
+   - **Condition Logic** (OR/AND)
 5. Click **"Submit"**
 
 Your timer is created! Now you can add the card to your dashboard.
@@ -115,8 +115,8 @@ show_title: true  # Show the timer name at the top
 |----|-----|------|-------|
 | `name` | string | ✅ | Timer name |
 | `entities` | list | ❌ | List of entities to control automatically |
-| `home_sensors` | list | ❌ | Sensors for home presence detection |
-| `home_logic` | string | ❌ | Sensor logic: OR or AND |
+| `home_sensors` | list | ❌ | Activation condition sensors (e.g., home presence, Shabbat mode, vacation) |
+| `home_logic` | string | ❌ | Condition logic: OR or AND |
 
 ### Card Settings
 
@@ -135,7 +135,7 @@ show_title: true  # Show the timer name at the top
 - `cover.*` - Covers and blinds
 - `input_boolean.*` - Virtual switches
 
-### Supported Sensor Types for Presence Detection
+### Supported Sensor Types for Activation Conditions
 
 - `person.*` - People
 - `device_tracker.*` - Device tracking
@@ -149,11 +149,12 @@ show_title: true  # Show the timer name at the top
    - **Outer circle**: Full hours (00:00, 01:00, etc.)
    - **Inner circle**: Half hours (00:30, 01:30, etc.)
 
-2. **🏠 Presence Detection**: The integration checks configured sensors every minute
-   - **OR**: At least one sensor must be active
-   - **AND**: All sensors must be active
+2. **🎯 Activation Conditions**: The integration checks configured sensors every minute
+   - **OR**: At least one condition must be met (active/on/true)
+   - **AND**: All conditions must be met (active/on/true)
+   - Leave empty to always activate entities
 
-3. **🔧 Entity Control**: If you're home and the time is active, entities will turn on automatically
+3. **🔧 Entity Control**: If activation conditions are met and the time is active, entities will turn on automatically
 
 4. **💾 Persistence**: Settings are automatically saved in the integration
 
@@ -162,8 +163,8 @@ show_title: true  # Show the timer name at the top
 - **🟢 Green**: Active segments
 - **⚪ Gray**: Inactive segments
 - **🔵 Blue**: Current segment (blue border)
-- **🟢 Green**: System active status (at home)
-- **🟡 Yellow**: System inactive status (away from home)
+- **🟢 Green**: System active (conditions met)
+- **🟡 Yellow**: System inactive (conditions not met)
 
 ## 🔧 Services
 
@@ -222,15 +223,22 @@ data:
 # Entities: light.living_room, light.kitchen
 ```
 
-### Advanced Timer with Presence Detection
+### Advanced Timer with Activation Conditions
 
 ```yaml
 # Add via UI:
 # Settings → Integrations → Add Integration → Timer 24H
 # Name: "Smart Home System"
 # Entities: light.all_lights, switch.water_heater, climate.living_room
-# Home Sensors: person.john, person.jane, binary_sensor.motion_entrance
-# Logic: OR
+# Activation Conditions: person.john, person.jane, binary_sensor.shabbat_mode
+# Condition Logic: OR
+#
+# Examples of conditions:
+# - Home presence: person.*, device_tracker.*
+# - Shabbat mode: binary_sensor.shabbat_mode, input_boolean.jewish_calendar
+# - Vacation mode: input_boolean.vacation_mode
+# - Temperature: binary_sensor.cold_weather
+# - Any sensor/input_boolean that returns on/off, true/false, home/away
 ```
 
 ### Automation with Timer
@@ -312,7 +320,7 @@ The integration includes full Hebrew support:
 
 1. Verify entities exist and are available
 2. Check that sensors return correct values
-3. Ensure you're "at home" according to sensors
+3. Ensure activation conditions are met according to configured sensors
 4. Check Home Assistant logs
 
 ## 🆘 Support

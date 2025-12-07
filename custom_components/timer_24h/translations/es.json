@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Agregar Temporizador 24H",
+        "description": "Configura tu temporizador de 24 horas con control automático de entidades",
+        "data": {
+          "name": "Nombre del Temporizador",
+          "entities": "Entidades a Controlar",
+          "home_sensors": "Condiciones de Activación (opcional)",
+          "home_logic": "Lógica de Condiciones"
+        },
+        "data_description": {
+          "name": "Dale a tu temporizador un nombre descriptivo",
+          "entities": "Selecciona entidades que serán controladas automáticamente por este temporizador",
+          "home_sensors": "Selecciona sensores/entidades que determinan cuándo se debe activar el temporizador (ej: presencia en casa, modo Shabat, modo vacaciones, temperatura). Deja vacío para activar siempre.",
+          "home_logic": "OR: El temporizador se activa si SE CUMPLE CUALQUIER condición. AND: El temporizador se activa solo si SE CUMPLEN TODAS las condiciones."
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Este nombre de temporizador ya está configurado"
+    },
+    "abort": {
+      "already_configured": "Este temporizador ya está configurado"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configurar Temporizador 24H",
+        "description": "Actualizar configuración y comportamiento del temporizador",
+        "data": {
+          "name": "Nombre del Temporizador",
+          "entities": "Entidades a Controlar",
+          "home_sensors": "Condiciones de Activación (opcional)",
+          "home_logic": "Lógica de Condiciones"
+        },
+        "data_description": {
+          "name": "Dale a tu temporizador un nombre descriptivo",
+          "entities": "Selecciona entidades que serán controladas automáticamente por este temporizador",
+          "home_sensors": "Selecciona sensores/entidades que determinan cuándo se debe activar el temporizador (ej: presencia en casa, modo Shabat, modo vacaciones, temperatura). Deja vacío para activar siempre.",
+          "home_logic": "OR: El temporizador se activa si SE CUMPLE CUALQUIER condición. AND: El temporizador se activa solo si SE CUMPLEN TODAS las condiciones."
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle_slot": {
+      "name": "Alternar Intervalo de Tiempo",
+      "description": "Alternar un intervalo de tiempo específico",
+      "fields": {
+        "entity_id": {
+          "name": "Entidad",
+          "description": "La entidad del temporizador a controlar"
+        },
+        "hour": {
+          "name": "Hora",
+          "description": "Hora (0-23)"
+        },
+        "minute": {
+          "name": "Minuto",
+          "description": "Minuto (0 o 30)"
+        }
+      }
+    },
+    "set_slots": {
+      "name": "Establecer Intervalos de Tiempo",
+      "description": "Establecer múltiples intervalos de tiempo a la vez",
+      "fields": {
+        "entity_id": {
+          "name": "Entidad",
+          "description": "La entidad del temporizador a controlar"
+        },
+        "slots": {
+          "name": "Intervalos",
+          "description": "Lista de intervalos a establecer con propiedades de hora, minuto e isActive"
+        }
+      }
+    },
+    "clear_all": {
+      "name": "Limpiar Todos los Intervalos",
+      "description": "Limpiar todos los intervalos de tiempo",
+      "fields": {
+        "entity_id": {
+          "name": "Entidad",
+          "description": "La entidad del temporizador a controlar"
+        }
+      }
+    }
+  }
+}
+

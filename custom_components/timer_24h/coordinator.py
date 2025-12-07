@@ -97,22 +97,22 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error communicating with API: {err}")
 
     def _check_home_status(self) -> None:
-        """Check if we are at home based on sensors."""
-        home_sensors = self.config_entry.options.get(CONF_HOME_SENSORS, [])
+        """Check activation conditions based on configured sensors."""
+        condition_sensors = self.config_entry.options.get(CONF_HOME_SENSORS, [])
         
-        if not home_sensors:
+        if not condition_sensors:
             self._home_status = True
             return
 
         logic = self.config_entry.options.get(CONF_HOME_LOGIC, DEFAULT_HOME_LOGIC)
         system_status = logic == "AND"
 
-        for sensor_id in home_sensors:
+        for sensor_id in condition_sensors:
             sensor = self.hass.states.get(sensor_id)
             if not sensor:
                 continue
 
-            # Check if sensor indicates "home" or "active"
+            # Check if sensor/condition is active/true
             is_true = sensor.state.lower() in ["on", "home", "true", "1", "yes"]
 
             if logic == "OR":
@@ -127,9 +127,9 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self._home_status = system_status
 
     async def _control_entities(self) -> None:
-        """Control entities based on time slots and home status."""
+        """Control entities based on time slots and activation conditions."""
         if not self._home_status:
-            _LOGGER.debug("Not at home, skipping entity control")
+            _LOGGER.debug("Activation conditions not met, skipping entity control")
             return
 
         entities = self.config_entry.options.get(CONF_ENTITIES, [])

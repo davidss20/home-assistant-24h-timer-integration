@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Aggiungi Timer 24H",
+        "description": "Configura il tuo timer di 24 ore con controllo automatico delle entità",
+        "data": {
+          "name": "Nome Timer",
+          "entities": "Entità da Controllare",
+          "home_sensors": "Condizioni di Attivazione (opzionale)",
+          "home_logic": "Logica delle Condizioni"
+        },
+        "data_description": {
+          "name": "Dai un nome descrittivo al tuo timer",
+          "entities": "Seleziona le entità che saranno controllate automaticamente da questo timer",
+          "home_sensors": "Seleziona sensori/entità che determinano quando il timer deve attivarsi (es: presenza in casa, modalità Shabbat, modalità vacanza, temperatura). Lascia vuoto per attivare sempre.",
+          "home_logic": "OR: Il timer si attiva se QUALSIASI condizione è soddisfatta. AND: Il timer si attiva solo se TUTTE le condizioni sono soddisfatte."
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Questo nome del timer è già configurato"
+    },
+    "abort": {
+      "already_configured": "Questo timer è già configurato"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configura Timer 24H",
+        "description": "Aggiorna impostazioni e comportamento del timer",
+        "data": {
+          "name": "Nome Timer",
+          "entities": "Entità da Controllare",
+          "home_sensors": "Condizioni di Attivazione (opzionale)",
+          "home_logic": "Logica delle Condizioni"
+        },
+        "data_description": {
+          "name": "Dai un nome descrittivo al tuo timer",
+          "entities": "Seleziona le entità che saranno controllate automaticamente da questo timer",
+          "home_sensors": "Seleziona sensori/entità che determinano quando il timer deve attivarsi (es: presenza in casa, modalità Shabbat, modalità vacanza, temperatura). Lascia vuoto per attivare sempre.",
+          "home_logic": "OR: Il timer si attiva se QUALSIASI condizione è soddisfatta. AND: Il timer si attiva solo se TUTTE le condizioni sono soddisfatte."
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle_slot": {
+      "name": "Commuta Fascia Oraria",
+      "description": "Commuta una fascia oraria specifica",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "L'entità del timer da controllare"
+        },
+        "hour": {
+          "name": "Ora",
+          "description": "Ora (0-23)"
+        },
+        "minute": {
+          "name": "Minuto",
+          "description": "Minuto (0 o 30)"
+        }
+      }
+    },
+    "set_slots": {
+      "name": "Imposta Fasce Orarie",
+      "description": "Imposta più fasce orarie contemporaneamente",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "L'entità del timer da controllare"
+        },
+        "slots": {
+          "name": "Fasce",
+          "description": "Elenco di fasce da impostare con proprietà hour, minute e isActive"
+        }
+      }
+    },
+    "clear_all": {
+      "name": "Cancella Tutte le Fasce",
+      "description": "Cancella tutte le fasce orarie",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "L'entità del timer da controllare"
+        }
+      }
+    }
+  }
+}
+

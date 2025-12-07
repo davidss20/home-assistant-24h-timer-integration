@@ -3,12 +3,18 @@
     "step": {
       "user": {
         "title": "Add Timer 24H",
-        "description": "Configure your 24-hour timer",
+        "description": "Configure your 24-hour timer with automatic entity control",
         "data": {
           "name": "Timer Name",
           "entities": "Entities to Control",
-          "home_sensors": "Home Presence Sensors (optional)",
-          "home_logic": "Sensor Logic"
+          "home_sensors": "Activation Conditions (optional)",
+          "home_logic": "Condition Logic"
+        },
+        "data_description": {
+          "name": "Give your timer a descriptive name",
+          "entities": "Select entities that will be automatically controlled by this timer",
+          "home_sensors": "Select sensors/entities that determine when timer should activate (e.g., home presence, Shabbat mode, vacation mode, temperature). Leave empty to always activate.",
+          "home_logic": "OR: Timer activates if ANY condition is met. AND: Timer activates only if ALL conditions are met."
         }
       }
     },
@@ -23,12 +29,18 @@
     "step": {
       "init": {
         "title": "Configure Timer 24H",
-        "description": "Update timer settings",
+        "description": "Update timer settings and behavior",
         "data": {
           "name": "Timer Name",
           "entities": "Entities to Control",
-          "home_sensors": "Home Presence Sensors (optional)",
-          "home_logic": "Sensor Logic"
+          "home_sensors": "Activation Conditions (optional)",
+          "home_logic": "Condition Logic"
+        },
+        "data_description": {
+          "name": "Give your timer a descriptive name",
+          "entities": "Select entities that will be automatically controlled by this timer",
+          "home_sensors": "Select sensors/entities that determine when timer should activate (e.g., home presence, Shabbat mode, vacation mode, temperature). Leave empty to always activate.",
+          "home_logic": "OR: Timer activates if ANY condition is met. AND: Timer activates only if ALL conditions are met."
         }
       }
     }
@@ -62,7 +74,7 @@
         },
         "slots": {
           "name": "Slots",
-          "description": "List of slots to set"
+          "description": "List of slots to set with hour, minute, and isActive properties"
         }
       }
     },
@@ -78,4 +90,3 @@
     }
   }
 }
-

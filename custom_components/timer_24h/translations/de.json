@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Timer 24H hinzufügen",
+        "description": "Konfigurieren Sie Ihren 24-Stunden-Timer mit automatischer Entitätssteuerung",
+        "data": {
+          "name": "Timer-Name",
+          "entities": "Zu steuernde Entitäten",
+          "home_sensors": "Aktivierungsbedingungen (optional)",
+          "home_logic": "Bedingungslogik"
+        },
+        "data_description": {
+          "name": "Geben Sie Ihrem Timer einen beschreibenden Namen",
+          "entities": "Wählen Sie Entitäten aus, die automatisch von diesem Timer gesteuert werden",
+          "home_sensors": "Wählen Sie Sensoren/Entitäten aus, die bestimmen, wann der Timer aktiviert werden soll (z.B.: Anwesenheit zu Hause, Sabbat-Modus, Urlaubsmodus, Temperatur). Leer lassen, um immer zu aktivieren.",
+          "home_logic": "OR: Timer aktiviert sich, wenn IRGENDEINE Bedingung erfüllt ist. AND: Timer aktiviert sich nur, wenn ALLE Bedingungen erfüllt sind."
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Dieser Timer-Name ist bereits konfiguriert"
+    },
+    "abort": {
+      "already_configured": "Dieser Timer ist bereits konfiguriert"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Timer 24H konfigurieren",
+        "description": "Timer-Einstellungen und Verhalten aktualisieren",
+        "data": {
+          "name": "Timer-Name",
+          "entities": "Zu steuernde Entitäten",
+          "home_sensors": "Aktivierungsbedingungen (optional)",
+          "home_logic": "Bedingungslogik"
+        },
+        "data_description": {
+          "name": "Geben Sie Ihrem Timer einen beschreibenden Namen",
+          "entities": "Wählen Sie Entitäten aus, die automatisch von diesem Timer gesteuert werden",
+          "home_sensors": "Wählen Sie Sensoren/Entitäten aus, die bestimmen, wann der Timer aktiviert werden soll (z.B.: Anwesenheit zu Hause, Sabbat-Modus, Urlaubsmodus, Temperatur). Leer lassen, um immer zu aktivieren.",
+          "home_logic": "OR: Timer aktiviert sich, wenn IRGENDEINE Bedingung erfüllt ist. AND: Timer aktiviert sich nur, wenn ALLE Bedingungen erfüllt sind."
+        }
+      }
+    }
+  },
+  "services": {
+    "toggle_slot": {
+      "name": "Zeitslot umschalten",
+      "description": "Einen bestimmten Zeitslot ein- oder ausschalten",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Die zu steuernde Timer-Entität"
+        },
+        "hour": {
+          "name": "Stunde",
+          "description": "Stunde (0-23)"
+        },
+        "minute": {
+          "name": "Minute",
+          "description": "Minute (0 oder 30)"
+        }
+      }
+    },
+    "set_slots": {
+      "name": "Zeitslots festlegen",
+      "description": "Mehrere Zeitslots auf einmal festlegen",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Die zu steuernde Timer-Entität"
+        },
+        "slots": {
+          "name": "Zeitslots",
+          "description": "Liste der festzulegenden Slots mit hour, minute und isActive Eigenschaften"
+        }
+      }
+    },
+    "clear_all": {
+      "name": "Alle Zeitslots löschen",
+      "description": "Alle Zeitslots löschen",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Die zu steuernde Timer-Entität"
+        }
+      }
+    }
+  }
+}
+
