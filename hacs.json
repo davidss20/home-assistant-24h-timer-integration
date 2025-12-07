@@ -4,10 +4,10 @@
   "content_in_root": false,
   "hacs": "1.6.0",
   "domains": ["timer_24h"],
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "homeassistant": "2024.1.0",
   "zip_release": false,
   "persistent_directory": false,
   "filename": "timer_24h",
-  "logo": "icon.png"
+  "country": ["IL"]
 } 
