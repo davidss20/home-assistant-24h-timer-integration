@@ -103,6 +103,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         console.log('🔄 Time slots changed, updating card');
         return true;
       }
+      
+      // Check if controlled entities states have changed
+      const controlledEntities = newState?.attributes.controlled_entities || [];
+      for (const entityId of controlledEntities) {
+        const oldEntityState = oldHass.states[entityId];
+        const newEntityState = this.hass.states[entityId];
+        if (oldEntityState?.state !== newEntityState?.state) {
+          console.log('🔄 Controlled entity state changed:', entityId);
+          return true;
+        }
+      }
     }
     
     return changedProps.has('currentTime');
@@ -514,24 +525,12 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               }
               
               return svg`
-                <!-- Outer glow circle -->
+                <!-- Full inner circle indicator -->
                 <circle 
                   cx="${centerX}" 
                   cy="${centerY}" 
-                  r="35" 
-                  fill="${indicatorColor}"
-                  opacity="0.1">
-                </circle>
-                
-                <!-- Main indicator circle -->
-                <circle 
-                  cx="${centerX}" 
-                  cy="${centerY}" 
-                  r="25" 
-                  fill="${indicatorColor}"
-                  stroke="#ffffff"
-                  stroke-width="3"
-                  style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                  r="${innerRadius}" 
+                  fill="${indicatorColor}">
                 </circle>
                 
                 <!-- Status text -->
@@ -539,7 +538,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                   x="${centerX}" 
                   y="${centerY + 5}" 
                   text-anchor="middle" 
-                  font-size="12" 
+                  font-size="14" 
                   font-weight="bold"
                   fill="#ffffff"
                   style="pointer-events: none; user-select: none;">
@@ -550,11 +549,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 ${status.total > 0 ? svg`
                   <text 
                     x="${centerX}" 
-                    y="${centerY + 18}" 
+                    y="${centerY + 20}" 
                     text-anchor="middle" 
-                    font-size="7" 
+                    font-size="8" 
                     fill="#ffffff"
-                    opacity="0.8"
+                    opacity="0.9"
                     style="pointer-events: none; user-select: none;">
                     ${status.total} ${status.total === 1 ? 'entity' : 'entities'}
                   </text>
@@ -762,7 +761,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.5.0 - CENTER INDICATOR  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.5.1 - IMPROVED CENTER INDICATOR  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

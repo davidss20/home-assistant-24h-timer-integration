@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.1] - 2024-12-07
+
+### Fixed
+- **Improved Center Indicator** - Now fills the entire inner circle instead of small circle
+- **Real-time Updates** - Indicator updates immediately when controlled entity states change
+- Removed glow effect and animations for cleaner look
+- Increased text size for better readability
+
+### Changed
+- Center indicator now uses full inner circle (radius 50px) for better visibility
+- Added state change tracking for controlled entities in `shouldUpdate()`
+- Instant visual feedback when any controlled entity changes state
+- Simplified design - solid color fill without extra effects
+
+### Technical Details
+- `shouldUpdate()` now monitors all controlled entities for state changes
+- Console log added when controlled entity state changes for debugging
+- Text size increased from 12px to 14px for main status
+- Entity count text increased from 7px to 8px
+- Removed glow circle and drop shadow for simpler appearance
+
 ## [5.5.0] - 2024-12-07
 
 ### Added

@@ -54,7 +54,7 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             "name": self._attr_name,
             "manufacturer": "Timer 24H",
             "model": "24 Hour Timer",
-            "sw_version": "5.5.0",
+            "sw_version": "5.5.1",
         }
 
     @property
