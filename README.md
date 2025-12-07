@@ -35,6 +35,8 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 ### Via HACS (Recommended)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=davidss20&repository=home-assistant-24h-timer-integration&category=integration)
+
 1. Open HACS in Home Assistant
 2. Click on "Integrations"
 3. Click the "+" button in the bottom right corner
