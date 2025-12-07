@@ -42,7 +42,7 @@ Perfect for:
 1. Unique Visual Interface: Provides an intuitive circular 24-hour timer that's easy to use
 2. Solves Common Need: Time-based automation is one of the most requested features
 3. Well Documented: Comprehensive README with examples in multiple languages
-4. Active Development: Regular updates with detailed changelog (currently v5.8.0)
+4. Active Development: Regular updates with detailed changelog (currently v1.0.0)
 5. Quality Code: Follows HA best practices, includes validation workflow
 6. Multi-Language: Supports 8 languages with RTL support
 7. Complete Solution: Includes both backend integration and frontend card
@@ -53,7 +53,7 @@ Perfect for:
 
 **Additional information:**
 ```
-- Latest version: 5.8.0
+- Latest version: 1.0.0
 - Minimum Home Assistant version: 2024.1.0
 - Minimum HACS version: 1.6.0
 - IoT Class: local_push (event-driven, no polling)
@@ -81,7 +81,7 @@ https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/image
 - [x] Repository is public
 - [x] Repository has a valid LICENSE file (MIT)
 - [x] Repository has a README.md with documentation
-- [x] Repository has releases (create v5.8.0 before submitting!)
+- [x] Repository has releases (create v1.0.0 before submitting!)
 - [x] Integration has a manifest.json
 - [x] Integration has a hacs.json
 - [x] Integration has proper structure in custom_components/
@@ -96,11 +96,15 @@ https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/image
 ## Quick Links for Submission
 
 1. **Create Release First**: https://github.com/davidss20/home-assistant-24h-timer-integration/releases/new
-   - Tag: `v5.8.0`
-   - Title: `v5.8.0 - Complete Rewrite of Resource Registration`
+   - Tag: `v1.0.0`
+   - Title: `v1.0.0 - First Official HACS Release`
    - Description: Copy from CHANGELOG.md
 
 2. **Submit to HACS**: https://github.com/hacs/default/issues/new?template=integration.yml
 
 3. **Wait for Response**: Usually 1-4 weeks
+
+---
+
+**Note**: Version 1.0.0 marks the first official HACS release. Previous versions (4.x-5.x) were development versions.
 

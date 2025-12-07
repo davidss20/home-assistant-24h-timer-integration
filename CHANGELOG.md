@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2024-12-07
+
+### 🎉 First Official HACS Release
+
+This is the first official release of Timer 24H Integration for HACS Default Repository!
+
+**What is Timer 24H?**
+A powerful 24-hour visual timer with automatic entity control for Home Assistant. Features a beautiful circular timer interface with half-hour precision, smart activation conditions, and real-time entity control.
+
+**Perfect for:**
+- Water heater scheduling
+- Smart lighting automation
+- Garden irrigation timers
+- HVAC time-based control
+- Any time-based home automation
+
+### ✨ Key Features
+
+- **🕐 24-Hour Circular Timer** with half-hour precision
+- **🎯 Smart Activation Conditions** - Control when entities activate based on any sensor
+- **🔧 Automatic Entity Control** - Lights, switches, fans, climate, covers, groups
+- **⚡ Event-Driven Architecture** - Instant response, no polling delays
+- **📊 Real-Time Status Indicators** - Visual feedback of system and entity status
+- **🌍 Multi-Language Support** - 8 languages (EN, HE, ES, FR, DE, IT, NL, PL)
+- **🎨 Beautiful UI** - Modern Lovelace card with RTL support
+- **💾 Automatic State Persistence** - Settings saved automatically
+- **🔄 Multiple Instances** - Create as many timers as you need
+- **✅ Easy Setup** - Config flow, no YAML required
+- **🚀 Auto-Install Card** - Lovelace card installs automatically with cache busting
+
+### 🔧 Technical Highlights
+
+- **Config Flow** - User-friendly configuration interface
+- **IoT Class: local_push** - Event-driven, not polling
+- **Resource Registration** - Automatic Lovelace card installation
+- **Cache Busting** - Version-based URL parameters prevent browser caching
+- **State Listeners** - Instant response to condition changes
+- **Integration Type: device** - Proper Home Assistant device integration
+
+### 📚 Documentation
+
+- Full documentation in README.md
+- 8-language translations
+- Comprehensive examples
+- Troubleshooting guide
+
+### 🙏 Acknowledgments
+
+Thanks to all early users and contributors for testing and feedback during development!
+
+---
+
+## Previous Development Versions
+
+The following versions were part of the development process before the official HACS release:
+
 ## [5.8.0] - 2024-12-07
 
 ### Fixed
