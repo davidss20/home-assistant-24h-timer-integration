@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.6.0] - 2024-12-07
+
+### Added
+- **Automatic Localization** - Card now automatically detects Home Assistant language and displays in the correct language
+- Full Hebrew translation support
+- Dynamic language switching based on HA interface language
+- No configuration needed - works automatically!
+
+### Languages Supported
+- ✅ **English (en)** - Default language
+- ✅ **Hebrew (he)** - עברית מלאה
+
+### Translated Strings
+- Status indicators: Active/Inactive → פעיל/לא פעיל
+- Entity status: ON/OFF → דלוק/כבוי
+- Entity counters: entity/entities → ישות/ישויות
+- Warning messages: Fully translated to Hebrew
+- Error messages: Configuration errors in Hebrew
+
+### Technical Details
+- Added `localize(key: string)` method to card
+- Detects language from `hass.language` or `hass.locale.language`
+- Falls back to English if language not found
+- All UI strings now use localization function
+- RTL support already built-in via CSS
+
+### User Experience
+**Before:** Card always displayed in English regardless of HA language
+**After:** Card automatically displays in your Home Assistant interface language
+
+**Hebrew Interface:** הכרטיס מוצג בעברית באופן אוטומטי
+**English Interface:** Card displays in English automatically
+
 ## [5.5.3] - 2024-12-07
 
 ### Fixed

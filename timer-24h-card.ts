@@ -221,6 +221,35 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     };
   }
 
+  private localize(key: string): string {
+    const lang = this.hass?.language || this.hass?.locale?.language || 'en';
+    
+    const translations: Record<string, Record<string, string>> = {
+      en: {
+        active: 'Active',
+        inactive: 'Inactive',
+        on: 'ON',
+        off: 'OFF',
+        entity: 'entity',
+        entities: 'entities',
+        configure_entity: 'Please configure the timer entity in card settings',
+        entity_not_found: 'Entity not found. Please check your configuration.',
+      },
+      he: {
+        active: 'פעיל',
+        inactive: 'לא פעיל',
+        on: 'דלוק',
+        off: 'כבוי',
+        entity: 'ישות',
+        entities: 'ישויות',
+        configure_entity: 'אנא הגדר את ישות הטיימר בהגדרות הכרטיס',
+        entity_not_found: 'הישות לא נמצאה. אנא בדוק את ההגדרות.',
+      },
+    };
+    
+    return translations[lang]?.[key] || translations['en'][key] || key;
+  }
+
   private handleSlotClick(event: Event, hour: number, minute: number): void {
     // Stop event propagation to prevent multiple triggers
     event.stopPropagation();
@@ -408,7 +437,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       return html`
         <ha-card>
           <div class="warning">
-            Please configure the timer entity in card settings
+            ${this.localize('configure_entity')}
           </div>
         </ha-card>
       `;
@@ -419,7 +448,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       return html`
         <ha-card>
           <div class="warning">
-            Entity "${this.config.entity}" not found. Please check your configuration.
+            ${this.localize('entity_not_found')} (${this.config.entity})
           </div>
         </ha-card>
       `;
@@ -441,7 +470,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           <div class="header">
             <div class="title">${entityName}</div>
             <div class="system-status ${homeStatus ? 'active' : 'inactive'}">
-              ${homeStatus ? 'Active' : 'Inactive'}
+              ${homeStatus ? this.localize('active') : this.localize('inactive')}
             </div>
           </div>
         ` : ''}
@@ -513,11 +542,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               } else if (status.active === 0) {
                 // All off - red
                 indicatorColor = '#ef4444';
-                statusText = 'OFF';
+                statusText = this.localize('off');
               } else if (status.active === status.total) {
                 // All on - green
                 indicatorColor = '#10b981';
-                statusText = 'ON';
+                statusText = this.localize('on');
               } else {
                 // Partial - orange/yellow
                 indicatorColor = '#f59e0b';
@@ -555,7 +584,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                     fill="#ffffff"
                     opacity="0.9"
                     style="pointer-events: none; user-select: none;">
-                    ${status.total} ${status.total === 1 ? 'entity' : 'entities'}
+                    ${status.total} ${status.total === 1 ? this.localize('entity') : this.localize('entities')}
                   </text>
                 ` : ''}
               `;
@@ -761,7 +790,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.5.2 - GROUP SUPPORT  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.6.0 - AUTOMATIC LOCALIZATION  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
