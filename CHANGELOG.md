@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.3] - 2024-12-07
+
+### Fixed
+- **Automatic Lovelace Resource Registration** - Fixed critical issue where resource wasn't registered automatically
+- Resource now registers with retry mechanism (3 attempts with 5-second delays)
+- Works correctly when integration is installed after Home Assistant has started
+- No more manual resource addition required in most cases!
+
+### Technical Details
+- Added asyncio import for proper async task handling
+- Modified `async_setup_entry` to register resource with retry mechanism
+- Changed `_async_register_lovelace_resource` to return success/failure status
+- Function now accepts `attempt` parameter for retry tracking
+- Lovelace resources API availability checked before registration
+- Detailed debug logging for troubleshooting registration issues
+
+### What Changed
+**Before:** Users had to manually add the Lovelace resource every time
+**After:** Resource registers automatically in background with smart retry logic
+
+**Registration Flow:**
+1. Integration loaded → starts background task
+2. Waits for Lovelace to be ready
+3. Tries up to 3 times (5 seconds between attempts)
+4. Logs success or instructs user if all attempts fail
+
+### User Experience
+- ✅ Install integration → resource registered automatically
+- ✅ Update integration → resource updated automatically  
+- ✅ No manual steps needed in most cases
+- ⚠️ If automatic registration fails after 3 attempts, check logs for instructions
+
 ## [5.5.2] - 2024-12-07
 
 ### Added
