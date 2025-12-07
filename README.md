@@ -45,26 +45,31 @@ Use this link to open the repository in HACS and click on Download
 4. Search for "Timer 24H Integration"
 5. Click "Install"
 6. **Restart Home Assistant**
-7. **Add the Lovelace Resource** (one-time setup):
-   - Go to: `Settings → Dashboards → Resources`
-   - Click: `+ Add Resource`
-   - **URL**: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
-   - **Type**: `JavaScript Module`
-   - Click: `Create`
+7. **Add the Integration** (Settings → Devices & Services → Add Integration → Timer 24H)
 
-**✨ That's it!** Future updates will work automatically thanks to cache busting!
+**✨ That's it!** The Lovelace resource is registered **automatically**!
+
+> **Note:** In rare cases, if the automatic registration fails, you'll see a warning in the logs.
+> If this happens, manually add the resource:
+> - Go to: `Settings → Dashboards → Resources`
+> - Click: `+ Add Resource`
+> - **URL**: `/local/timer-24h-card/timer-24h-card.js` (version is added automatically)
+> - **Type**: `JavaScript Module`
+> - Click: `Create`
 
 ### Manual Installation
 
 1. Download the latest release from [GitHub Releases](https://github.com/davidss20/home-assistant-24h-timer-integration/releases)
 2. Extract the `custom_components/timer_24h` folder into your `config/custom_components/` directory
 3. **Restart Home Assistant**
-4. **Add the Lovelace Resource** (one-time setup):
-   - Go to: `Settings → Dashboards → Resources`
-   - Click: `+ Add Resource`
-   - **URL**: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
-   - **Type**: `JavaScript Module`
-   - Click: `Create`
+4. **Add the Integration** (Settings → Devices & Services → Add Integration → Timer 24H)
+
+**✨ The Lovelace resource is registered automatically!**
+
+> **Note:** If automatic registration fails (check logs), manually add:
+> `Settings → Dashboards → Resources → Add Resource`
+> - **URL**: `/local/timer-24h-card/timer-24h-card.js`
+> - **Type**: `JavaScript Module`
 
 **✨ The integration automatically:**
 - Copies card files to `www/timer-24h-card/`
@@ -278,18 +283,24 @@ The integration includes full Hebrew support:
 
 ### Card Not Appearing
 
-**Did you add the Lovelace resource?** This is a **one-time setup** required:
+**The resource should register automatically!** Check your Home Assistant logs first.
 
+**Automatic Registration Status:**
+1. Check logs: `Settings → System → Logs`
+2. Look for: `✅ Timer 24H Card resource registered successfully`
+3. If you see: `⚠️ Timer 24H Card resource could not be registered automatically`
+
+**Manual Registration (if automatic fails):**
 1. Go to: `Settings → Dashboards → Resources`
 2. Click: `+ Add Resource`
-3. **URL**: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
+3. **URL**: `/local/timer-24h-card/timer-24h-card.js`
 4. **Type**: `JavaScript Module`
 5. Click: `Create`
 6. Refresh browser: `Ctrl + Shift + R`
 
 **To verify:**
 - Go to: `Settings → Dashboards → Resources`
-- You should see: `/local/timer-24h-card/timer-24h-card.js?v=4.7.0`
+- You should see: `/local/timer-24h-card/timer-24h-card.js` (with version parameter)
 
 ### Card Not Updating After Integration Update
 

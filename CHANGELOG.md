@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.0] - 2024-12-07
+
+### Fixed
+- **Enhanced Automatic Resource Registration** - Improved resource registration with multiple fallback methods
+  - Added 3-tier registration strategy: API → Service → Direct storage file
+  - Increased retry attempts from 3 to 5 with adaptive delays (0, 2, 5, 10, 15 seconds)
+  - Added direct manipulation of `.storage/lovelace_resources` file as last resort
+  - More detailed logging for troubleshooting registration issues
+  - Better error messages with clear manual instructions if auto-registration fails
+  - Should now work reliably in all installation scenarios
+
+### Technical Details
+- Method 1: Lovelace Resources API (preferred method)
+- Method 2: Frontend service reload (fallback)
+- Method 3: Direct `.storage/lovelace_resources` file manipulation (last resort)
+- Each method attempts to both create new resources and update existing ones
+- Automatic version detection from `manifest.json`
+
 ## [5.6.0] - 2024-12-07
 
 ### Added
