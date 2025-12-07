@@ -1,12 +1,10 @@
 """The Timer 24H integration."""
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import os
 import shutil
-import uuid
 from pathlib import Path
 
 import voluptuous as vol
@@ -14,6 +12,8 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.lovelace.resources import ResourceStorageCollection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import entity_registry as er
 
@@ -33,6 +33,45 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
+async def init_lovelace_resource(hass: HomeAssistant, url: str, version: str) -> bool:
+    """Add/update lovelace resource with proper version handling.
+    
+    Based on the approach used by ha-simple-timer integration.
+    """
+    try:
+        resources: ResourceStorageCollection = hass.data["lovelace"].resources
+        # Force load storage - THIS IS THE KEY!
+        await resources.async_get_info()
+        
+        url_with_version = f"{url}?v={version}"
+        
+        # Check if resource already exists
+        for item in resources.async_items():
+            if not item.get("url", "").startswith(url):
+                continue
+            
+            # Already has correct version
+            if item["url"].endswith(version):
+                _LOGGER.info("✅ Timer 24H resource already at version %s", version)
+                return False
+            
+            # Update to new version
+            _LOGGER.info("🔄 Updating Timer 24H resource from %s to %s", item["url"], url_with_version)
+            await resources.async_update_item(
+                item["id"], {"res_type": "module", "url": url_with_version}
+            )
+            return True
+        
+        # Create new resource
+        _LOGGER.info("✅ Creating new Timer 24H resource: %s", url_with_version)
+        await resources.async_create_item({"res_type": "module", "url": url_with_version})
+        return True
+        
+    except Exception as err:
+        _LOGGER.error("❌ Failed to register lovelace resource: %s", err)
+        return False
+
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Timer 24H component."""
     hass.data.setdefault(DOMAIN, {})
@@ -40,7 +79,29 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     # Install card files automatically
     await _async_install_card(hass)
     
-    _LOGGER.info("🔵 Timer 24H integration async_setup completed - card files installed")
+    # Register static path for the card
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(
+            "/local/timer-24h-card/timer-24h-card.js",
+            hass.config.path("www/timer-24h-card/timer-24h-card.js"),
+            True
+        )
+    ])
+    
+    # Get version from manifest
+    integration_path = Path(__file__).parent
+    manifest_path = integration_path / "manifest.json"
+    version = "1.0.0"
+    try:
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+            version = manifest.get("version", "1.0.0")
+    except Exception as err:
+        _LOGGER.warning("Could not read version from manifest: %s", err)
+    
+    # Register lovelace resource
+    _LOGGER.info("🔵 Timer 24H: Registering lovelace resource (version %s)", version)
+    await init_lovelace_resource(hass, "/local/timer-24h-card/timer-24h-card.js", version)
     
     return True
 
@@ -62,52 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register services
     await _async_register_services(hass)
-    
-    # Register Lovelace resource with retry mechanism
-    async def _delayed_resource_registration():
-        """Try to register resource with delay for lovelace to be ready."""
-        integration_path = Path(__file__).parent
-        manifest_path = integration_path / "manifest.json"
-        version = "1.0.0"
-        try:
-            with open(manifest_path) as f:
-                manifest = json.load(f)
-                version = manifest.get("version", "1.0.0")
-        except Exception:
-            pass
-        
-        # Try up to 5 times with increasing delays
-        delays = [0, 2, 5, 10, 15]  # seconds
-        success = False
-        
-        for attempt in range(5):
-            if delays[attempt] > 0:
-                await asyncio.sleep(delays[attempt])
-            
-            try:
-                success = await _async_register_lovelace_resource(hass, version, attempt + 1)
-                if success:
-                    _LOGGER.info("✅ Timer 24H Card resource registered successfully on attempt %d", attempt + 1)
-                    break
-            except Exception as err:
-                _LOGGER.debug("Attempt %d to register resource failed: %s", attempt + 1, err)
-        
-        # If all attempts failed, show warning
-        if not success:
-            url = f"/local/timer-24h-card/timer-24h-card.js?v={version}"
-            _LOGGER.warning(
-                "⚠️⚠️⚠️ Timer 24H Card resource could not be registered automatically!\n"
-                "📌 Please add manually:\n"
-                "   1. Go to: Settings → Dashboards → Resources\n"
-                "   2. Click: Add Resource\n"
-                "   3. URL: %s\n"
-                "   4. Type: JavaScript Module\n"
-                "   5. Click Save",
-                url
-            )
-    
-    # Call the function asynchronously
-    hass.async_create_task(_delayed_resource_registration())
 
     # Register update listener
     entry.async_on_unload(entry.add_update_listener(async_update_options))
@@ -284,134 +299,4 @@ async def _async_install_card(hass: HomeAssistant) -> None:
         _LOGGER.error("Failed to install Timer 24H Card: %s", err)
 
 
-async def _async_register_lovelace_resource(hass: HomeAssistant, version: str, attempt: int = 1) -> bool:
-    """Register the Lovelace resource automatically with retry support."""
-    url = f"/local/timer-24h-card/timer-24h-card.js?v={version}"
-    
-    _LOGGER.info("🔵 Attempting to register Timer 24H Card resource (attempt %d, version %s)", attempt, version)
-    
-    try:
-        # Method 1: Try lovelace.resources collection (preferred)
-        lovelace_resources = hass.data.get("lovelace", {}).get("resources")
-        
-        if lovelace_resources is not None:
-            _LOGGER.debug("Lovelace resources collection found, attempting registration...")
-            
-            # Check if resource already exists
-            existing_resource = None
-            try:
-                items = lovelace_resources.async_items()
-                for item in items:
-                    item_url = item.get("url", "")
-                    if "timer-24h-card" in item_url:
-                        existing_resource = item
-                        _LOGGER.debug("Found existing resource with ID: %s, URL: %s", item.get("id"), item_url)
-                        break
-            except Exception as err:
-                _LOGGER.debug("Could not enumerate existing resources: %s", err)
-            
-            try:
-                # Update or create resource
-                if existing_resource:
-                    # Update existing resource with new version
-                    if existing_resource.get("url") != url:
-                        await lovelace_resources.async_update_item(
-                            existing_resource["id"],
-                            {"url": url, "type": "module"}
-                        )
-                        _LOGGER.info("✅ Updated Timer 24H Card resource to version %s", version)
-                        return True
-                    else:
-                        _LOGGER.info("✅ Timer 24H Card resource already up to date (v%s)", version)
-                        return True
-                else:
-                    # Create new resource
-                    await lovelace_resources.async_create_item(
-                        {"url": url, "type": "module"}
-                    )
-                    _LOGGER.info("✅ Registered NEW Timer 24H Card resource version %s", version)
-                    return True
-            except Exception as create_err:
-                _LOGGER.warning("Could not create/update resource via API: %s", create_err)
-        else:
-            _LOGGER.debug("Lovelace resources collection not available yet (attempt %d)", attempt)
-        
-        # Method 2: Try using frontend service call as fallback
-        if hass.services.has_service("frontend", "reload_resources"):
-            try:
-                # Try to add via websocket API (this will trigger a reload)
-                _LOGGER.debug("Attempting registration via frontend service...")
-                await hass.services.async_call(
-                    "frontend",
-                    "reload_resources",
-                    blocking=False,
-                )
-                _LOGGER.debug("Frontend resources reload triggered")
-            except Exception as service_err:
-                _LOGGER.debug("Frontend service call failed: %s", service_err)
-        
-        # Method 3: Direct file manipulation as last resort (storage mode)
-        try:
-            lovelace_storage_path = Path(hass.config.path(".storage/lovelace_resources"))
-            if lovelace_storage_path.exists():
-                _LOGGER.debug("Found lovelace_resources storage file, attempting direct update...")
-                
-                # Read current resources
-                with open(lovelace_storage_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                
-                items = data.get("data", {}).get("items", [])
-                resource_exists = False
-                
-                # Check if our resource exists
-                for item in items:
-                    if "timer-24h-card" in item.get("url", ""):
-                        # Update URL with new version
-                        if item.get("url") != url:
-                            item["url"] = url
-                            item["type"] = "module"
-                            resource_exists = True
-                            _LOGGER.debug("Updated existing resource in storage file")
-                        else:
-                            _LOGGER.debug("Resource already exists with correct URL in storage")
-                            return True
-                        break
-                
-                # Add new resource if it doesn't exist
-                if not resource_exists:
-                    # Generate a unique ID
-                    new_id = str(uuid.uuid4())
-                    
-                    items.append({
-                        "id": new_id,
-                        "url": url,
-                        "type": "module"
-                    })
-                    _LOGGER.debug("Added new resource to storage file with ID: %s", new_id)
-                
-                # Write back to file
-                with open(lovelace_storage_path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2)
-                
-                _LOGGER.info("✅ Successfully updated lovelace_resources storage file (v%s)", version)
-                
-                # Trigger reload
-                if hass.services.has_service("frontend", "reload_resources"):
-                    await hass.services.async_call(
-                        "frontend",
-                        "reload_resources",
-                        blocking=False,
-                    )
-                    _LOGGER.debug("Triggered frontend resources reload")
-                
-                return True
-                
-        except Exception as file_err:
-            _LOGGER.debug("Storage file manipulation failed: %s", file_err)
-        
-        return False
-        
-    except Exception as err:
-        _LOGGER.error("Unexpected error in resource registration (attempt %d): %s", attempt, err, exc_info=True)
-        return False
 

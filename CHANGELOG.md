@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.0] - 2024-12-07
+
+### Fixed
+- **Complete Rewrite of Resource Registration** - Fixed resource registration using proven method from ha-simple-timer
+  - Moved registration from `async_setup_entry` to `async_setup` (runs earlier in lifecycle)
+  - Use `ResourceStorageCollection` directly with `async_get_info()` to force storage load
+  - Added `StaticPathConfig` for proper HTTP path registration
+  - Removed all retry mechanisms - no longer needed with correct approach
+  - Registration now happens immediately and reliably
+  - **This should fix the installation issues permanently!**
+
+### Changed
+- Simplified codebase by removing 130+ lines of complex retry logic
+- More efficient resource registration (no delays or multiple attempts)
+- Better error messages if registration fails
+
+### Technical Details
+- Based on proven implementation from ArikShemesh/ha-simple-timer
+- Key insight: Must call `await resources.async_get_info()` before accessing items
+- Registration in `async_setup` ensures lovelace is ready
+- Single, clean registration attempt instead of multiple retries
+
 ## [5.7.0] - 2024-12-07
 
 ### Fixed
