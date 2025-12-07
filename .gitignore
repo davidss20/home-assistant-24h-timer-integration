@@ -64,3 +64,4 @@ home-assistant_v2.db*
 *.tmp
 *.bak
 *.orig
+RELEASE_INSTRUCTIONS.md
