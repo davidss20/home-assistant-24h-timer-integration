@@ -186,17 +186,26 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         _LOGGER.info("📋 Active slots BEFORE toggle: %s", ", ".join(active_before) if active_before else "None")
         
         slot_found = False
+        # CREATE A NEW LIST - this ensures HA detects the change!
+        new_slots = []
         for slot in self._time_slots:
             if slot["hour"] == hour and slot["minute"] == minute:
                 old_state = slot["isActive"]
-                slot["isActive"] = not slot["isActive"]
+                # Create new dict with toggled state
+                new_slot = {**slot, "isActive": not slot["isActive"]}
+                new_slots.append(new_slot)
                 _LOGGER.info("✅ Found and toggled slot %s:%02d: %s → %s", 
-                           hour, minute, old_state, slot["isActive"])
+                           hour, minute, old_state, new_slot["isActive"])
                 slot_found = True
-                break
+            else:
+                # Keep other slots as-is (but create new dict)
+                new_slots.append({**slot})
         
         if not slot_found:
             _LOGGER.error("❌ Slot %s:%02d NOT FOUND in time_slots!", hour, minute)
+        
+        # Replace the entire list - this creates a NEW reference
+        self._time_slots = new_slots
         
         # Log AFTER state
         active_after = [f"{s['hour']}:{s['minute']:02d}" for s in self._time_slots if s["isActive"]]
@@ -211,7 +220,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         # Immediately check and control entities
         await self._control_entities()
         
-        # Update the entity
+        # Update the entity - NOW with a NEW list reference
         self.async_set_updated_data(
             {
                 "time_slots": self._time_slots,

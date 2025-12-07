@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] - 2024-12-07
+
+### Fixed
+- **CRITICAL: State Update Bug** - Fixed issue where card didn't update after toggling slots without manual refresh
+- **State Reference Problem** - Fixed coordinator creating same reference instead of new object
+- **Deep State Detection** - Added JSON.stringify comparison in card's shouldUpdate for reliable change detection
+
+### Changed
+- Coordinator now creates new list reference on every toggle (immutable pattern)
+- Sensor attributes return fresh copies of time_slots array
+- Card's shouldUpdate performs deep comparison of time_slots content
+
+### Technical Details
+- `async_toggle_slot()` now creates completely new slots list with new dict objects
+- `extra_state_attributes` returns `[slot.copy() for slot in ...]` for proper change detection
+- `shouldUpdate()` uses JSON.stringify to detect actual content changes
+- This ensures Home Assistant's state machine properly detects and propagates changes
+
+### Why This Fix?
+The previous implementation modified the list in-place, keeping the same reference. Home Assistant's
+state tracking relies on object identity changes to detect updates. By creating new references,
+we ensure the state change propagates correctly to all UI components without requiring manual refresh.
+
 ## [5.0.0] - 2024-12-05
 
 ### Changed

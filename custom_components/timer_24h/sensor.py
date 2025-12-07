@@ -54,7 +54,7 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             "name": self._attr_name,
             "manufacturer": "Timer 24H",
             "model": "24 Hour Timer",
-            "sw_version": "4.6.7",
+            "sw_version": "5.1.0",
         }
 
     @property
@@ -75,8 +75,9 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
         current_slot = self.coordinator.get_current_slot()
         
         return {
-            ATTR_TIME_SLOTS: self.coordinator.time_slots,
-            ATTR_CURRENT_SLOT: current_slot,
+            # Create a new list copy to ensure HA detects changes
+            ATTR_TIME_SLOTS: [slot.copy() for slot in self.coordinator.time_slots],
+            ATTR_CURRENT_SLOT: current_slot.copy() if current_slot else None,
             ATTR_HOME_STATUS: self.coordinator.home_status,
             ATTR_CONTROLLED_ENTITIES: self.config_entry.options.get("entities", []),
             ATTR_LAST_UPDATE: datetime.now().isoformat(),

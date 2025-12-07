@@ -89,13 +89,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       const oldState = oldHass.states[this.config.entity];
       const newState = this.hass.states[this.config.entity];
       
-      // Check if the entity state has changed
+      // Check if the entity state object changed
       if (oldState !== newState) {
         return true;
       }
       
-      // Check if time_slots attribute has changed
-      if (oldState?.attributes.time_slots !== newState?.attributes.time_slots) {
+      // Deep check if time_slots content has changed
+      const oldSlots = JSON.stringify(oldState?.attributes.time_slots || []);
+      const newSlots = JSON.stringify(newState?.attributes.time_slots || []);
+      
+      if (oldSlots !== newSlots) {
+        console.log('🔄 Time slots changed, updating card');
         return true;
       }
     }
@@ -644,7 +648,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 4.5.0 - SERVICE FIX  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.1.0 - STATE UPDATE FIX  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
