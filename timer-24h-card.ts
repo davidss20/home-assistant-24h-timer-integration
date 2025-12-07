@@ -761,7 +761,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.5.1 - IMPROVED CENTER INDICATOR  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.5.2 - GROUP SUPPORT  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

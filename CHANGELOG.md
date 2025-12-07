@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.2] - 2024-12-07
+
+### Added
+- **Group Support** - Added support for Home Assistant groups (entity domain: `group`)
+- Can now select light groups, switch groups, and any other group type as controlled entities
+- Groups will be turned on/off as a single unit, controlling all entities within the group
+
+### Technical Details
+- Added `"group"` to `SUPPORTED_ENTITY_DOMAINS` in `config_flow.py`
+- Groups appear in entity selector alongside individual lights, switches, etc.
+- When timer activates/deactivates, group entities are controlled just like individual entities
+
+### Use Cases
+- Select `group.living_room_lights` instead of individual lights
+- Control entire rooms with a single group selection
+- Simplify configuration when managing multiple related entities
+- Works with any Home Assistant group (light groups, switch groups, etc.)
+
 ## [5.5.1] - 2024-12-07
 
 ### Fixed

@@ -32,6 +32,7 @@ SUPPORTED_ENTITY_DOMAINS = [
     "media_player",
     "cover",
     "input_boolean",
+    "group",
 ]
 
 SUPPORTED_SENSOR_DOMAINS = [
