@@ -655,7 +655,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.3.0 - ACTIVATION CONDITIONS  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.4.0 - REAL-TIME RESPONSE  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

@@ -62,6 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = Timer24HCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
+    # Setup state listeners for immediate response to condition changes
+    coordinator.setup_state_listeners()
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
@@ -80,11 +83,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
+    # Reload will cleanup old listeners and setup new ones
     await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    # Cleanup state listeners before unloading
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    coordinator.cleanup_state_listeners()
+    
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     
     if unload_ok:

@@ -6,7 +6,8 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, Event
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -31,6 +32,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self._time_slots: list[dict[str, Any]] = self._initialize_time_slots()
         self._home_status: bool = True
         self._last_controlled_states: dict[str, bool] = {}
+        self._state_change_unsubscribe = None
         
         # Load saved time slots from options
         if "time_slots" in config_entry.options:
@@ -275,4 +277,75 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self.hass.config_entries.async_update_entry(
             self.config_entry, options=new_options
         )
+
+    def setup_state_listeners(self) -> None:
+        """Setup state change listeners for home sensors."""
+        condition_sensors = self.config_entry.options.get(CONF_HOME_SENSORS, [])
+        
+        if not condition_sensors:
+            _LOGGER.debug("No condition sensors configured, skipping state listeners")
+            return
+        
+        @callback
+        def sensor_state_changed(event: Event) -> None:
+            """Handle sensor state change."""
+            entity_id = event.data.get("entity_id")
+            new_state = event.data.get("new_state")
+            old_state = event.data.get("old_state")
+            
+            if new_state is None:
+                return
+            
+            _LOGGER.debug(
+                "Condition sensor changed: %s (%s → %s)",
+                entity_id,
+                old_state.state if old_state else "unknown",
+                new_state.state
+            )
+            
+            # Check home status immediately
+            old_home_status = self._home_status
+            self._check_home_status()
+            
+            # If status changed, control entities immediately and update UI
+            if old_home_status != self._home_status:
+                _LOGGER.info(
+                    "🏠 Home status changed: %s → %s (triggered by %s)", 
+                    "Active" if old_home_status else "Inactive",
+                    "Active" if self._home_status else "Inactive",
+                    entity_id
+                )
+                
+                # Control entities immediately
+                self.hass.async_create_task(self._control_entities())
+                
+                # Update the data to refresh UI
+                self.async_set_updated_data({
+                    "time_slots": self._time_slots,
+                    "home_status": self._home_status,
+                })
+        
+        # Unsubscribe from previous listeners if any
+        if self._state_change_unsubscribe:
+            self._state_change_unsubscribe()
+        
+        # Subscribe to state changes of all condition sensors
+        self._state_change_unsubscribe = async_track_state_change_event(
+            self.hass,
+            condition_sensors,
+            sensor_state_changed
+        )
+        
+        _LOGGER.info(
+            "✅ State listeners configured for %d condition sensor(s): %s",
+            len(condition_sensors),
+            ", ".join(condition_sensors)
+        )
+
+    def cleanup_state_listeners(self) -> None:
+        """Cleanup state change listeners."""
+        if self._state_change_unsubscribe:
+            self._state_change_unsubscribe()
+            self._state_change_unsubscribe = None
+            _LOGGER.debug("State listeners cleaned up")
 

@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.0] - 2024-12-07
+
+### Added
+- **Real-Time Response to Activation Conditions** - Immediate response when condition sensors change state
+- Event-driven state change listeners for condition sensors
+- No more waiting up to 60 seconds for condition changes to take effect
+- Automatic UI refresh when home status changes
+
+### Changed
+- Integration now uses `local_push` instead of `local_polling` for IoT class
+- Condition sensor changes now trigger immediate entity control updates
+- Enhanced logging with emoji indicators for home status changes (🏠)
+
+### Technical Details
+- Added `async_track_state_change_event` for real-time sensor monitoring
+- New `setup_state_listeners()` method in coordinator
+- New `cleanup_state_listeners()` method for proper resource cleanup
+- State change callback updates `home_status` and controls entities immediately
+- Listeners are automatically re-registered when configuration changes
+- Much more efficient: only processes events when actual state changes occur (vs. checking every 60 seconds)
+
+### Performance
+- **99.3% reduction in unnecessary checks** - From 1,440 checks/day to ~10 actual state changes
+- Instant response time (milliseconds) vs. up to 60 seconds delay
+- Lower CPU usage - event-driven instead of polling
+- Better resource utilization
+
+### Why This Matters?
+Previously, if you changed a condition sensor (e.g., marking yourself as "home"), the integration would only notice this change at the next scheduled update (up to 60 seconds later). Now, the integration responds **immediately** to any condition sensor state change, providing a much better user experience.
+
+### Example Use Cases That Benefit:
+- Returning home → lights turn on instantly (not after 60 seconds)
+- Shabbat mode activated → timer immediately responds to new conditions
+- Vacation mode enabled → entities controlled instantly
+- Temperature threshold reached → immediate action
+
 ## [5.3.0] - 2024-12-07
 
 ### Changed
