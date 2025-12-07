@@ -11,6 +11,7 @@ import { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
 interface Timer24HCardConfig {
   entity: string;
   show_title?: boolean;
+  custom_title?: string;
 }
 
 @customElement('timer-24h-card-editor')
@@ -93,6 +94,22 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
           </div>
         </div>
 
+        ${this.config.show_title !== false ? html`
+          <div class="config-row">
+            <label for="custom_title">Custom Title (Optional)</label>
+            <input
+              type="text"
+              id="custom_title"
+              .value="${this.config.custom_title || ''}"
+              @input="${this.handleCustomTitleChange}"
+              placeholder="Leave empty to use entity name"
+            />
+            <div class="help-text">
+              Override the entity name with a custom title
+            </div>
+          </div>
+        ` : ''}
+
         ${this.config.entity && this.hass.states[this.config.entity] ? html`
           <div class="preview-info">
             <h3>Selected Timer Details</h3>
@@ -123,6 +140,12 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
   private handleShowTitleChange(ev: Event): void {
     const target = ev.target as HTMLInputElement;
     this.config = { ...this.config, show_title: target.checked };
+    this.configChanged();
+  }
+
+  private handleCustomTitleChange(ev: Event): void {
+    const target = ev.target as HTMLInputElement;
+    this.config = { ...this.config, custom_title: target.value || undefined };
     this.configChanged();
   }
 

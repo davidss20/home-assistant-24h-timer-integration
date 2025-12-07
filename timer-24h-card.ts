@@ -14,6 +14,7 @@ import { HomeAssistant, LovelaceCard, LovelaceCardConfig } from 'custom-card-hel
 interface Timer24HCardConfig extends LovelaceCardConfig {
   entity: string;
   show_title?: boolean;
+  custom_title?: string;
 }
 
 interface TimeSlot {
@@ -171,6 +172,12 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   }
 
   private getEntityName(): string {
+    // If custom title is set, use it
+    if (this.config.custom_title) {
+      return this.config.custom_title;
+    }
+    
+    // Otherwise use entity's friendly name
     const entity = this.getEntityState();
     if (!entity) return 'Timer 24H';
     return entity.attributes.friendly_name || 'Timer 24H';
@@ -648,7 +655,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.1.0 - STATE UPDATE FIX  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.2.0 - CUSTOM TITLE  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

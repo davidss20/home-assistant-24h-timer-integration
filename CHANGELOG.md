@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.2.0] - 2024-12-07
+
+### Added
+- **Custom Title Support** - Added ability to set custom card title independent of entity name
+- New `custom_title` configuration option in card editor
+- Optional field that overrides entity's friendly_name when set
+
+### Changed
+- Card editor now shows custom title input field when "Show entity name as title" is enabled
+- Title display logic prioritizes custom_title over entity friendly_name
+
+### Technical Details
+- Added `custom_title?: string` to `Timer24HCardConfig` interface
+- Updated `getEntityName()` to check for custom_title first
+- Card editor includes new input field with placeholder text
+- All UI text in English for consistency
+
+### Usage Example
+```yaml
+type: custom:timer-24h-card
+entity: sensor.timer_24h_lighting
+show_title: true
+custom_title: "My Custom Timer Name"
+```
+
 ## [5.1.0] - 2024-12-07
 
 ### Fixed
