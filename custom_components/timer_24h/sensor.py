@@ -81,6 +81,7 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             ATTR_HOME_STATUS: self.coordinator.home_status,
             ATTR_CONTROLLED_ENTITIES: self.config_entry.options.get("entities", []),
             ATTR_LAST_UPDATE: datetime.now().isoformat(),
+            "enabled": self.coordinator.enabled,
         }
 
     @callback

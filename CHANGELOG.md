@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This beta introduces improvements and prepares for the upcoming v1.1.0 release.
 
 ### Added
+- 🎛️ **Enable/Disable Timer Switch** - New optional toggle switch in card to enable or disable timer functionality
+  - When disabled, timer won't control entities even if time slots are active
+  - Optional display via card configuration: `show_enable_switch: true`
+  - State persisted across restarts
+  - New service: `timer_24h.set_enabled` for automation integration
 - 🎨 **Custom icon support** - Added official icon to Home Assistant Brands (pending approval)
 - 📝 **Enhanced documentation** - Added comprehensive guides for HACS submission and beta testing
 - 🔧 **Developer tooling** - Added helper files for release management

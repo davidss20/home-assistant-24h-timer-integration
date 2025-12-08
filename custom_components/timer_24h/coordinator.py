@@ -31,12 +31,17 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self._time_slots: list[dict[str, Any]] = self._initialize_time_slots()
         self._home_status: bool = True
+        self._enabled: bool = True
         self._last_controlled_states: dict[str, bool] = {}
         self._state_change_unsubscribe = None
         
         # Load saved time slots from options
         if "time_slots" in config_entry.options:
             self._time_slots = config_entry.options["time_slots"]
+        
+        # Load saved enabled state from options
+        if "enabled" in config_entry.options:
+            self._enabled = config_entry.options["enabled"]
 
         super().__init__(
             hass,
@@ -70,6 +75,11 @@ class Timer24HCoordinator(DataUpdateCoordinator):
     def home_status(self) -> bool:
         """Return home status."""
         return self._home_status
+    
+    @property
+    def enabled(self) -> bool:
+        """Return enabled status."""
+        return self._enabled
 
     def get_current_slot(self) -> dict[str, Any] | None:
         """Get the current time slot."""
@@ -94,6 +104,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             return {
                 "time_slots": self._time_slots,
                 "home_status": self._home_status,
+                "enabled": self._enabled,
             }
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
@@ -130,6 +141,10 @@ class Timer24HCoordinator(DataUpdateCoordinator):
 
     async def _control_entities(self) -> None:
         """Control entities based on time slots and activation conditions."""
+        if not self._enabled:
+            _LOGGER.debug("Timer is disabled, skipping entity control")
+            return
+        
         if not self._home_status:
             _LOGGER.debug("Activation conditions not met, skipping entity control")
             return
@@ -227,6 +242,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             {
                 "time_slots": self._time_slots,
                 "home_status": self._home_status,
+                "enabled": self._enabled,
             }
         )
         
@@ -252,6 +268,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             {
                 "time_slots": self._time_slots,
                 "home_status": self._home_status,
+                "enabled": self._enabled,
             }
         )
 
@@ -268,6 +285,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             {
                 "time_slots": self._time_slots,
                 "home_status": self._home_status,
+                "enabled": self._enabled,
             }
         )
 
@@ -277,6 +295,34 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self.hass.config_entries.async_update_entry(
             self.config_entry, options=new_options
         )
+    
+    async def async_set_enabled(self, enabled: bool) -> None:
+        """Set timer enabled state."""
+        _LOGGER.info("Setting timer enabled state: %s → %s", self._enabled, enabled)
+        self._enabled = enabled
+        
+        # Save to config entry options
+        new_options = {**self.config_entry.options, "enabled": enabled}
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, options=new_options
+        )
+        
+        # Clear control memory when changing enabled state
+        self._last_controlled_states.clear()
+        
+        # Control entities based on new state
+        await self._control_entities()
+        
+        # Update the entity
+        self.async_set_updated_data(
+            {
+                "time_slots": self._time_slots,
+                "home_status": self._home_status,
+                "enabled": self._enabled,
+            }
+        )
+        
+        _LOGGER.info("✅ Timer enabled state updated to: %s", enabled)
 
     def setup_state_listeners(self) -> None:
         """Setup state change listeners for home sensors."""
@@ -323,6 +369,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
                 self.async_set_updated_data({
                     "time_slots": self._time_slots,
                     "home_status": self._home_status,
+                    "enabled": self._enabled,
                 })
         
         # Unsubscribe from previous listeners if any

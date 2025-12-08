@@ -23,6 +23,7 @@ from .const import (
     ATTR_SLOTS,
     DOMAIN,
     SERVICE_CLEAR_ALL,
+    SERVICE_SET_ENABLED,
     SERVICE_SET_SLOTS,
     SERVICE_TOGGLE_SLOT,
 )
@@ -207,6 +208,27 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                         and entity_entry.entity_id == entity_id):
                         await coordinator.async_clear_all()
                         return
+    
+    async def handle_set_enabled(call: ServiceCall) -> None:
+        """Handle the set_enabled service call."""
+        entity_id = call.data.get("entity_id")
+        enabled = call.data.get("enabled")
+
+        _LOGGER.info("🔵 SERVICE CALLED: set_enabled(entity=%s, enabled=%s)", entity_id, enabled)
+
+        for entry_id, data in hass.data[DOMAIN].items():
+            if isinstance(data, dict) and "coordinator" in data:
+                coordinator = data["coordinator"]
+                
+                entity_registry = er.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (entity_entry.config_entry_id == coordinator.config_entry.entry_id 
+                        and entity_entry.entity_id == entity_id):
+                        _LOGGER.info("✅ Found matching coordinator for entity_id=%s", entity_id)
+                        await coordinator.async_set_enabled(enabled)
+                        return
+        
+        _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
 
     # Register services if not already registered
     if not hass.services.has_service(DOMAIN, SERVICE_TOGGLE_SLOT):
@@ -244,6 +266,19 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             schema=vol.Schema(
                 {
                     vol.Required("entity_id"): cv.entity_id,
+                }
+            ),
+        )
+    
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_ENABLED):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_ENABLED,
+            handle_set_enabled,
+            schema=vol.Schema(
+                {
+                    vol.Required("entity_id"): cv.entity_id,
+                    vol.Required("enabled"): cv.boolean,
                 }
             ),
         )

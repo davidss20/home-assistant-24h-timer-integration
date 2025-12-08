@@ -15,6 +15,7 @@ interface Timer24HCardConfig extends LovelaceCardConfig {
   entity: string;
   show_title?: boolean;
   custom_title?: string;
+  show_enable_switch?: boolean;
 }
 
 interface TimeSlot {
@@ -54,6 +55,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return {
       entity: '',
       show_title: true,
+      show_enable_switch: false,
     };
   }
 
@@ -72,6 +74,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
     this.config = {
       show_title: true,
+      show_enable_switch: false,
       ...config
     };
   }
@@ -234,6 +237,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         entities: 'entities',
         configure_entity: 'Please configure the timer entity in card settings',
         entity_not_found: 'Entity not found. Please check your configuration.',
+        enable_timer: 'Enable Timer',
       },
       he: {
         active: 'פעיל',
@@ -244,6 +248,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         entities: 'ישויות',
         configure_entity: 'אנא הגדר את ישות הטיימר בהגדרות הכרטיס',
         entity_not_found: 'הישות לא נמצאה. אנא בדוק את ההגדרות.',
+        enable_timer: 'הפעל טיימר',
       },
     };
     
@@ -293,6 +298,53 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     } catch (error) {
       console.error(`❌ Failed to toggle time slot ${key}:`, error);
     }
+  }
+  
+  private getEnabled(): boolean {
+    const entity = this.getEntityState();
+    return entity?.attributes.enabled !== false;
+  }
+  
+  private async handleEnableToggle(event: Event): Promise<void> {
+    event.stopPropagation();
+    const target = event.target as HTMLInputElement;
+    const enabled = target.checked;
+    
+    if (!this.hass || !this.config.entity) return;
+    
+    try {
+      console.log(`🔄 Setting enabled to: ${enabled}`);
+      
+      await this.hass.callService('timer_24h', 'set_enabled', {
+        entity_id: this.config.entity,
+        enabled: enabled,
+      });
+      
+      console.log(`✅ Enabled state updated to: ${enabled}`);
+    } catch (error) {
+      console.error(`❌ Failed to set enabled state:`, error);
+    }
+  }
+  
+  private renderEnableSwitch(): TemplateResult {
+    const enabled = this.getEnabled();
+    
+    return html`
+      <div class="enable-switch-container">
+        <label class="enable-switch-label">
+          <span class="enable-switch-text">
+            ${this.localize('enable_timer')}
+          </span>
+          <input
+            type="checkbox"
+            class="enable-switch"
+            .checked="${enabled}"
+            @change="${this.handleEnableToggle}"
+          />
+          <span class="slider"></span>
+        </label>
+      </div>
+    `;
   }
 
   private createSectorPath(hour: number, totalSectors: number, innerRadius: number, outerRadius: number, centerX: number, centerY: number): string {
@@ -474,6 +526,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             </div>
           </div>
         ` : ''}
+        
+        ${this.config.show_enable_switch ? this.renderEnableSwitch() : ''}
         
         <div class="timer-container">
           <svg class="timer-svg" viewBox="0 0 400 400">
@@ -784,6 +838,65 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         .header {
           padding: 8px 12px 0 12px;
         }
+      }
+      
+      /* Enable Switch Styles */
+      .enable-switch-container {
+        padding: 8px 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 1px solid var(--divider-color, #e5e7eb);
+      }
+      
+      .enable-switch-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        user-select: none;
+      }
+      
+      .enable-switch-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--primary-text-color, #212121);
+      }
+      
+      .enable-switch {
+        position: relative;
+        appearance: none;
+        width: 44px;
+        height: 24px;
+        background-color: var(--disabled-color, #bbb);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        outline: none;
+      }
+      
+      .enable-switch:checked {
+        background-color: var(--primary-color, #03a9f4);
+      }
+      
+      .enable-switch::before {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background-color: white;
+        top: 3px;
+        left: 3px;
+        transition: transform 0.3s;
+      }
+      
+      .enable-switch:checked::before {
+        transform: translateX(20px);
+      }
+      
+      .enable-switch:focus {
+        box-shadow: 0 0 0 2px var(--primary-color-alpha, rgba(3, 169, 244, 0.2));
       }
     `;
   }

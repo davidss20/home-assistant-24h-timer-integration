@@ -12,6 +12,7 @@ interface Timer24HCardConfig {
   entity: string;
   show_title?: boolean;
   custom_title?: string;
+  show_enable_switch?: boolean;
 }
 
 @customElement('timer-24h-card-editor')
@@ -109,6 +110,20 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
             </div>
           </div>
         ` : ''}
+        
+        <div class="config-row">
+          <label>
+            <input
+              type="checkbox"
+              .checked="${this.config.show_enable_switch === true}"
+              @change="${this.handleShowEnableSwitchChange}"
+            />
+            Show enable/disable switch
+          </label>
+          <div class="help-text">
+            Display a toggle switch to enable or disable the timer
+          </div>
+        </div>
 
         ${this.config.entity && this.hass.states[this.config.entity] ? html`
           <div class="preview-info">
@@ -146,6 +161,12 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
   private handleCustomTitleChange(ev: Event): void {
     const target = ev.target as HTMLInputElement;
     this.config = { ...this.config, custom_title: target.value || undefined };
+    this.configChanged();
+  }
+  
+  private handleShowEnableSwitchChange(ev: Event): void {
+    const target = ev.target as HTMLInputElement;
+    this.config = { ...this.config, show_enable_switch: target.checked };
     this.configChanged();
   }
 

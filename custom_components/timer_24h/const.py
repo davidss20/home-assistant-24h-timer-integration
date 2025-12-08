@@ -18,6 +18,7 @@ DEFAULT_HOME_LOGIC: Final = "OR"
 SERVICE_TOGGLE_SLOT: Final = "toggle_slot"
 SERVICE_SET_SLOTS: Final = "set_slots"
 SERVICE_CLEAR_ALL: Final = "clear_all"
+SERVICE_SET_ENABLED: Final = "set_enabled"
 
 # Attributes
 ATTR_TIME_SLOTS: Final = "time_slots"
