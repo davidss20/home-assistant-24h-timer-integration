@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0-beta.2] - 2024-12-08
+
+### 🧪 Beta Release - Test Version
+
+**⚠️ This is a BETA version for testing purposes. Please report any issues!**
+
+### Added
+- 🎛️ **Enable/Disable Timer Switch** - New optional toggle switch in card to enable or disable timer functionality
+  - When disabled, timer won't control entities even if time slots are active
+  - Optional display via card configuration: `show_enable_switch: true`
+  - State persisted across restarts
+  - New service: `timer_24h.set_enabled` for automation integration
+  - Hebrew and English translations included
+
+### How to Use
+Add to your card configuration:
+```yaml
+type: custom:timer-24h-card
+entity: sensor.your_timer
+show_enable_switch: true  # Show the enable/disable switch
+```
+
+Or use the service in automations:
+```yaml
+service: timer_24h.set_enabled
+data:
+  entity_id: sensor.your_timer
+  enabled: false  # or true
+```
+
+### How to Test
+1. Update via HACS:
+   - Go to HACS → Integrations → Timer 24H
+   - Click ⋮ → Redownload
+   - Select version: `v1.1.0-beta.2` from dropdown
+   - Install and restart
+2. Add `show_enable_switch: true` to your card config
+3. Test the toggle switch
+4. Verify the timer stops controlling entities when disabled
+5. Check that state persists after restart
+
 ## [1.1.0-beta.1] - 2024-12-08
 
 ### 🧪 Beta Release - Test Version
