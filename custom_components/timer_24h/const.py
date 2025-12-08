@@ -9,6 +9,7 @@ CONF_NAME: Final = "name"
 CONF_ENTITIES: Final = "entities"
 CONF_HOME_SENSORS: Final = "home_sensors"
 CONF_HOME_LOGIC: Final = "home_logic"
+CONF_SHOW_ENABLE_SWITCH: Final = "show_enable_switch"
 
 # Defaults
 DEFAULT_NAME: Final = "Timer 24H"
