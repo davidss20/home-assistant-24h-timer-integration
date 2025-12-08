@@ -55,7 +55,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return {
       entity: '',
       show_title: true,
-      show_enable_switch: false,
     };
   }
 
@@ -74,7 +73,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
     this.config = {
       show_title: true,
-      show_enable_switch: false,
       ...config
     };
   }
@@ -306,14 +304,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   }
   
   private shouldShowEnableSwitch(): boolean {
-    // Check if explicitly set in card config
-    if (this.config.show_enable_switch !== undefined) {
-      return this.config.show_enable_switch;
-    }
-    
-    // Otherwise, check entity attributes (from integration options)
-    const entity = this.getEntityState();
-    return entity?.attributes.show_enable_switch === true;
+    // Check card config only
+    return this.config.show_enable_switch === true;
   }
   
   private async handleEnableToggle(event: Event): Promise<void> {

@@ -18,7 +18,6 @@ from .const import (
     CONF_ENTITIES,
     CONF_HOME_SENSORS,
     CONF_HOME_LOGIC,
-    CONF_SHOW_ENABLE_SWITCH,
     DEFAULT_NAME,
     DEFAULT_HOME_LOGIC,
 )
@@ -102,7 +101,6 @@ class Timer24HConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_HOME_LOGIC, default=DEFAULT_HOME_LOGIC): vol.In(
                     ["OR", "AND"]
                 ),
-                vol.Optional(CONF_SHOW_ENABLE_SWITCH, default=False): cv.boolean,
             }
         )
 
@@ -110,9 +108,6 @@ class Timer24HConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={
-                "show_enable_switch_help": "Display enable/disable switch in the card"
-            },
         )
 
     @staticmethod
@@ -167,18 +162,8 @@ class Timer24HOptionsFlow(config_entries.OptionsFlow):
                     CONF_HOME_LOGIC,
                     default=options.get(CONF_HOME_LOGIC, DEFAULT_HOME_LOGIC),
                 ): vol.In(["OR", "AND"]),
-                vol.Optional(
-                    CONF_SHOW_ENABLE_SWITCH,
-                    default=options.get(CONF_SHOW_ENABLE_SWITCH, False),
-                ): cv.boolean,
             }
         )
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=data_schema,
-            description_placeholders={
-                "show_enable_switch_help": "Display enable/disable switch in the card"
-            },
-        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
