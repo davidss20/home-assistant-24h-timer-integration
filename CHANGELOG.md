@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0-beta.1] - 2024-12-08
+
+### 🧪 Beta Release - Test Version
+
+**⚠️ This is a BETA version for testing purposes. Please report any issues!**
+
+This beta introduces improvements and prepares for the upcoming v1.1.0 release.
+
+### Added
+- 🎨 **Custom icon support** - Added official icon to Home Assistant Brands (pending approval)
+- 📝 **Enhanced documentation** - Added comprehensive guides for HACS submission and beta testing
+- 🔧 **Developer tooling** - Added helper files for release management
+- 🖼️ **High-resolution icons** - Added @2x icons for better display on high-DPI screens
+
+### Changed
+- 📦 Improved project structure with better documentation organization
+- 🗂️ Better .gitignore configuration
+- 🎨 Icons optimized to correct dimensions (256x256 and 512x512)
+
+### Fixed
+- 📐 Icon dimensions now meet Home Assistant Brands requirements
+
+### Testing Notes
+- **Icon display**: Once the Brands PR is approved, the custom icon will appear automatically
+- **Stability**: All core functionality from v1.0.0 is maintained
+- **Performance**: No known regressions
+
+### How to Test
+1. Install via HACS:
+   - Go to HACS → Integrations → Timer 24H
+   - Click ⋮ → Redownload
+   - Select version: `v1.1.0-beta.1` from dropdown
+   - Install and restart
+2. Verify all existing functionality works
+3. Check for any errors in Home Assistant logs
+4. Report issues at: https://github.com/davidss20/home-assistant-24h-timer-integration/issues
+
+### Rollback Instructions
+If you encounter issues, you can rollback to stable:
+1. HACS → Integrations → Timer 24H
+2. Click ⋮ → Redownload
+3. Select version: `v1.0.0` (Latest)
+4. Restart Home Assistant
+
+---
+
 ## [1.0.0] - 2024-12-07
 
 ### 🎉 First Official HACS Release
