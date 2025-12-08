@@ -5,6 +5,19 @@ https://github.com/hacs/default/issues/new?template=integration.yml
 
 ---
 
+## 📌 Issue Title (כותרת ה-Issue):
+
+```
+Add Timer 24H Integration
+```
+
+או באנגלית מפורטת יותר:
+```
+Add Timer 24H Integration - 24-hour visual timer with automatic entity control
+```
+
+---
+
 ## Repository Information
 
 **Repository URL:**
