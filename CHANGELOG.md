@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2024-12-08
+
+### 🎉 Official Stable Release
+
+This is the first stable release of version 1.1.0, incorporating all improvements from the beta versions.
+
+### Added
+- 🎛️ **UI Configuration for Enable Switch** - Configure the enable/disable switch through the Home Assistant UI
+  - Go to Settings → Devices & Services → Timer 24H → Configure
+  - Toggle "Show enable/disable switch" option
+  - No need to edit YAML anymore!
+  - Card config still works as override if needed
+- New service: `timer_24h.set_enabled` for automation integration
+- Visual toggle switch in card (optional display)
+- Hebrew and English translations for new features
+
+### How to Use
+
+**Option 1: Configure via UI (Recommended)**
+1. Go to Settings → Devices & Services
+2. Find Timer 24H integration
+3. Click Configure
+4. Check "Show enable/disable switch"
+5. Save - the switch will appear in all cards automatically!
+
+**Option 2: Configure in card YAML (still works)**
+```yaml
+type: custom:timer-24h-card
+entity: sensor.your_timer
+show_enable_switch: true
+```
+
+**Option 3: Use in automations**
+```yaml
+service: timer_24h.set_enabled
+data:
+  entity_id: sensor.your_timer
+  enabled: false  # or true
+```
+
+### Changed
+- Improved configuration flow with UI options
+- Enhanced user experience with visible switch control
+- Better integration with Home Assistant's configuration system
+
+### Fixed
+- All issues from beta testing resolved
+- Stable and ready for production use
+
+---
+
 ## [1.1.0-beta.4] - 2024-12-08
 
 ### 🧪 Beta Release - Test Version
