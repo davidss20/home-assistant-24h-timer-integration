@@ -262,6 +262,150 @@ automation:
           message: "Timer activated - lights turned on"
 ```
 
+## 🎯 Using Timer Attributes in Automations
+
+The timer sensor exposes several attributes that you can use in automations and templates:
+
+### Available Attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `time_slots` | list | All 48 time slots (30-minute segments) |
+| `current_slot` | dict | Current time slot with hour, minute, and isActive |
+| `home_status` | boolean | Whether activation conditions are met |
+| `controlled_entities` | list | List of entities controlled by the timer |
+| `enabled` | boolean | Whether the timer is enabled |
+| `last_update` | string | Last update timestamp |
+
+### Automation Examples
+
+#### Monitor When Activation Conditions Change
+
+```yaml
+automation:
+  - alias: "Alert when home status changes"
+    trigger:
+      - platform: template
+        value_template: "{{ state_attr('sensor.timer_24h_lighting', 'home_status') }}"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "🏠 Timer Status Changed"
+          message: >
+            Timer activation conditions are now: 
+            {{ 'Active ✅' if state_attr('sensor.timer_24h_lighting', 'home_status') else 'Blocked 🚫' }}
+```
+
+#### Alert When Timer State Changes
+
+```yaml
+automation:
+  - alias: "Timer state notifications"
+    trigger:
+      - platform: state
+        entity_id: sensor.timer_24h_lighting
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "⏰ Timer Update"
+          message: >
+            Timer is now: {{ states('sensor.timer_24h_lighting') }}
+            {% if is_state('sensor.timer_24h_lighting', 'active') %}
+              🟢 Entities are being activated
+            {% elif is_state('sensor.timer_24h_lighting', 'blocked') %}
+              🔴 Activation conditions not met
+            {% else %}
+              ⚪ Waiting for active time slot
+            {% endif %}
+```
+
+#### Count Active Time Slots
+
+```yaml
+template:
+  - sensor:
+      - name: "Timer Active Hours Count"
+        unique_id: timer_lighting_active_count
+        state: >
+          {% set slots = state_attr('sensor.timer_24h_lighting', 'time_slots') %}
+          {{ (slots | selectattr('isActive', 'equalto', true) | list | count) / 2 }}
+        unit_of_measurement: "hours"
+        icon: mdi:clock-check
+```
+
+#### Display Current Time Slot
+
+```yaml
+template:
+  - sensor:
+      - name: "Timer Current Slot"
+        unique_id: timer_lighting_current_slot
+        state: >
+          {% set slot = state_attr('sensor.timer_24h_lighting', 'current_slot') %}
+          {% if slot %}
+            {{ '%02d:%02d' | format(slot.hour, slot.minute) }}
+          {% else %}
+            Unknown
+          {% endif %}
+        icon: mdi:clock-outline
+```
+
+#### Check If Specific Time Slot Is Active
+
+```yaml
+template:
+  - binary_sensor:
+      - name: "Timer 14:30 Slot Active"
+        unique_id: timer_lighting_1430_active
+        state: >
+          {% set slots = state_attr('sensor.timer_24h_lighting', 'time_slots') %}
+          {% set slot = slots | selectattr('hour', 'equalto', 14) | selectattr('minute', 'equalto', 30) | list | first %}
+          {{ slot.isActive if slot else false }}
+        icon: mdi:clock-check-outline
+```
+
+#### Override Timer Control
+
+```yaml
+automation:
+  - alias: "Emergency override - turn off all timer entities"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.emergency_mode
+        to: "on"
+    action:
+      - service: homeassistant.turn_off
+        target:
+          entity_id: "{{ state_attr('sensor.timer_24h_lighting', 'controlled_entities') }}"
+      - service: notify.mobile_app
+        data:
+          message: "🚨 Emergency mode - all timer entities turned off"
+```
+
+#### Daily Report
+
+```yaml
+automation:
+  - alias: "Daily timer report"
+    trigger:
+      - platform: time
+        at: "08:00:00"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "📊 Daily Timer Report"
+          message: >
+            Timer: {{ state_attr('sensor.timer_24h_lighting', 'friendly_name') }}
+            
+            Status: {{ states('sensor.timer_24h_lighting') }}
+            
+            Active slots: {{ (state_attr('sensor.timer_24h_lighting', 'time_slots') | selectattr('isActive', 'equalto', true) | list | count) / 2 }} hours
+            
+            Controlled entities: {{ state_attr('sensor.timer_24h_lighting', 'controlled_entities') | length }}
+            
+            Conditions met: {{ '✅ Yes' if state_attr('sensor.timer_24h_lighting', 'home_status') else '❌ No' }}
+```
+
 ## 🔄 Updating Settings
 
 You can change timer settings at any time:
