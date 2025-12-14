@@ -53,6 +53,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
   public static getStubConfig(): Timer24HCardConfig {
     return {
+      type: 'custom:timer-24h-card',
       entity: '',
       show_title: true,
     };
@@ -375,6 +376,18 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return { x, y };
   }
 
+  private getSectorCenterAngleDeg(index: number, totalSectors: number): number {
+    return (index + 0.5) * (360 / totalSectors) - 90;
+  }
+
+  private getUprightTextRotationDeg(angleDeg: number): number {
+    // Keep text readable in the bottom half of the circle by flipping 180°
+    if (angleDeg > 90 || angleDeg < -90) {
+      return angleDeg + 180;
+    }
+    return angleDeg;
+  }
+
   private getTimeLabel(hour: number, minute: number): string {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
@@ -419,6 +432,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     for (let hour = 0; hour < 24; hour++) {
       const sectorPath = this.createSectorPath(hour, 24, innerRadius, outerRadius, centerX, centerY);
       const textPos = this.getTextPosition(hour, 24, (innerRadius + outerRadius) / 2, centerX, centerY);
+      const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
+      const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
+      const labelY = textPos.y + 3;
       const slot = timeSlots.find(s => s.hour === hour && s.minute === 0);
       const isActive = slot?.isActive || false;
       const isCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() < 30;
@@ -434,10 +450,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         </path>
         <text 
           x="${textPos.x}" 
-          y="${textPos.y + 3}" 
+          y="${labelY}" 
           text-anchor="middle" 
-          font-size="10" 
+          font-size="11" 
           font-weight="bold"
+          transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
           style="pointer-events: none; user-select: none; font-weight: bold;"
           fill="${isActive ? '#ffffff' : '#374151'}">
           ${this.getTimeLabel(hour, 0)}
@@ -458,6 +475,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     for (let hour = 0; hour < 24; hour++) {
       const sectorPath = this.createSectorPath(hour, 24, 0, innerRadius, centerX, centerY);
       const textPos = this.getTextPosition(hour, 24, innerRadius / 2, centerX, centerY);
+      const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
+      const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
+      const labelY = textPos.y + 2;
       const slot = timeSlots.find(s => s.hour === hour && s.minute === 30);
       const isActive = slot?.isActive || false;
       const isCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() >= 30;
@@ -473,10 +493,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         </path>
         <text 
           x="${textPos.x}" 
-          y="${textPos.y + 2}" 
+          y="${labelY}" 
           text-anchor="middle" 
-          font-size="8" 
+          font-size="9" 
           font-weight="bold"
+          transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
           style="pointer-events: none; user-select: none; font-weight: bold;"
           fill="${isActive ? '#ffffff' : '#6b7280'}">
           ${this.getTimeLabel(hour, 30)}
@@ -656,6 +677,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                                this.currentTime.getMinutes() < 30;
               const sectorPath = this.createSectorPath(hour, 24, middleRadius, outerRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
+              const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
+              const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
+              const labelY = textPos.y + 3;
               
               // Create a bound handler with explicit parameters
               const clickHandler = (e: Event) => {
@@ -674,10 +698,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 </path>
                 <text 
                   x="${textPos.x}" 
-                  y="${textPos.y + 3}" 
+                  y="${labelY}" 
                   text-anchor="middle" 
-                  font-size="10" 
+                  font-size="11" 
                   font-weight="bold"
+                  transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
                   style="pointer-events: none; user-select: none;"
                   fill="${isActive ? '#ffffff' : '#374151'}">
                   ${this.getTimeLabel(hour, 0)}
@@ -694,6 +719,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                                this.currentTime.getMinutes() >= 30;
               const sectorPath = this.createSectorPath(hour, 24, innerRadius, middleRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
+              const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
+              const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
+              const labelY = textPos.y + 2;
               
               // Create a bound handler with explicit parameters
               const clickHandler = (e: Event) => {
@@ -712,10 +740,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 </path>
                 <text 
                   x="${textPos.x}" 
-                  y="${textPos.y + 2}" 
+                  y="${labelY}" 
                   text-anchor="middle" 
-                  font-size="8" 
+                  font-size="9" 
                   font-weight="bold"
+                  transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
                   style="pointer-events: none; user-select: none;"
                   fill="${isActive ? '#ffffff' : '#6b7280'}">
                   ${this.getTimeLabel(hour, 30)}
