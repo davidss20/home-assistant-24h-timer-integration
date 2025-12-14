@@ -10,12 +10,16 @@ from pathlib import Path
 def main():
     print("🔨 Building Timer 24H Card...")
     print("-" * 50)
+
+    # On Windows, "npm" is typically a .cmd shim which CreateProcess can't execute directly
+    # when shell=False. Use npm.cmd explicitly.
+    npm_executable = "npm.cmd" if os.name == "nt" else "npm"
     
     # Step 1: Run npm build
     print("\n📦 Step 1: Running npm build...")
     try:
         result = subprocess.run(
-            ["npm", "run", "build"],
+            [npm_executable, "run", "build"],
             check=True,
             capture_output=True,
             text=True

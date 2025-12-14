@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-12-14
+
+### 🎉 Official Release
+
+### Added
+- 🎛️ אפשרות להציג/להסתיר את מתג ההפעלה/כיבוי דרך ממשק Home Assistant (UI) + תמיכה ב-`show_enable_switch` ב-YAML
+- 🔧 שירות `timer_24h.set_enabled` לאוטומציות
+
+### Changed
+- 🧭 יישור כיתוב השעות/חצאי-השעה לסקטורים (עם שמירה על קריאות בחצי התחתון)
+- 🔠 הגדלה קלה של גודל הכיתוב סביב השעון
+
+### Fixed
+- 🕧 חצאי-שעה מוצגים כראוי כ-`HH:30`
+- 🪟 `build_and_install.py` תוקן ל-Windows כדי להריץ `npm.cmd` בצורה תקינה
+
 ## [1.1.0] - 2024-12-08
 
 ### 🎉 Official Stable Release
@@ -55,8 +71,6 @@ data:
 ### Fixed
 - All issues from beta testing resolved
 - Stable and ready for production use
-
----
 
 ## [1.1.0-beta.4] - 2024-12-08
 
