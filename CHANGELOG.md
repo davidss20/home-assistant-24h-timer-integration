@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.1] - 2025-12-14
+## [1.1.3] - 2025-12-14
 
 ### 🎉 Official Release
 
@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - 🧭 יישור כיתוב השעות/חצאי-השעה לסקטורים (עם שמירה על קריאות בחצי התחתון)
-- 🔠 הגדלה קלה של גודל הכיתוב סביב השעון
+- 🔠 הגדלה של גודל הכיתוב סביב השעון
+- 🔠 הגדלה נוספת של כיתוב השעות בגלגל החיצוני
 
 ### Fixed
 - 🕧 חצאי-שעה מוצגים כראוי כ-`HH:30`
