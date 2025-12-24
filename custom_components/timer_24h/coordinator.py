@@ -250,20 +250,23 @@ class Timer24HCoordinator(DataUpdateCoordinator):
 
     async def async_set_slots(self, slots: list[dict[str, Any]]) -> None:
         """Set multiple time slots."""
-        for new_slot in slots:
-            hour = new_slot.get("hour")
-            minute = new_slot.get("minute")
-            is_active = new_slot.get("isActive", False)
-            
-            for slot in self._time_slots:
-                if slot["hour"] == hour and slot["minute"] == minute:
-                    slot["isActive"] = is_active
-                    break
+        # Build a lookup map for incoming slots
+        slot_updates = {(s.get("hour"), s.get("minute")): s.get("isActive", False) for s in slots}
+
+        # CREATE A NEW LIST - this ensures HA detects the change!
+        new_slots = []
+        for slot in self._time_slots:
+            key = (slot["hour"], slot["minute"])
+            if key in slot_updates:
+                new_slots.append({**slot, "isActive": slot_updates[key]})
+            else:
+                new_slots.append({**slot})
+        self._time_slots = new_slots
 
         await self._save_time_slots()
         self._last_controlled_states.clear()
         await self._control_entities()
-        
+
         self.async_set_updated_data(
             {
                 "time_slots": self._time_slots,
@@ -274,13 +277,20 @@ class Timer24HCoordinator(DataUpdateCoordinator):
 
     async def async_clear_all(self) -> None:
         """Clear all time slots."""
+        _LOGGER.info("Clearing all time slots")
+        active_before = [f"{s['hour']}:{s['minute']:02d}" for s in self._time_slots if s["isActive"]]
+        _LOGGER.info("Active slots BEFORE clear: %s", ", ".join(active_before) if active_before else "None")
+
+        # CREATE A NEW LIST - this ensures HA detects the change!
+        new_slots = []
         for slot in self._time_slots:
-            slot["isActive"] = False
+            new_slots.append({**slot, "isActive": False})
+        self._time_slots = new_slots
 
         await self._save_time_slots()
         self._last_controlled_states.clear()
         await self._control_entities()
-        
+
         self.async_set_updated_data(
             {
                 "time_slots": self._time_slots,
@@ -289,12 +299,17 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             }
         )
 
+        _LOGGER.info("✅ All time slots cleared successfully")
+
     async def _save_time_slots(self) -> None:
         """Save time slots to config entry options."""
-        new_options = {**self.config_entry.options, "time_slots": self._time_slots}
+        # Deep copy the slots to ensure no shared references with HA config system
+        time_slots_copy = [dict(slot) for slot in self._time_slots]
+        new_options = {**self.config_entry.options, "time_slots": time_slots_copy}
         self.hass.config_entries.async_update_entry(
             self.config_entry, options=new_options
         )
+        _LOGGER.debug("Saved %d time slots to config entry", len(time_slots_copy))
     
     async def async_set_enabled(self, enabled: bool) -> None:
         """Set timer enabled state."""
