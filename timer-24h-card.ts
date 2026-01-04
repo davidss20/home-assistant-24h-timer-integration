@@ -330,23 +330,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     }
   }
   
-  private getEntityFriendlyName(entityId: string): string {
-    const state = this.hass.states[entityId];
-    return state?.attributes.friendly_name || entityId;
-  }
-
-  private buildTooltipText(): string {
-    const status = this.getControlledEntitiesStatus();
-    if (status.total === 0) return '';
-    
-    return status.entities.map(entityId => {
-      const state = this.hass.states[entityId];
-      const isOn = state?.state === 'on';
-      const name = this.getEntityFriendlyName(entityId);
-      const icon = isOn ? '🟢' : '🔴';
-      return `${icon} ${name}`;
-    }).join('\n');
-  }
   
   private renderEnableSwitch(): TemplateResult {
     const enabled = this.getEnabled();
@@ -649,17 +632,13 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 statusText = `${status.active}/${status.total}`;
               }
               
-              const tooltipText = this.buildTooltipText();
-              
               return svg`
-                <!-- Full inner circle indicator with native tooltip -->
+                <!-- Full inner circle indicator -->
                 <circle 
                   cx="${centerX}" 
                   cy="${centerY}" 
                   r="${innerRadius}" 
-                  fill="${indicatorColor}"
-                  style="cursor: ${status.total > 0 ? 'help' : 'default'};">
-                  ${status.total > 0 ? svg`<title>${tooltipText}</title>` : ''}
+                  fill="${indicatorColor}">
                 </circle>
                 
                 <!-- Status text -->
@@ -958,7 +937,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.4 - NATIVE TOOLTIP  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.5  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
