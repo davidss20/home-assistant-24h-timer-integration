@@ -29,7 +29,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: Timer24HCardConfig;
   @state() private currentTime: Date = new Date();
-  @state() private showEntitiesTooltip: boolean = false;
   
   private updateInterval?: number;
   private clickTimeout?: number;
@@ -238,7 +237,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         configure_entity: 'Please configure the timer entity in card settings',
         entity_not_found: 'Entity not found. Please check your configuration.',
         enable_timer: 'Enable Timer',
-        entities_list: 'Controlled Entities',
       },
       he: {
         active: 'פעיל',
@@ -250,7 +248,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         configure_entity: 'אנא הגדר את ישות הטיימר בהגדרות הכרטיס',
         entity_not_found: 'הישות לא נמצאה. אנא בדוק את ההגדרות.',
         enable_timer: 'הפעל טיימר',
-        entities_list: 'ישויות מבוקרות',
       },
     };
     
@@ -333,45 +330,22 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     }
   }
   
-  private showTooltip(): void {
-    const status = this.getControlledEntitiesStatus();
-    if (status.total > 0) {
-      this.showEntitiesTooltip = true;
-    }
-  }
-
-  private hideTooltip(): void {
-    this.showEntitiesTooltip = false;
-  }
-
   private getEntityFriendlyName(entityId: string): string {
     const state = this.hass.states[entityId];
     return state?.attributes.friendly_name || entityId;
   }
 
-  private renderEntitiesTooltip(): TemplateResult {
-    if (!this.showEntitiesTooltip) return html``;
-    
+  private buildTooltipText(): string {
     const status = this.getControlledEntitiesStatus();
-    if (status.total === 0) return html``;
+    if (status.total === 0) return '';
     
-    return html`
-      <div class="entities-tooltip">
-        <div class="tooltip-title">${this.localize('entities_list')}</div>
-        <ul class="tooltip-list">
-          ${status.entities.map(entityId => {
-            const state = this.hass.states[entityId];
-            const isOn = state?.state === 'on';
-            return html`
-              <li class="tooltip-item">
-                <span class="tooltip-dot ${isOn ? 'on' : 'off'}"></span>
-                <span class="tooltip-name">${this.getEntityFriendlyName(entityId)}</span>
-              </li>
-            `;
-          })}
-        </ul>
-      </div>
-    `;
+    return status.entities.map(entityId => {
+      const state = this.hass.states[entityId];
+      const isOn = state?.state === 'on';
+      const name = this.getEntityFriendlyName(entityId);
+      const icon = isOn ? '🟢' : '🔴';
+      return `${icon} ${name}`;
+    }).join('\n');
   }
   
   private renderEnableSwitch(): TemplateResult {
@@ -675,16 +649,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 statusText = `${status.active}/${status.total}`;
               }
               
+              const tooltipText = this.buildTooltipText();
+              
               return svg`
-                <!-- Full inner circle indicator - hover to show tooltip -->
+                <!-- Full inner circle indicator with native tooltip -->
                 <circle 
                   cx="${centerX}" 
                   cy="${centerY}" 
                   r="${innerRadius}" 
                   fill="${indicatorColor}"
-                  style="cursor: ${status.total > 0 ? 'help' : 'default'};"
-                  @mouseenter="${() => this.showTooltip()}"
-                  @mouseleave="${() => this.hideTooltip()}">
+                  style="cursor: ${status.total > 0 ? 'help' : 'default'};">
+                  ${status.total > 0 ? svg`<title>${tooltipText}</title>` : ''}
                 </circle>
                 
                 <!-- Status text -->
@@ -799,7 +774,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               `;
             })}
           </svg>
-          ${this.renderEntitiesTooltip()}
         </div>
       </ha-card>
     `;
@@ -866,7 +840,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         padding: 0;
         flex: 1;
         min-height: 0;
-        position: relative;
       }
       
       .timer-svg {
@@ -980,73 +953,12 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         box-shadow: 0 0 0 2px var(--primary-color-alpha, rgba(3, 169, 244, 0.2));
       }
       
-      /* Tooltip Styles */
-      .entities-tooltip {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: var(--card-background-color, white);
-        border-radius: 8px;
-        padding: 10px 14px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-        z-index: 100;
-        min-width: 150px;
-        max-width: 220px;
-        pointer-events: none;
-      }
-      
-      .tooltip-title {
-        font-size: 0.75rem;
-        font-weight: bold;
-        color: var(--secondary-text-color, #666);
-        margin-bottom: 6px;
-        text-align: center;
-        border-bottom: 1px solid var(--divider-color, #e5e7eb);
-        padding-bottom: 6px;
-      }
-      
-      .tooltip-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      
-      .tooltip-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 0;
-        font-size: 0.8rem;
-        color: var(--primary-text-color, #212121);
-      }
-      
-      .tooltip-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-      
-      .tooltip-dot.on {
-        background: #10b981;
-      }
-      
-      .tooltip-dot.off {
-        background: #ef4444;
-      }
-      
-      .tooltip-name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
     `;
   }
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.3 - ENTITIES TOOLTIP  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.4 - NATIVE TOOLTIP  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
