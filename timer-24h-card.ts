@@ -29,7 +29,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: Timer24HCardConfig;
   @state() private currentTime: Date = new Date();
-  @state() private showEntitiesDialog: boolean = false;
+  @state() private showEntitiesTooltip: boolean = false;
   
   private updateInterval?: number;
   private clickTimeout?: number;
@@ -239,8 +239,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         entity_not_found: 'Entity not found. Please check your configuration.',
         enable_timer: 'Enable Timer',
         entities_list: 'Controlled Entities',
-        close: 'Close',
-        no_entities: 'No entities configured',
       },
       he: {
         active: 'פעיל',
@@ -253,8 +251,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         entity_not_found: 'הישות לא נמצאה. אנא בדוק את ההגדרות.',
         enable_timer: 'הפעל טיימר',
         entities_list: 'ישויות מבוקרות',
-        close: 'סגור',
-        no_entities: 'לא הוגדרו ישויות',
       },
     };
     
@@ -337,15 +333,15 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     }
   }
   
-  private handleCenterClick(): void {
+  private showTooltip(): void {
     const status = this.getControlledEntitiesStatus();
     if (status.total > 0) {
-      this.showEntitiesDialog = true;
+      this.showEntitiesTooltip = true;
     }
   }
 
-  private closeEntitiesDialog(): void {
-    this.showEntitiesDialog = false;
+  private hideTooltip(): void {
+    this.showEntitiesTooltip = false;
   }
 
   private getEntityFriendlyName(entityId: string): string {
@@ -353,59 +349,27 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return state?.attributes.friendly_name || entityId;
   }
 
-  private getEntityIcon(entityId: string): string {
-    const state = this.hass.states[entityId];
-    if (state?.attributes.icon) {
-      return state.attributes.icon;
-    }
-    // Default icons based on domain
-    const domain = entityId.split('.')[0];
-    const defaultIcons: Record<string, string> = {
-      light: 'mdi:lightbulb',
-      switch: 'mdi:toggle-switch',
-      fan: 'mdi:fan',
-      climate: 'mdi:thermostat',
-      media_player: 'mdi:cast',
-      cover: 'mdi:window-shutter',
-      input_boolean: 'mdi:toggle-switch-outline',
-    };
-    return defaultIcons[domain] || 'mdi:toggle-switch';
-  }
-
-  private renderEntitiesDialog(): TemplateResult {
-    if (!this.showEntitiesDialog) return html``;
+  private renderEntitiesTooltip(): TemplateResult {
+    if (!this.showEntitiesTooltip) return html``;
     
     const status = this.getControlledEntitiesStatus();
+    if (status.total === 0) return html``;
     
     return html`
-      <div class="dialog-overlay" @click="${this.closeEntitiesDialog}">
-        <div class="dialog-content" @click="${(e: Event) => e.stopPropagation()}">
-          <div class="dialog-header">
-            <span class="dialog-title">${this.localize('entities_list')}</span>
-            <button class="dialog-close" @click="${this.closeEntitiesDialog}">×</button>
-          </div>
-          <div class="dialog-body">
-            ${status.entities.length === 0 ? html`
-              <div class="no-entities">${this.localize('no_entities')}</div>
-            ` : html`
-              <ul class="entities-list">
-                ${status.entities.map(entityId => {
-                  const state = this.hass.states[entityId];
-                  const isOn = state?.state === 'on';
-                  return html`
-                    <li class="entity-item ${isOn ? 'on' : 'off'}">
-                      <ha-icon icon="${this.getEntityIcon(entityId)}"></ha-icon>
-                      <span class="entity-name">${this.getEntityFriendlyName(entityId)}</span>
-                      <span class="entity-state ${isOn ? 'on' : 'off'}">
-                        ${isOn ? this.localize('on') : this.localize('off')}
-                      </span>
-                    </li>
-                  `;
-                })}
-              </ul>
-            `}
-          </div>
-        </div>
+      <div class="entities-tooltip">
+        <div class="tooltip-title">${this.localize('entities_list')}</div>
+        <ul class="tooltip-list">
+          ${status.entities.map(entityId => {
+            const state = this.hass.states[entityId];
+            const isOn = state?.state === 'on';
+            return html`
+              <li class="tooltip-item">
+                <span class="tooltip-dot ${isOn ? 'on' : 'off'}"></span>
+                <span class="tooltip-name">${this.getEntityFriendlyName(entityId)}</span>
+              </li>
+            `;
+          })}
+        </ul>
       </div>
     `;
   }
@@ -712,14 +676,15 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               }
               
               return svg`
-                <!-- Full inner circle indicator - clickable when entities exist -->
+                <!-- Full inner circle indicator - hover to show tooltip -->
                 <circle 
                   cx="${centerX}" 
                   cy="${centerY}" 
                   r="${innerRadius}" 
                   fill="${indicatorColor}"
-                  style="cursor: ${status.total > 0 ? 'pointer' : 'default'}; transition: opacity 0.2s;"
-                  @click="${() => this.handleCenterClick()}">
+                  style="cursor: ${status.total > 0 ? 'help' : 'default'};"
+                  @mouseenter="${() => this.showTooltip()}"
+                  @mouseleave="${() => this.hideTooltip()}">
                 </circle>
                 
                 <!-- Status text -->
@@ -834,8 +799,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               `;
             })}
           </svg>
+          ${this.renderEntitiesTooltip()}
         </div>
-        ${this.renderEntitiesDialog()}
       </ha-card>
     `;
   }
@@ -901,6 +866,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         padding: 0;
         flex: 1;
         min-height: 0;
+        position: relative;
       }
       
       .timer-svg {
@@ -1014,139 +980,73 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         box-shadow: 0 0 0 2px var(--primary-color-alpha, rgba(3, 169, 244, 0.2));
       }
       
-      /* Dialog Styles */
-      .dialog-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 999;
-      }
-      
-      .dialog-content {
+      /* Tooltip Styles */
+      .entities-tooltip {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         background: var(--card-background-color, white);
-        border-radius: 12px;
-        width: 320px;
-        max-width: 90vw;
-        max-height: 70vh;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 10px 14px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+        z-index: 100;
+        min-width: 150px;
+        max-width: 220px;
+        pointer-events: none;
       }
       
-      .dialog-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--divider-color, #e5e7eb);
-        background: var(--primary-background-color, #f5f5f5);
-      }
-      
-      .dialog-title {
-        font-size: 1rem;
+      .tooltip-title {
+        font-size: 0.75rem;
         font-weight: bold;
-        color: var(--primary-text-color, #212121);
-      }
-      
-      .dialog-close {
-        background: none;
-        border: none;
-        font-size: 1.3rem;
-        cursor: pointer;
         color: var(--secondary-text-color, #666);
-        padding: 4px 8px;
-        line-height: 1;
-        border-radius: 4px;
+        margin-bottom: 6px;
+        text-align: center;
+        border-bottom: 1px solid var(--divider-color, #e5e7eb);
+        padding-bottom: 6px;
       }
       
-      .dialog-close:hover {
-        background-color: var(--secondary-background-color, #e0e0e0);
-      }
-      
-      .dialog-body {
-        padding: 12px;
-        max-height: 50vh;
-        overflow-y: auto;
-      }
-      
-      .entities-list {
+      .tooltip-list {
         list-style: none;
         margin: 0;
         padding: 0;
       }
       
-      .entity-item {
+      .tooltip-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 6px;
-        background: var(--secondary-background-color, #f5f5f5);
-      }
-      
-      .entity-item:last-child {
-        margin-bottom: 0;
-      }
-      
-      .entity-item.on {
-        background: rgba(16, 185, 129, 0.15);
-      }
-      
-      .entity-item.off {
-        background: var(--secondary-background-color, #f5f5f5);
-      }
-      
-      .entity-item ha-icon {
-        --mdc-icon-size: 20px;
-        color: var(--secondary-text-color, #666);
-      }
-      
-      .entity-item.on ha-icon {
-        color: #10b981;
-      }
-      
-      .entity-name {
-        flex: 1;
+        gap: 8px;
+        padding: 4px 0;
+        font-size: 0.8rem;
         color: var(--primary-text-color, #212121);
-        font-size: 0.85rem;
       }
       
-      .entity-state {
-        font-size: 0.7rem;
-        padding: 3px 8px;
-        border-radius: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
+      .tooltip-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
       }
       
-      .entity-state.on {
-        color: #10b981;
-        background: rgba(16, 185, 129, 0.2);
+      .tooltip-dot.on {
+        background: #10b981;
       }
       
-      .entity-state.off {
-        color: #ef4444;
-        background: rgba(239, 68, 68, 0.15);
+      .tooltip-dot.off {
+        background: #ef4444;
       }
       
-      .no-entities {
-        text-align: center;
-        color: var(--secondary-text-color, #666);
-        padding: 16px;
-        font-size: 0.9rem;
+      .tooltip-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     `;
   }
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.2 - ENTITIES DIALOG  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.3 - ENTITIES TOOLTIP  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
