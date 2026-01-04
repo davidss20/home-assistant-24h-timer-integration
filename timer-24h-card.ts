@@ -1026,47 +1026,29 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         justify-content: center;
         align-items: center;
         z-index: 999;
-        animation: fadeIn 0.2s ease-out;
-      }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
-      @keyframes slideIn {
-        from { 
-          opacity: 0;
-          transform: scale(0.9) translateY(-10px);
-        }
-        to { 
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
       }
       
       .dialog-content {
         background: var(--card-background-color, white);
         border-radius: 12px;
-        max-width: 90%;
-        max-height: 80vh;
-        min-width: 280px;
+        width: 320px;
+        max-width: 90vw;
+        max-height: 70vh;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        animation: slideIn 0.2s ease-out;
       }
       
       .dialog-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 16px;
+        padding: 12px 16px;
         border-bottom: 1px solid var(--divider-color, #e5e7eb);
         background: var(--primary-background-color, #f5f5f5);
       }
       
       .dialog-title {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: bold;
         color: var(--primary-text-color, #212121);
       }
@@ -1074,13 +1056,12 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .dialog-close {
         background: none;
         border: none;
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         cursor: pointer;
         color: var(--secondary-text-color, #666);
-        padding: 0 8px;
+        padding: 4px 8px;
         line-height: 1;
         border-radius: 4px;
-        transition: background-color 0.2s;
       }
       
       .dialog-close:hover {
@@ -1088,8 +1069,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       }
       
       .dialog-body {
-        padding: 16px;
-        max-height: 60vh;
+        padding: 12px;
+        max-height: 50vh;
         overflow-y: auto;
       }
       
@@ -1102,12 +1083,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .entity-item {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 8px;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 6px;
         background: var(--secondary-background-color, #f5f5f5);
-        transition: background-color 0.2s;
       }
       
       .entity-item:last-child {
@@ -1123,7 +1103,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       }
       
       .entity-item ha-icon {
-        --mdc-icon-size: 24px;
+        --mdc-icon-size: 20px;
         color: var(--secondary-text-color, #666);
       }
       
@@ -1134,16 +1114,15 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .entity-name {
         flex: 1;
         color: var(--primary-text-color, #212121);
-        font-size: 0.95rem;
+        font-size: 0.85rem;
       }
       
       .entity-state {
-        font-size: 0.8rem;
-        padding: 4px 10px;
-        border-radius: 12px;
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 10px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
       }
       
       .entity-state.on {
@@ -1159,15 +1138,15 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .no-entities {
         text-align: center;
         color: var(--secondary-text-color, #666);
-        padding: 24px;
-        font-size: 0.95rem;
+        padding: 16px;
+        font-size: 0.9rem;
       }
     `;
   }
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.1 - ENTITIES DIALOG  ',
+  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.2 - ENTITIES DIALOG  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
