@@ -118,3 +118,4 @@ Thank you for testing this beta release and helping make Timer 24H better!
 - Custom icon in Home Assistant (pending Brands approval)
 - Additional features based on your feedback!
 
+

@@ -51,3 +51,4 @@ Full documentation available at: [GitHub Repository](https://github.com/davidss2
 
 Report issues: [GitHub Issues](https://github.com/davidss20/home-assistant-24h-timer-integration/issues)
 
+
