@@ -40,6 +40,10 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @state() private config!: Timer24HCardConfig;
   @state() private currentTime: Date = new Date();
   @state() private showEntitiesDialog: boolean = false;
+  @state() private showConditionsDialog: boolean = false;
+  @state() private draftConditionSensors: string[] = [];
+  @state() private draftConditionLogic: 'OR' | 'AND' = 'OR';
+  @state() private conditionsSaving: boolean = false;
   
   private updateInterval?: number;
   private clickTimeout?: number;
@@ -91,7 +95,14 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
     // Dialog open/close must update immediately (do not wait for hass/currentTime)
-    if (changedProps.has('config') || changedProps.has('showEntitiesDialog')) {
+    if (
+      changedProps.has('config') ||
+      changedProps.has('showEntitiesDialog') ||
+      changedProps.has('showConditionsDialog') ||
+      changedProps.has('draftConditionSensors') ||
+      changedProps.has('draftConditionLogic') ||
+      changedProps.has('conditionsSaving')
+    ) {
       return true;
     }
     
@@ -136,6 +147,18 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       const oldSettings = JSON.stringify(oldState?.attributes.entity_settings || {});
       const newSettings = JSON.stringify(newState?.attributes.entity_settings || {});
       if (oldSettings !== newSettings) {
+        return true;
+      }
+
+      const oldConditions = JSON.stringify({
+        sensors: oldState?.attributes.home_sensors || [],
+        logic: oldState?.attributes.home_logic || 'OR',
+      });
+      const newConditions = JSON.stringify({
+        sensors: newState?.attributes.home_sensors || [],
+        logic: newState?.attributes.home_logic || 'OR',
+      });
+      if (oldConditions !== newConditions) {
         return true;
       }
     }
@@ -304,6 +327,15 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         entities_list: 'Controlled Entities',
         close: 'Close',
         no_entities: 'No entities configured',
+        activation_conditions: 'Activation Conditions',
+        condition_logic: 'Condition logic',
+        logic_or: 'OR (any)',
+        logic_and: 'AND (all)',
+        add_condition: 'Add condition',
+        no_conditions: 'No conditions — timer always allowed',
+        conditions_hint: 'Saved to the integration (works in background). Empty = always active.',
+        save: 'Save',
+        remove: 'Remove',
       },
       he: {
         active: 'פעיל',
@@ -329,6 +361,15 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         entities_list: 'ישויות מבוקרות',
         close: 'סגור',
         no_entities: 'לא הוגדרו ישויות',
+        activation_conditions: 'תנאי הפעלה',
+        condition_logic: 'לוגיקת תנאים',
+        logic_or: 'OR (אחד מספיק)',
+        logic_and: 'AND (הכל חייב)',
+        add_condition: 'הוסף תנאי',
+        no_conditions: 'אין תנאים — הטיימר תמיד מורשה',
+        conditions_hint: 'נשמר באינטגרציה (עובד ברקע). ריק = תמיד פעיל.',
+        save: 'שמור',
+        remove: 'הסר',
       },
     };
     
@@ -535,6 +576,187 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     this.showEntitiesDialog = false;
   }
 
+  private getConditionSensors(): string[] {
+    const entity = this.hass?.states[this.config.entity];
+    const sensors = entity?.attributes?.home_sensors;
+    return Array.isArray(sensors) ? [...sensors] : [];
+  }
+
+  private getConditionLogic(): 'OR' | 'AND' {
+    const entity = this.hass?.states[this.config.entity];
+    const logic = String(entity?.attributes?.home_logic || 'OR').toUpperCase();
+    return logic === 'AND' ? 'AND' : 'OR';
+  }
+
+  private getAvailableConditionSensors(): string[] {
+    if (!this.hass) return [];
+    const domains = [
+      'person',
+      'device_tracker',
+      'binary_sensor',
+      'sensor',
+      'input_boolean',
+    ];
+    return Object.keys(this.hass.states)
+      .filter((id) => domains.some((d) => id.startsWith(`${d}.`)))
+      .sort();
+  }
+
+  private openConditionsDialog(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.draftConditionSensors = this.getConditionSensors();
+    this.draftConditionLogic = this.getConditionLogic();
+    this.showConditionsDialog = true;
+  }
+
+  private closeConditionsDialog(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.showConditionsDialog = false;
+  }
+
+  private addConditionSensor(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const entityId = target.value;
+    if (!entityId) return;
+    if (!this.draftConditionSensors.includes(entityId)) {
+      this.draftConditionSensors = [...this.draftConditionSensors, entityId];
+    }
+    target.value = '';
+  }
+
+  private removeConditionSensor(entityId: string): void {
+    this.draftConditionSensors = this.draftConditionSensors.filter(
+      (id) => id !== entityId
+    );
+  }
+
+  private setDraftConditionLogic(logic: 'OR' | 'AND'): void {
+    this.draftConditionLogic = logic;
+  }
+
+  private async saveActivationConditions(): Promise<void> {
+    if (!this.hass || !this.config?.entity || this.conditionsSaving) return;
+    this.conditionsSaving = true;
+    try {
+      await this.hass.callService('timer_24h', 'set_activation_conditions', {
+        entity_id: this.config.entity,
+        home_sensors: this.draftConditionSensors,
+        home_logic: this.draftConditionLogic,
+      });
+      this.showConditionsDialog = false;
+    } catch (error) {
+      console.error('❌ Failed to update activation conditions:', error);
+    } finally {
+      this.conditionsSaving = false;
+    }
+  }
+
+  private renderConditionsDialog(): TemplateResult {
+    if (!this.showConditionsDialog) return html``;
+
+    const selected = new Set(this.draftConditionSensors);
+    const available = this.getAvailableConditionSensors().filter(
+      (id) => !selected.has(id)
+    );
+
+    return html`
+      <div
+        class="dialog-overlay"
+        @click=${this.closeConditionsDialog}
+        @pointerdown=${this.closeConditionsDialog}
+      >
+        <div
+          class="dialog-content conditions-dialog"
+          @click=${(e: Event) => e.stopPropagation()}
+          @pointerdown=${(e: Event) => e.stopPropagation()}
+        >
+          <div class="dialog-header">
+            <span class="dialog-title">${this.localize('activation_conditions')}</span>
+            <button
+              type="button"
+              class="dialog-close"
+              @click=${this.closeConditionsDialog}
+              aria-label="${this.localize('close')}"
+            >×</button>
+          </div>
+          <div class="dialog-body">
+            <p class="conditions-hint">${this.localize('conditions_hint')}</p>
+
+            <div class="conditions-section">
+              <div class="conditions-label">${this.localize('condition_logic')}</div>
+              <div class="logic-toggle">
+                <button
+                  type="button"
+                  class="logic-btn ${this.draftConditionLogic === 'OR' ? 'active' : ''}"
+                  @click=${() => this.setDraftConditionLogic('OR')}
+                >${this.localize('logic_or')}</button>
+                <button
+                  type="button"
+                  class="logic-btn ${this.draftConditionLogic === 'AND' ? 'active' : ''}"
+                  @click=${() => this.setDraftConditionLogic('AND')}
+                >${this.localize('logic_and')}</button>
+              </div>
+            </div>
+
+            <div class="conditions-section">
+              ${this.draftConditionSensors.length === 0
+                ? html`<div class="no-entities">${this.localize('no_conditions')}</div>`
+                : html`
+                    <ul class="entities-list">
+                      ${this.draftConditionSensors.map(
+                        (entityId) => html`
+                          <li class="entity-item">
+                            <ha-icon icon="${this.getEntityIcon(entityId)}"></ha-icon>
+                            <span class="entity-name">${this.getFriendlyName(entityId)}</span>
+                            <button
+                              type="button"
+                              class="remove-btn"
+                              @click=${() => this.removeConditionSensor(entityId)}
+                              aria-label="${this.localize('remove')}"
+                            >×</button>
+                          </li>
+                        `
+                      )}
+                    </ul>
+                  `}
+            </div>
+
+            <div class="conditions-section">
+              <label class="conditions-label" for="add-condition">
+                ${this.localize('add_condition')}
+              </label>
+              <select
+                id="add-condition"
+                class="condition-select"
+                @change=${this.addConditionSensor}
+              >
+                <option value="">-- ${this.localize('add_condition')} --</option>
+                ${available.map(
+                  (entityId) => html`
+                    <option value="${entityId}">
+                      ${this.getFriendlyName(entityId)} (${entityId})
+                    </option>
+                  `
+                )}
+              </select>
+            </div>
+
+            <button
+              type="button"
+              class="save-conditions-btn"
+              ?disabled=${this.conditionsSaving}
+              @click=${() => this.saveActivationConditions()}
+            >
+              ${this.localize('save')}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   private getEntityIcon(entityId: string): string {
     const state = this.hass.states[entityId];
     if (state?.attributes.icon) {
@@ -549,6 +771,10 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       media_player: 'mdi:cast',
       cover: 'mdi:window-shutter',
       input_boolean: 'mdi:toggle-switch-outline',
+      person: 'mdi:account',
+      device_tracker: 'mdi:cellphone',
+      binary_sensor: 'mdi:checkbox-marked-circle-outline',
+      sensor: 'mdi:eye',
     };
     return defaultIcons[domain] || 'mdi:toggle-switch';
   }
@@ -966,18 +1192,36 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           <div class="header">
             <div class="title">${entityName}</div>
             ${this.shouldShowEnableSwitch() ? this.renderEnableSwitch() : ''}
-            <div class="system-status ${homeStatus ? 'active' : 'inactive'}">
+            <div
+              class="system-status clickable ${homeStatus ? 'active' : 'inactive'}"
+              title="${this.localize('activation_conditions')}"
+              @click=${this.openConditionsDialog}
+            >
               ${homeStatus ? this.localize('active') : this.localize('inactive')}
             </div>
           </div>
         ` : this.shouldShowEnableSwitch() ? html`
           <div class="header">
             ${this.renderEnableSwitch()}
-            <div class="system-status ${homeStatus ? 'active' : 'inactive'}">
+            <div
+              class="system-status clickable ${homeStatus ? 'active' : 'inactive'}"
+              title="${this.localize('activation_conditions')}"
+              @click=${this.openConditionsDialog}
+            >
               ${homeStatus ? this.localize('active') : this.localize('inactive')}
             </div>
           </div>
-        ` : ''}
+        ` : html`
+          <div class="header">
+            <div
+              class="system-status clickable ${homeStatus ? 'active' : 'inactive'}"
+              title="${this.localize('activation_conditions')}"
+              @click=${this.openConditionsDialog}
+            >
+              ${homeStatus ? this.localize('active') : this.localize('inactive')}
+            </div>
+          </div>
+        `}
         
         <div class="timer-container">
           <svg class="timer-svg" viewBox="0 0 400 400">
@@ -1183,6 +1427,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         ${this.renderClimateControls()}
         ${this.renderFanControls()}
         ${this.renderEntitiesDialog()}
+        ${this.renderConditionsDialog()}
       </ha-card>
     `;
   }
@@ -1246,6 +1491,16 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .system-status.inactive {
         color: var(--warning-color, #f59e0b);
         background-color: var(--warning-color-alpha, rgba(245, 158, 11, 0.1));
+      }
+
+      .system-status.clickable {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .system-status.clickable:hover {
+        filter: brightness(0.95);
+        outline: 1px solid currentColor;
       }
       
       .timer-container {
@@ -1599,13 +1854,100 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         padding: 16px;
         font-size: 0.9rem;
       }
+
+      .conditions-dialog {
+        max-width: 360px;
+      }
+
+      .conditions-hint {
+        margin: 0 0 12px 0;
+        font-size: 0.8rem;
+        color: var(--secondary-text-color, #666);
+        line-height: 1.35;
+      }
+
+      .conditions-section {
+        margin-bottom: 14px;
+      }
+
+      .conditions-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--secondary-text-color, #666);
+      }
+
+      .logic-toggle {
+        display: flex;
+        gap: 6px;
+      }
+
+      .logic-btn {
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid var(--divider-color, #ddd);
+        border-radius: 6px;
+        background: var(--card-background-color, #fff);
+        color: var(--primary-text-color, #212121);
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+
+      .logic-btn.active {
+        background: var(--primary-color, #03a9f4);
+        border-color: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, #fff);
+      }
+
+      .condition-select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--divider-color, #ddd);
+        border-radius: 6px;
+        background: var(--card-background-color, #fff);
+        color: var(--primary-text-color, #212121);
+        font-size: 0.85rem;
+      }
+
+      .remove-btn {
+        border: none;
+        background: transparent;
+        color: var(--secondary-text-color, #666);
+        font-size: 1.2rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      .remove-btn:hover {
+        color: var(--error-color, #ef4444);
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      .save-conditions-btn {
+        width: 100%;
+        padding: 10px 12px;
+        border: none;
+        border-radius: 6px;
+        background: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, #fff);
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .save-conditions-btn:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
       
     `;
   }
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.2.4  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.2.7-beta.1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

@@ -18,6 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
+    ATTR_HOME_LOGIC,
+    ATTR_HOME_SENSORS,
     ATTR_HOUR,
     ATTR_HVAC_MODE,
     ATTR_MINUTE,
@@ -27,6 +29,7 @@ from .const import (
     ATTR_TEMPERATURE,
     DOMAIN,
     SERVICE_CLEAR_ALL,
+    SERVICE_SET_ACTIVATION_CONDITIONS,
     SERVICE_SET_ENABLED,
     SERVICE_SET_ENTITY_SETTINGS,
     SERVICE_SET_SLOTS,
@@ -276,6 +279,38 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
         _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
 
+    async def handle_set_activation_conditions(call: ServiceCall) -> None:
+        """Handle the set_activation_conditions service call."""
+        entity_id = call.data.get("entity_id")
+        home_sensors = call.data.get(ATTR_HOME_SENSORS)
+        home_logic = call.data.get(ATTR_HOME_LOGIC)
+
+        _LOGGER.info(
+            "🔵 SERVICE CALLED: set_activation_conditions(entity=%s, sensors=%s, logic=%s)",
+            entity_id,
+            home_sensors,
+            home_logic,
+        )
+
+        for entry_id, data in hass.data[DOMAIN].items():
+            if isinstance(data, dict) and "coordinator" in data:
+                coordinator = data["coordinator"]
+
+                entity_registry = er.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (
+                        entity_entry.config_entry_id
+                        == coordinator.config_entry.entry_id
+                        and entity_entry.entity_id == entity_id
+                    ):
+                        await coordinator.async_set_activation_conditions(
+                            home_sensors=home_sensors,
+                            home_logic=home_logic,
+                        )
+                        return
+
+        _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
+
     # Register services if not already registered
     if not hass.services.has_service(DOMAIN, SERVICE_TOGGLE_SLOT):
         hass.services.async_register(
@@ -343,6 +378,22 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     vol.Optional(ATTR_PERCENTAGE): vol.All(
                         vol.Coerce(int), vol.Range(min=0, max=100)
                     ),
+                }
+            ),
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_ACTIVATION_CONDITIONS):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_ACTIVATION_CONDITIONS,
+            handle_set_activation_conditions,
+            schema=vol.Schema(
+                {
+                    vol.Required("entity_id"): cv.entity_id,
+                    vol.Optional(ATTR_HOME_SENSORS): vol.All(
+                        cv.ensure_list, [cv.entity_id]
+                    ),
+                    vol.Optional(ATTR_HOME_LOGIC): vol.In(["OR", "AND"]),
                 }
             ),
         )

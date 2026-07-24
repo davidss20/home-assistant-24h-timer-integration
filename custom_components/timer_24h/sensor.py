@@ -16,10 +16,15 @@ from .const import (
     ATTR_CONTROLLED_ENTITIES,
     ATTR_CURRENT_SLOT,
     ATTR_ENTITY_SETTINGS,
+    ATTR_HOME_LOGIC,
+    ATTR_HOME_SENSORS,
     ATTR_HOME_STATUS,
     ATTR_LAST_UPDATE,
     ATTR_TIME_SLOTS,
     CONF_ENTITY_SETTINGS,
+    CONF_HOME_LOGIC,
+    CONF_HOME_SENSORS,
+    DEFAULT_HOME_LOGIC,
     DOMAIN,
     STATE_ACTIVE,
     STATE_BLOCKED,
@@ -88,6 +93,12 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             ATTR_TIME_SLOTS: [slot.copy() for slot in self.coordinator.time_slots],
             ATTR_CURRENT_SLOT: current_slot.copy() if current_slot else None,
             ATTR_HOME_STATUS: self.coordinator.home_status,
+            ATTR_HOME_SENSORS: list(
+                self.config_entry.options.get(CONF_HOME_SENSORS, [])
+            ),
+            ATTR_HOME_LOGIC: self.config_entry.options.get(
+                CONF_HOME_LOGIC, DEFAULT_HOME_LOGIC
+            ),
             ATTR_CONTROLLED_ENTITIES: self.config_entry.options.get("entities", []),
             ATTR_ENTITY_SETTINGS: self.config_entry.options.get(
                 CONF_ENTITY_SETTINGS, {}

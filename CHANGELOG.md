@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.7-beta.1] - 2026-07-24
+
+### Added
+- 🎯 Edit activation conditions from the card (click Active/Inactive status)
+- 🔧 Service `timer_24h.set_activation_conditions` — persists to integration options (safe for background control)
+- 📡 Sensor attributes `home_sensors` and `home_logic` exposed for the card UI
+
 ## [1.2.6] - 2026-07-24
 
 ### Changed

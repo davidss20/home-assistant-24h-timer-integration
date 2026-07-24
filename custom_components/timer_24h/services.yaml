@@ -130,3 +130,43 @@ set_entity_settings:
           min: 0
           max: 100
           mode: box
+
+set_activation_conditions:
+  name: Set activation conditions
+  description: >
+    Update activation condition sensors and logic. Changes are saved to the
+    integration options (not the Lovelace card), so the timer keeps working in
+    the background.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    home_sensors:
+      name: Activation conditions
+      description: >
+        Sensors that must be met for the timer to control entities.
+        Leave empty to always allow activation.
+      required: false
+      selector:
+        entity:
+          domain:
+            - person
+            - device_tracker
+            - binary_sensor
+            - sensor
+            - input_boolean
+          multiple: true
+    home_logic:
+      name: Condition logic
+      description: OR = any condition met; AND = all conditions met.
+      required: false
+      selector:
+        select:
+          options:
+            - "OR"
+            - "AND"

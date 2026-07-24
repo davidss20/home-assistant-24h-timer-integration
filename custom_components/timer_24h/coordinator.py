@@ -427,6 +427,82 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             entity_settings,
         )
 
+    async def async_set_activation_conditions(
+        self,
+        home_sensors: list[str] | None = None,
+        home_logic: str | None = None,
+    ) -> None:
+        """Update activation conditions persisted in config entry options.
+
+        Source of truth remains the integration options (not Lovelace card YAML),
+        so entity control continues to work when the card is closed.
+        """
+        allowed_domains = {
+            "person",
+            "device_tracker",
+            "binary_sensor",
+            "sensor",
+            "input_boolean",
+        }
+
+        if home_sensors is None:
+            validated = list(self.config_entry.options.get(CONF_HOME_SENSORS, []))
+        else:
+            validated = []
+            for entity_id in home_sensors:
+                if not isinstance(entity_id, str) or "." not in entity_id:
+                    _LOGGER.warning("Skipping invalid condition entity_id: %s", entity_id)
+                    continue
+                domain = entity_id.split(".", 1)[0]
+                if domain not in allowed_domains:
+                    _LOGGER.warning(
+                        "Skipping unsupported condition entity domain: %s", entity_id
+                    )
+                    continue
+                if entity_id not in validated:
+                    validated.append(entity_id)
+
+        if home_logic is None:
+            logic = self.config_entry.options.get(CONF_HOME_LOGIC, DEFAULT_HOME_LOGIC)
+        else:
+            logic = home_logic.upper() if isinstance(home_logic, str) else DEFAULT_HOME_LOGIC
+            if logic not in ("OR", "AND"):
+                _LOGGER.warning("Invalid home_logic %s, using %s", home_logic, DEFAULT_HOME_LOGIC)
+                logic = DEFAULT_HOME_LOGIC
+
+        new_options = {
+            **self.config_entry.options,
+            CONF_HOME_SENSORS: validated,
+            CONF_HOME_LOGIC: logic,
+        }
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, options=new_options
+        )
+
+        # Refresh listeners immediately; entry reload will also reconfigure them
+        self.cleanup_state_listeners()
+        self.setup_state_listeners()
+
+        self._check_home_status()
+        self._last_controlled_states.clear()
+        await self._control_entities()
+
+        self.async_set_updated_data(
+            {
+                "time_slots": self._time_slots,
+                "home_status": self._home_status,
+                "enabled": self._enabled,
+                CONF_HOME_SENSORS: validated,
+                CONF_HOME_LOGIC: logic,
+            }
+        )
+        _LOGGER.info(
+            "✅ Updated activation conditions: sensors=%s logic=%s home_status=%s",
+            validated,
+            logic,
+            self._home_status,
+        )
+
     async def async_toggle_slot(self, hour: int, minute: int) -> None:
         """Toggle a time slot."""
         _LOGGER.info("🎯 Toggle slot called: hour=%s, minute=%s", hour, minute)

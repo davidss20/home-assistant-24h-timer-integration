@@ -140,6 +140,14 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
             <div class="detail-row">
               <strong>Home Status:</strong> ${this.hass.states[this.config.entity]?.attributes?.home_status ? 'At Home' : 'Away'}
             </div>
+            <div class="detail-row">
+              <strong>Conditions:</strong> ${(this.hass.states[this.config.entity]?.attributes?.home_sensors || []).length || 0}
+              (${this.hass.states[this.config.entity]?.attributes?.home_logic || 'OR'})
+            </div>
+            <p class="help-text" style="margin-top: 12px;">
+              Tip: Click Active/Inactive on the card to edit activation conditions.
+              Changes are saved to the integration (not card YAML).
+            </p>
           </div>
         ` : ''}
       </div>

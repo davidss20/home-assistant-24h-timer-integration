@@ -174,8 +174,8 @@ show_title: true  # Show the timer name at the top
 - **🟢 Green**: Active segments
 - **⚪ Gray**: Inactive segments
 - **🔵 Blue**: Current segment (blue border)
-- **🟢 Green**: System active (conditions met)
-- **🟡 Yellow**: System inactive (conditions not met)
+- **🟢 Green**: System active (conditions met) — click to edit conditions
+- **🟡 Yellow**: System inactive (conditions not met) — click to edit conditions
 
 ## 🔧 Services
 
@@ -221,6 +221,22 @@ Clear all time slots.
 service: timer_24h.clear_all
 data:
   entity_id: sensor.timer_24h_lighting
+```
+
+### `timer_24h.set_activation_conditions`
+
+Update activation condition sensors and logic. Changes are saved to the **integration options** (not Lovelace card YAML), so the timer keeps working in the background.
+
+You can also edit these from the card by clicking the **Active / Inactive** status badge.
+
+```yaml
+service: timer_24h.set_activation_conditions
+data:
+  entity_id: sensor.timer_24h_lighting
+  home_sensors:
+    - person.john
+    - binary_sensor.shabbat_mode
+  home_logic: OR  # or AND
 ```
 
 ## 📋 Examples
@@ -278,6 +294,8 @@ The timer sensor exposes several attributes that you can use in automations and 
 | `time_slots` | list | All 48 time slots (30-minute segments) |
 | `current_slot` | dict | Current time slot with hour, minute, and isActive |
 | `home_status` | boolean | Whether activation conditions are met |
+| `home_sensors` | list | Activation condition entity IDs |
+| `home_logic` | string | Condition logic (`OR` / `AND`) |
 | `controlled_entities` | list | List of entities controlled by the timer |
 | `enabled` | boolean | Whether the timer is enabled |
 | `last_update` | string | Last update timestamp |
@@ -420,6 +438,8 @@ You can change timer settings at any time:
 3. Click **"Configure"** (⚙️)
 4. Edit the settings
 5. Click **"Submit"**
+
+**Activation conditions** can also be edited from the Lovelace card by clicking the Active/Inactive status badge (saved to the integration, not card YAML).
 
 ## 🌍 Hebrew Support
 
