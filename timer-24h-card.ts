@@ -90,7 +90,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   }
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
-    if (changedProps.has('config')) {
+    // Dialog open/close must update immediately (do not wait for hass/currentTime)
+    if (changedProps.has('config') || changedProps.has('showEntitiesDialog')) {
       return true;
     }
     
@@ -508,13 +509,16 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
   private handleCenterClick(event?: Event): void {
     event?.stopPropagation();
+    event?.preventDefault();
     const status = this.getControlledEntitiesStatus();
     if (status.total > 0) {
       this.showEntitiesDialog = true;
     }
   }
 
-  private closeEntitiesDialog(): void {
+  private closeEntitiesDialog(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
     this.showEntitiesDialog = false;
   }
 
@@ -542,11 +546,24 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     const status = this.getControlledEntitiesStatus();
 
     return html`
-      <div class="dialog-overlay" @click="${this.closeEntitiesDialog}">
-        <div class="dialog-content" @click="${(e: Event) => e.stopPropagation()}">
+      <div
+        class="dialog-overlay"
+        @click=${this.closeEntitiesDialog}
+        @pointerdown=${this.closeEntitiesDialog}
+      >
+        <div
+          class="dialog-content"
+          @click=${(e: Event) => e.stopPropagation()}
+          @pointerdown=${(e: Event) => e.stopPropagation()}
+        >
           <div class="dialog-header">
             <span class="dialog-title">${this.localize('entities_list')}</span>
-            <button class="dialog-close" @click="${this.closeEntitiesDialog}" aria-label="${this.localize('close')}">×</button>
+            <button
+              type="button"
+              class="dialog-close"
+              @click=${this.closeEntitiesDialog}
+              aria-label="${this.localize('close')}"
+            >×</button>
           </div>
           <div class="dialog-body">
             ${status.entities.length === 0
@@ -581,7 +598,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
     return html`
       <div class="device-controls">
-        <div class="device-controls-title">${this.localize('climate_controls')}</div>
         ${climateEntities.map((entityId) => {
           const temp = this.getClimateTemp(entityId);
           const mode = this.getClimateMode(entityId);
@@ -643,7 +659,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
     return html`
       <div class="device-controls">
-        <div class="device-controls-title">${this.localize('fan_controls')}</div>
         ${fanEntities.map((entityId) => {
           const percentage = this.getFanPercentage(entityId);
 
@@ -682,39 +697,81 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     const enabled = this.getEnabled();
     
     return html`
-      <div class="enable-switch-container">
-        <label class="enable-switch-label">
-          <span class="enable-switch-text">
-            ${this.localize('enable_timer')}
-          </span>
-          <input
-            type="checkbox"
-            class="enable-switch"
-            .checked="${enabled}"
-            @change="${this.handleEnableToggle}"
-          />
-          <span class="slider"></span>
-        </label>
-      </div>
+      <label class="enable-switch-label" title="${this.localize('enable_timer')}">
+        <span class="enable-switch-text">
+          ${this.localize('enable_timer')}
+        </span>
+        <input
+          type="checkbox"
+          class="enable-switch"
+          .checked="${enabled}"
+          @change="${this.handleEnableToggle}"
+        />
+      </label>
     `;
   }
 
-  private createSectorPath(hour: number, totalSectors: number, innerRadius: number, outerRadius: number, centerX: number, centerY: number): string {
-    const startAngle = (hour * 360 / totalSectors - 90) * (Math.PI / 180);
-    const endAngle = ((hour + 1) * 360 / totalSectors - 90) * (Math.PI / 180);
-    
-    const x1 = centerX + innerRadius * Math.cos(startAngle);
-    const y1 = centerY + innerRadius * Math.sin(startAngle);
-    const x2 = centerX + outerRadius * Math.cos(startAngle);
-    const y2 = centerY + outerRadius * Math.sin(startAngle);
-    const x3 = centerX + outerRadius * Math.cos(endAngle);
-    const y3 = centerY + outerRadius * Math.sin(endAngle);
-    const x4 = centerX + innerRadius * Math.cos(endAngle);
-    const y4 = centerY + innerRadius * Math.sin(endAngle);
-    
+  private createSectorPath(
+    hour: number,
+    totalSectors: number,
+    innerRadius: number,
+    outerRadius: number,
+    centerX: number,
+    centerY: number,
+    inset: number = 0
+  ): string {
+    const anglePerSector = 360 / totalSectors;
+    const midRadius = (innerRadius + outerRadius) / 2;
+    // Inset radial edges by ~inset px so a centered stroke sits inside the sector
+    const angularInsetDeg = midRadius > 0 ? (inset / midRadius) * (180 / Math.PI) : 0;
+
+    const startAngle = (hour * anglePerSector - 90 + angularInsetDeg) * (Math.PI / 180);
+    const endAngle = ((hour + 1) * anglePerSector - 90 - angularInsetDeg) * (Math.PI / 180);
+
+    const rInner = innerRadius + inset;
+    const rOuter = outerRadius - inset;
+
+    const x1 = centerX + rInner * Math.cos(startAngle);
+    const y1 = centerY + rInner * Math.sin(startAngle);
+    const x2 = centerX + rOuter * Math.cos(startAngle);
+    const y2 = centerY + rOuter * Math.sin(startAngle);
+    const x3 = centerX + rOuter * Math.cos(endAngle);
+    const y3 = centerY + rOuter * Math.sin(endAngle);
+    const x4 = centerX + rInner * Math.cos(endAngle);
+    const y4 = centerY + rInner * Math.sin(endAngle);
+
     const largeArcFlag = endAngle - startAngle <= Math.PI ? 0 : 1;
-    
-    return `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1} ${y1}`;
+
+    return `M ${x1} ${y1} L ${x2} ${y2} A ${rOuter} ${rOuter} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${rInner} ${rInner} 0 ${largeArcFlag} 0 ${x1} ${y1}`;
+  }
+
+  private renderCurrentTimeHighlight(
+    centerX: number,
+    centerY: number,
+    innerRadius: number,
+    middleRadius: number,
+    outerRadius: number
+  ) {
+    const hour = this.currentTime.getHours();
+    const isOuter = this.currentTime.getMinutes() < 30;
+    const r0 = isOuter ? middleRadius : innerRadius;
+    const r1 = isOuter ? outerRadius : middleRadius;
+    // Half of stroke-width so the frame sits fully inside the slot
+    const strokeWidth = 3;
+    const inset = strokeWidth / 2;
+    const highlightPath = this.createSectorPath(hour, 24, r0, r1, centerX, centerY, inset);
+
+    return svg`
+      <path
+        d="${highlightPath}"
+        fill="none"
+        stroke="#ff6b6b"
+        stroke-width="${strokeWidth}"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+        pointer-events="none">
+      </path>
+    `;
   }
 
   private getTextPosition(hour: number, totalSectors: number, radius: number, centerX: number, centerY: number): { x: number; y: number } {
@@ -893,13 +950,19 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         ${this.config.show_title !== false ? html`
           <div class="header">
             <div class="title">${entityName}</div>
+            ${this.shouldShowEnableSwitch() ? this.renderEnableSwitch() : ''}
+            <div class="system-status ${homeStatus ? 'active' : 'inactive'}">
+              ${homeStatus ? this.localize('active') : this.localize('inactive')}
+            </div>
+          </div>
+        ` : this.shouldShowEnableSwitch() ? html`
+          <div class="header">
+            ${this.renderEnableSwitch()}
             <div class="system-status ${homeStatus ? 'active' : 'inactive'}">
               ${homeStatus ? this.localize('active') : this.localize('inactive')}
             </div>
           </div>
         ` : ''}
-        
-        ${this.shouldShowEnableSwitch() ? this.renderEnableSwitch() : ''}
         
         <div class="timer-container">
           <svg class="timer-svg" viewBox="0 0 400 400">
@@ -1023,8 +1086,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               const hour = index;  // Explicitly capture the index value
               const slot = timeSlots.find(s => s.hour === hour && s.minute === 0);
               const isActive = slot?.isActive || false;
-              const isCurrent = this.currentTime.getHours() === hour && 
-                               this.currentTime.getMinutes() < 30;
               const sectorPath = this.createSectorPath(hour, 24, middleRadius, outerRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
               const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
@@ -1041,8 +1102,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 <path 
                   d="${sectorPath}" 
                   fill="${isActive ? '#10b981' : '#ffffff'}"
-                  stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
-                  stroke-width="${isCurrent ? '3' : '1'}"
+                  stroke="#e5e7eb"
+                  stroke-width="1"
                   style="cursor: pointer; transition: all 0.2s;"
                   @click="${clickHandler}">
                 </path>
@@ -1065,8 +1126,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               const hour = index;  // Explicitly capture the index value
               const slot = timeSlots.find(s => s.hour === hour && s.minute === 30);
               const isActive = slot?.isActive || false;
-              const isCurrent = this.currentTime.getHours() === hour && 
-                               this.currentTime.getMinutes() >= 30;
               const sectorPath = this.createSectorPath(hour, 24, innerRadius, middleRadius, centerX, centerY);
               const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
               const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
@@ -1083,8 +1142,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 <path 
                   d="${sectorPath}" 
                   fill="${isActive ? '#10b981' : '#f8f9fa'}"
-                  stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
-                  stroke-width="${isCurrent ? '3' : '1'}"
+                  stroke="#e5e7eb"
+                  stroke-width="1"
                   style="cursor: pointer; transition: all 0.2s;"
                   @click="${clickHandler}">
                 </path>
@@ -1101,6 +1160,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                 </text>
               `;
             })}
+
+            <!-- Current time highlight (drawn last so all sides stay uniform) -->
+            ${this.renderCurrentTimeHighlight(centerX, centerY, innerRadius, middleRadius, outerRadius)}
           </svg>
         </div>
         ${this.renderClimateControls()}
@@ -1137,6 +1199,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 8px;
         margin-bottom: 4px;
         padding: 4px 8px 0 8px;
       }
@@ -1145,6 +1208,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         font-size: 1rem;
         font-weight: bold;
         color: var(--primary-text-color, #212121);
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       
       .system-status {
@@ -1152,6 +1220,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         text-align: center;
         padding: 2px 8px;
         border-radius: 4px;
+        flex-shrink: 0;
       }
       
       .system-status.active {
@@ -1225,39 +1294,34 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         }
       }
       
-      /* Enable Switch Styles */
-      .enable-switch-container {
-        padding: 8px 16px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-bottom: 1px solid var(--divider-color, #e5e7eb);
-      }
-      
+      /* Enable Switch Styles — inline in header between title and status */
       .enable-switch-label {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 6px;
         cursor: pointer;
         user-select: none;
+        flex-shrink: 0;
       }
       
       .enable-switch-text {
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         font-weight: 500;
-        color: var(--primary-text-color, #212121);
+        color: var(--secondary-text-color, #6b7280);
+        white-space: nowrap;
       }
       
       .enable-switch {
         position: relative;
         appearance: none;
-        width: 44px;
-        height: 24px;
+        width: 36px;
+        height: 20px;
         background-color: var(--disabled-color, #bbb);
-        border-radius: 12px;
+        border-radius: 10px;
         cursor: pointer;
         transition: background-color 0.3s;
         outline: none;
+        flex-shrink: 0;
       }
       
       .enable-switch:checked {
@@ -1267,8 +1331,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .enable-switch::before {
         content: '';
         position: absolute;
-        width: 18px;
-        height: 18px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
         background-color: white;
         top: 3px;
@@ -1277,11 +1341,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       }
       
       .enable-switch:checked::before {
-        transform: translateX(20px);
+        transform: translateX(16px);
       }
       
       .enable-switch:focus {
         box-shadow: 0 0 0 2px var(--primary-color-alpha, rgba(3, 169, 244, 0.2));
+      }
+      
+      @container (max-width: 250px) {
+        .enable-switch-text {
+          display: none;
+        }
       }
 
       .device-controls {
@@ -1387,15 +1457,13 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       /* Entities dialog */
       .dialog-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 999;
+        z-index: 10000;
+        touch-action: manipulation;
       }
 
       .dialog-content {
@@ -1406,6 +1474,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         max-height: 70vh;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        touch-action: manipulation;
       }
 
       .dialog-header {
@@ -1516,7 +1585,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.2.1  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.2.4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
