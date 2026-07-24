@@ -38,6 +38,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+# Integration is configured via config entries only (not YAML)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def init_lovelace_resource(hass: HomeAssistant, url: str, version: str) -> bool:
     """Add/update lovelace resource with proper version handling.

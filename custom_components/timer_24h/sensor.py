@@ -63,7 +63,7 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             name=name,
             manufacturer="Timer 24H",
             model="24 Hour Timer",
-            sw_version="1.2.1",
+            sw_version="1.2.2",
         )
 
     @property

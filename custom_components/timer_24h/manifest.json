@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/davidss20/home-assistant-24h-timer-integration/issues",
+  "after_dependencies": ["http", "lovelace"],
   "requirements": [],
-  "version": "1.2.1",
-  "icon": "mdi:home-clock"
+  "version": "1.2.2"
 }
