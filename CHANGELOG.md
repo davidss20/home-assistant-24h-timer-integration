@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.2.7-beta.1] - 2026-07-24
+## [1.2.7] - 2026-07-24
 
 ### Added
 - 🎯 Edit activation conditions from the card (click Active/Inactive status)
