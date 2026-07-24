@@ -618,7 +618,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
           return html`
             <div class="device-control-card">
-              <div class="device-control-name">${this.getFriendlyName(entityId)}</div>
+              ${climateEntities.length > 1
+                ? html`<div class="device-control-name">${this.getFriendlyName(entityId)}</div>`
+                : ''}
               <div class="control-row single-row">
                 <ha-icon class="control-icon" icon="mdi:thermometer"></ha-icon>
                 <div class="temp-controls">
@@ -675,7 +677,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
           return html`
             <div class="device-control-card">
-              <div class="device-control-name">${this.getFriendlyName(entityId)}</div>
+              ${fanEntities.length > 1
+                ? html`<div class="device-control-name">${this.getFriendlyName(entityId)}</div>`
+                : ''}
               <div class="control-row single-row">
                 <ha-icon class="control-icon" icon="mdi:fan"></ha-icon>
                 <div class="temp-controls">
@@ -1374,9 +1378,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       }
 
       .device-control-card {
-        background: var(--secondary-background-color, #f3f4f6);
-        border-radius: 8px;
-        padding: 8px 10px;
+        padding: 4px 0;
         display: flex;
         flex-direction: column;
         gap: 6px;

@@ -37,30 +37,30 @@ function t(t,e,i,s){var o,n=arguments.length,r=n<3?e:null===s?s=Object.getOwnPro
       </div>
     `}renderClimateControls(){const t=this.getClimateEntities();return 0===t.length?B``:B`
       <div class="device-controls">
-        ${t.map(t=>{const e=this.getClimateTemp(t),i=this.getClimateMode(t),s=this.getClimateModes(t);return B`
+        ${t.map(e=>{const i=this.getClimateTemp(e),s=this.getClimateMode(e),o=this.getClimateModes(e);return B`
             <div class="device-control-card">
-              <div class="device-control-name">${this.getFriendlyName(t)}</div>
+              ${t.length>1?B`<div class="device-control-name">${this.getFriendlyName(e)}</div>`:""}
               <div class="control-row single-row">
                 <ha-icon class="control-icon" icon="mdi:thermometer"></ha-icon>
                 <div class="temp-controls">
                   <button
                     class="ctrl-btn"
-                    @click=${e=>{e.stopPropagation(),this.adjustClimateTemp(t,-1)}}
+                    @click=${t=>{t.stopPropagation(),this.adjustClimateTemp(e,-1)}}
                   >−</button>
-                  <span class="temp-value">${e}°</span>
+                  <span class="temp-value">${i}°</span>
                   <button
                     class="ctrl-btn"
-                    @click=${e=>{e.stopPropagation(),this.adjustClimateTemp(t,1)}}
+                    @click=${t=>{t.stopPropagation(),this.adjustClimateTemp(e,1)}}
                   >+</button>
                 </div>
                 <div class="mode-buttons">
-                  ${s.map(e=>B`
+                  ${o.map(t=>B`
                       <button
-                        class="mode-btn ${i===e?"active":""}"
-                        title="${this.localizeHvacMode(e)}"
-                        @click=${i=>{i.stopPropagation(),this.setClimateMode(t,e)}}
+                        class="mode-btn ${s===t?"active":""}"
+                        title="${this.localizeHvacMode(t)}"
+                        @click=${i=>{i.stopPropagation(),this.setClimateMode(e,t)}}
                       >
-                        <ha-icon icon="${this.getHvacModeIcon(e)}"></ha-icon>
+                        <ha-icon icon="${this.getHvacModeIcon(t)}"></ha-icon>
                       </button>
                     `)}
                 </div>
@@ -70,20 +70,20 @@ function t(t,e,i,s){var o,n=arguments.length,r=n<3?e:null===s?s=Object.getOwnPro
       </div>
     `}renderFanControls(){const t=this.getFanEntities();return 0===t.length?B``:B`
       <div class="device-controls">
-        ${t.map(t=>{const e=this.getFanPercentage(t);return B`
+        ${t.map(e=>{const i=this.getFanPercentage(e);return B`
             <div class="device-control-card">
-              <div class="device-control-name">${this.getFriendlyName(t)}</div>
+              ${t.length>1?B`<div class="device-control-name">${this.getFriendlyName(e)}</div>`:""}
               <div class="control-row single-row">
                 <ha-icon class="control-icon" icon="mdi:fan"></ha-icon>
                 <div class="temp-controls">
                   <button
                     class="ctrl-btn"
-                    @click=${e=>{e.stopPropagation(),this.adjustFanPercentage(t,-1)}}
+                    @click=${t=>{t.stopPropagation(),this.adjustFanPercentage(e,-1)}}
                   >−</button>
-                  <span class="temp-value">${e}%</span>
+                  <span class="temp-value">${i}%</span>
                   <button
                     class="ctrl-btn"
-                    @click=${e=>{e.stopPropagation(),this.adjustFanPercentage(t,1)}}
+                    @click=${t=>{t.stopPropagation(),this.adjustFanPercentage(e,1)}}
                   >+</button>
                 </div>
               </div>
@@ -515,9 +515,7 @@ function t(t,e,i,s){var o,n=arguments.length,r=n<3?e:null===s?s=Object.getOwnPro
       }
 
       .device-control-card {
-        background: var(--secondary-background-color, #f3f4f6);
-        border-radius: 8px;
-        padding: 8px 10px;
+        padding: 4px 0;
         display: flex;
         flex-direction: column;
         gap: 6px;
