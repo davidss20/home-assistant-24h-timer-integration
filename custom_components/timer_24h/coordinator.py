@@ -12,8 +12,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_ENTITIES,
+    CONF_ENTITY_SETTINGS,
     CONF_HOME_LOGIC,
     CONF_HOME_SENSORS,
+    DEFAULT_CLIMATE_HVAC_MODE,
+    DEFAULT_CLIMATE_TEMPERATURE,
+    DEFAULT_FAN_PERCENTAGE,
     DEFAULT_HOME_LOGIC,
     DOMAIN,
     UPDATE_INTERVAL,
@@ -32,7 +36,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self._time_slots: list[dict[str, Any]] = self._initialize_time_slots()
         self._home_status: bool = True
         self._enabled: bool = True
-        self._last_controlled_states: dict[str, bool] = {}
+        self._last_controlled_states: dict[str, Any] = {}
         self._state_change_unsubscribe = None
         
         # Load saved time slots from options
@@ -48,6 +52,129 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        )
+
+    def get_entity_settings(self, entity_id: str | None = None) -> dict[str, Any]:
+        """Return entity settings for all entities or a specific one."""
+        all_settings = self.config_entry.options.get(CONF_ENTITY_SETTINGS, {})
+        if entity_id is None:
+            return dict(all_settings)
+        return dict(all_settings.get(entity_id, {}))
+
+    def _is_entity_on(self, entity_id: str, entity: Any) -> bool:
+        """Return True if the entity is considered on."""
+        domain = entity_id.split(".", 1)[0]
+        state = (entity.state or "").lower()
+
+        if state in ("unavailable", "unknown"):
+            return False
+
+        if domain == "climate":
+            return state not in ("off",)
+
+        return state == "on"
+
+    def _build_desired_control(
+        self, entity_id: str, should_be_on: bool
+    ) -> dict[str, Any]:
+        """Build a comparable desired control payload for an entity."""
+        settings = self.get_entity_settings(entity_id)
+        domain = entity_id.split(".", 1)[0]
+        desired: dict[str, Any] = {"on": should_be_on}
+
+        if not should_be_on:
+            return desired
+
+        if domain == "climate":
+            desired["hvac_mode"] = settings.get(
+                "hvac_mode", DEFAULT_CLIMATE_HVAC_MODE
+            )
+            desired["temperature"] = settings.get(
+                "temperature", DEFAULT_CLIMATE_TEMPERATURE
+            )
+        elif domain == "fan":
+            desired["percentage"] = settings.get(
+                "percentage", DEFAULT_FAN_PERCENTAGE
+            )
+
+        return desired
+
+    async def _async_turn_on_entity(self, entity_id: str, desired: dict[str, Any]) -> None:
+        """Turn on an entity with domain-specific settings."""
+        domain = entity_id.split(".", 1)[0]
+
+        if domain == "climate":
+            hvac_mode = desired.get("hvac_mode", DEFAULT_CLIMATE_HVAC_MODE)
+            temperature = desired.get("temperature", DEFAULT_CLIMATE_TEMPERATURE)
+
+            if hvac_mode:
+                await self.hass.services.async_call(
+                    "climate",
+                    "set_hvac_mode",
+                    {"entity_id": entity_id, "hvac_mode": hvac_mode},
+                    blocking=False,
+                )
+
+            if temperature is not None and hvac_mode not in (None, "off", "fan_only"):
+                await self.hass.services.async_call(
+                    "climate",
+                    "set_temperature",
+                    {"entity_id": entity_id, "temperature": temperature},
+                    blocking=False,
+                )
+            return
+
+        if domain == "fan":
+            percentage = desired.get("percentage", DEFAULT_FAN_PERCENTAGE)
+            if percentage is not None:
+                try:
+                    await self.hass.services.async_call(
+                        "fan",
+                        "set_percentage",
+                        {"entity_id": entity_id, "percentage": int(percentage)},
+                        blocking=False,
+                    )
+                    return
+                except Exception as err:
+                    _LOGGER.warning(
+                        "fan.set_percentage failed for %s (%s), falling back to turn_on",
+                        entity_id,
+                        err,
+                    )
+
+            await self.hass.services.async_call(
+                "homeassistant",
+                "turn_on",
+                {"entity_id": entity_id},
+                blocking=False,
+            )
+            return
+
+        await self.hass.services.async_call(
+            "homeassistant",
+            "turn_on",
+            {"entity_id": entity_id},
+            blocking=False,
+        )
+
+    async def _async_turn_off_entity(self, entity_id: str) -> None:
+        """Turn off an entity with domain-aware service calls."""
+        domain = entity_id.split(".", 1)[0]
+
+        if domain == "climate":
+            await self.hass.services.async_call(
+                "climate",
+                "set_hvac_mode",
+                {"entity_id": entity_id, "hvac_mode": "off"},
+                blocking=False,
+            )
+            return
+
+        await self.hass.services.async_call(
+            "homeassistant",
+            "turn_off",
+            {"entity_id": entity_id},
+            blocking=False,
         )
 
     def _initialize_time_slots(self) -> list[dict[str, Any]]:
@@ -139,6 +266,47 @@ class Timer24HCoordinator(DataUpdateCoordinator):
 
         self._home_status = system_status
 
+    def _entity_matches_desired(
+        self, entity_id: str, entity: Any, desired: dict[str, Any]
+    ) -> bool:
+        """Return True if the entity already matches the desired control state."""
+        is_on = self._is_entity_on(entity_id, entity)
+        should_be_on = bool(desired.get("on"))
+
+        if is_on != should_be_on:
+            return False
+
+        if not should_be_on:
+            return True
+
+        domain = entity_id.split(".", 1)[0]
+        if domain == "climate":
+            desired_mode = desired.get("hvac_mode")
+            if desired_mode and entity.state != desired_mode:
+                return False
+            desired_temp = desired.get("temperature")
+            current_temp = entity.attributes.get("temperature")
+            if desired_temp is not None and current_temp is not None:
+                try:
+                    if abs(float(current_temp) - float(desired_temp)) > 0.4:
+                        return False
+                except (TypeError, ValueError):
+                    return False
+            return True
+
+        if domain == "fan":
+            desired_pct = desired.get("percentage")
+            current_pct = entity.attributes.get("percentage")
+            if desired_pct is not None and current_pct is not None:
+                try:
+                    if abs(int(current_pct) - int(desired_pct)) > 1:
+                        return False
+                except (TypeError, ValueError):
+                    return False
+            return True
+
+        return True
+
     async def _control_entities(self) -> None:
         """Control entities based on time slots and activation conditions."""
         if not self._enabled:
@@ -161,38 +329,103 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             if not entity:
                 continue
 
-            current_state = entity.state == "on"
+            desired = self._build_desired_control(entity_id, should_be_on)
             last_controlled_state = self._last_controlled_states.get(entity_id)
 
-            # Only send command if state differs and we haven't sent this command
-            if current_state != should_be_on and last_controlled_state != should_be_on:
-                try:
-                    service = "turn_on" if should_be_on else "turn_off"
-                    await self.hass.services.async_call(
-                        "homeassistant",
-                        service,
-                        {"entity_id": entity_id},
-                        blocking=False,
-                    )
-                    _LOGGER.info(
-                        "%s %s based on timer schedule",
-                        "Turned on" if should_be_on else "Turned off",
-                        entity_id,
-                    )
+            if last_controlled_state == desired:
+                continue
 
-                    # Remember what command we sent
-                    self._last_controlled_states[entity_id] = should_be_on
+            if self._entity_matches_desired(entity_id, entity, desired):
+                self._last_controlled_states[entity_id] = desired
+                continue
 
-                    # Clear the memory after some time
-                    @callback
-                    def _clear_memory():
-                        if self._last_controlled_states.get(entity_id) == should_be_on:
-                            self._last_controlled_states.pop(entity_id, None)
+            try:
+                if should_be_on:
+                    await self._async_turn_on_entity(entity_id, desired)
+                else:
+                    await self._async_turn_off_entity(entity_id)
 
-                    self.hass.loop.call_later(30, _clear_memory)
+                _LOGGER.info(
+                    "%s %s based on timer schedule (desired=%s)",
+                    "Turned on" if should_be_on else "Turned off",
+                    entity_id,
+                    desired,
+                )
 
-                except Exception as err:
-                    _LOGGER.error("Failed to control %s: %s", entity_id, err)
+                self._last_controlled_states[entity_id] = desired
+
+                @callback
+                def _clear_memory(eid=entity_id, payload=desired):
+                    if self._last_controlled_states.get(eid) == payload:
+                        self._last_controlled_states.pop(eid, None)
+
+                self.hass.loop.call_later(30, _clear_memory)
+
+            except Exception as err:
+                _LOGGER.error("Failed to control %s: %s", entity_id, err)
+
+    async def async_set_entity_settings(
+        self,
+        target_entity_id: str,
+        temperature: float | None = None,
+        hvac_mode: str | None = None,
+        percentage: int | None = None,
+    ) -> None:
+        """Update per-entity climate/fan settings used when the timer turns entities on."""
+        entities = self.config_entry.options.get(CONF_ENTITIES, [])
+        if target_entity_id not in entities:
+            _LOGGER.warning(
+                "Cannot set settings for %s - not in controlled entities",
+                target_entity_id,
+            )
+            return
+
+        all_settings = dict(
+            self.config_entry.options.get(CONF_ENTITY_SETTINGS, {})
+        )
+        entity_settings = dict(all_settings.get(target_entity_id, {}))
+
+        domain = target_entity_id.split(".", 1)[0]
+        if domain == "climate":
+            if temperature is not None:
+                entity_settings["temperature"] = float(temperature)
+            if hvac_mode is not None:
+                entity_settings["hvac_mode"] = hvac_mode
+        elif domain == "fan":
+            if percentage is not None:
+                entity_settings["percentage"] = int(percentage)
+        else:
+            _LOGGER.warning(
+                "Entity settings are only supported for climate/fan, got %s",
+                domain,
+            )
+            return
+
+        all_settings[target_entity_id] = entity_settings
+        new_options = {
+            **self.config_entry.options,
+            CONF_ENTITY_SETTINGS: all_settings,
+        }
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, options=new_options
+        )
+
+        self._last_controlled_states.pop(target_entity_id, None)
+        await self._control_entities()
+
+        self.async_set_updated_data(
+            {
+                "time_slots": self._time_slots,
+                "home_status": self._home_status,
+                "enabled": self._enabled,
+                "entity_settings": all_settings,
+            }
+        )
+        _LOGGER.info(
+            "✅ Updated entity settings for %s: %s",
+            target_entity_id,
+            entity_settings,
+        )
 
     async def async_toggle_slot(self, hour: int, minute: int) -> None:
         """Toggle a time slot."""

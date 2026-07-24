@@ -24,6 +24,16 @@ interface TimeSlot {
   isActive: boolean;
 }
 
+interface EntitySettings {
+  temperature?: number;
+  hvac_mode?: string;
+  percentage?: number;
+}
+
+interface EntitySettingsMap {
+  [entityId: string]: EntitySettings;
+}
+
 @customElement('timer-24h-card')
 export class Timer24HCard extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -111,10 +121,20 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       for (const entityId of controlledEntities) {
         const oldEntityState = oldHass.states[entityId];
         const newEntityState = this.hass.states[entityId];
-        if (oldEntityState?.state !== newEntityState?.state) {
+        if (
+          oldEntityState?.state !== newEntityState?.state ||
+          oldEntityState?.attributes?.temperature !== newEntityState?.attributes?.temperature ||
+          oldEntityState?.attributes?.percentage !== newEntityState?.attributes?.percentage
+        ) {
           console.log('🔄 Controlled entity state changed:', entityId);
           return true;
         }
+      }
+
+      const oldSettings = JSON.stringify(oldState?.attributes.entity_settings || {});
+      const newSettings = JSON.stringify(newState?.attributes.entity_settings || {});
+      if (oldSettings !== newSettings) {
+        return true;
       }
     }
     
@@ -196,6 +216,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return entity.attributes.friendly_name || 'Timer 24H';
   }
 
+  private isEntityOn(entityId: string): boolean {
+    const entityState = this.hass?.states[entityId];
+    if (!entityState) return false;
+    const state = (entityState.state || '').toLowerCase();
+    if (state === 'unavailable' || state === 'unknown') return false;
+    if (entityId.startsWith('climate.')) {
+      return state !== 'off';
+    }
+    return state === 'on';
+  }
+
   private getControlledEntitiesStatus(): { 
     total: number; 
     active: number; 
@@ -210,8 +241,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     let activeCount = 0;
     
     for (const entityId of controlledEntities) {
-      const entityState = this.hass.states[entityId];
-      if (entityState && entityState.state === 'on') {
+      if (this.isEntityOn(entityId)) {
         activeCount++;
       }
     }
@@ -221,6 +251,27 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       active: activeCount,
       entities: controlledEntities
     };
+  }
+
+  private getEntitySettingsMap(): EntitySettingsMap {
+    const entity = this.getEntityState();
+    return (entity?.attributes?.entity_settings as EntitySettingsMap) || {};
+  }
+
+  private getClimateEntities(): string[] {
+    return this.getControlledEntitiesStatus().entities.filter((id) =>
+      id.startsWith('climate.')
+    );
+  }
+
+  private getFanEntities(): string[] {
+    return this.getControlledEntitiesStatus().entities.filter((id) =>
+      id.startsWith('fan.')
+    );
+  }
+
+  private getFriendlyName(entityId: string): string {
+    return this.hass?.states[entityId]?.attributes?.friendly_name || entityId;
   }
 
   private localize(key: string): string {
@@ -237,6 +288,17 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         configure_entity: 'Please configure the timer entity in card settings',
         entity_not_found: 'Entity not found. Please check your configuration.',
         enable_timer: 'Enable Timer',
+        climate_controls: 'Climate',
+        fan_controls: 'Fan',
+        temperature: 'Temp',
+        mode: 'Mode',
+        speed: 'Speed',
+        cool: 'Cool',
+        heat: 'Heat',
+        heat_cool: 'Auto',
+        auto: 'Auto',
+        dry: 'Dry',
+        fan_only: 'Fan',
       },
       he: {
         active: 'פעיל',
@@ -248,10 +310,29 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         configure_entity: 'אנא הגדר את ישות הטיימר בהגדרות הכרטיס',
         entity_not_found: 'הישות לא נמצאה. אנא בדוק את ההגדרות.',
         enable_timer: 'הפעל טיימר',
+        climate_controls: 'מזגן',
+        fan_controls: 'מאוורר',
+        temperature: 'מעלות',
+        mode: 'מצב',
+        speed: 'מהירות',
+        cool: 'קור',
+        heat: 'חום',
+        heat_cool: 'אוטו',
+        auto: 'אוטו',
+        dry: 'ייבוש',
+        fan_only: 'מאוורר',
       },
     };
     
     return translations[lang]?.[key] || translations['en'][key] || key;
+  }
+
+  private localizeHvacMode(mode: string): string {
+    const known = ['cool', 'heat', 'heat_cool', 'auto', 'dry', 'fan_only', 'off'];
+    if (known.includes(mode)) {
+      return this.localize(mode);
+    }
+    return mode;
   }
 
   private handleSlotClick(event: Event, hour: number, minute: number): void {
@@ -328,6 +409,198 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     } catch (error) {
       console.error(`❌ Failed to set enabled state:`, error);
     }
+  }
+
+  private async updateEntitySettings(
+    targetEntityId: string,
+    updates: EntitySettings
+  ): Promise<void> {
+    if (!this.hass || !this.config.entity) return;
+
+    try {
+      await this.hass.callService('timer_24h', 'set_entity_settings', {
+        entity_id: this.config.entity,
+        target_entity_id: targetEntityId,
+        ...updates,
+      });
+    } catch (error) {
+      console.error('❌ Failed to update entity settings:', error);
+    }
+  }
+
+  private getClimateTemp(entityId: string): number {
+    const saved = this.getEntitySettingsMap()[entityId]?.temperature;
+    if (typeof saved === 'number') return saved;
+
+    const state = this.hass.states[entityId];
+    const current = state?.attributes?.temperature;
+    if (typeof current === 'number') return current;
+
+    return 24;
+  }
+
+  private getClimateMode(entityId: string): string {
+    const saved = this.getEntitySettingsMap()[entityId]?.hvac_mode;
+    if (saved) return saved;
+
+    const state = this.hass.states[entityId];
+    if (state && state.state !== 'off') return state.state;
+
+    const modes: string[] = state?.attributes?.hvac_modes || [];
+    const preferred = modes.find((m) => m !== 'off') || 'cool';
+    return preferred;
+  }
+
+  private getFanPercentage(entityId: string): number {
+    const saved = this.getEntitySettingsMap()[entityId]?.percentage;
+    if (typeof saved === 'number') return saved;
+
+    const state = this.hass.states[entityId];
+    const current = state?.attributes?.percentage;
+    if (typeof current === 'number') return current;
+
+    return 50;
+  }
+
+  private getClimateModes(entityId: string): string[] {
+    const state = this.hass.states[entityId];
+    const modes: string[] = state?.attributes?.hvac_modes || [
+      'cool',
+      'heat',
+      'heat_cool',
+      'dry',
+      'fan_only',
+    ];
+    return modes.filter((mode) => mode !== 'off');
+  }
+
+  private async adjustClimateTemp(entityId: string, delta: number): Promise<void> {
+    const state = this.hass.states[entityId];
+    const minTemp = Number(state?.attributes?.min_temp ?? 16);
+    const maxTemp = Number(state?.attributes?.max_temp ?? 30);
+    const next = Math.min(maxTemp, Math.max(minTemp, this.getClimateTemp(entityId) + delta));
+    await this.updateEntitySettings(entityId, {
+      temperature: next,
+      hvac_mode: this.getClimateMode(entityId),
+    });
+  }
+
+  private async setClimateMode(entityId: string, mode: string): Promise<void> {
+    await this.updateEntitySettings(entityId, {
+      hvac_mode: mode,
+      temperature: this.getClimateTemp(entityId),
+    });
+  }
+
+  private async adjustFanPercentage(entityId: string, delta: number): Promise<void> {
+    const state = this.hass.states[entityId];
+    const step = Number(state?.attributes?.percentage_step ?? 10);
+    const next = Math.min(100, Math.max(0, this.getFanPercentage(entityId) + delta * step));
+    await this.updateEntitySettings(entityId, { percentage: next });
+  }
+
+  private renderClimateControls(): TemplateResult {
+    const climateEntities = this.getClimateEntities();
+    if (climateEntities.length === 0) {
+      return html``;
+    }
+
+    return html`
+      <div class="device-controls">
+        <div class="device-controls-title">${this.localize('climate_controls')}</div>
+        ${climateEntities.map((entityId) => {
+          const temp = this.getClimateTemp(entityId);
+          const mode = this.getClimateMode(entityId);
+          const modes = this.getClimateModes(entityId);
+
+          return html`
+            <div class="device-control-card">
+              <div class="device-control-name">${this.getFriendlyName(entityId)}</div>
+              <div class="control-row">
+                <span class="control-label">${this.localize('temperature')}</span>
+                <div class="temp-controls">
+                  <button
+                    class="ctrl-btn"
+                    @click=${(e: Event) => {
+                      e.stopPropagation();
+                      this.adjustClimateTemp(entityId, -1);
+                    }}
+                  >−</button>
+                  <span class="temp-value">${temp}°</span>
+                  <button
+                    class="ctrl-btn"
+                    @click=${(e: Event) => {
+                      e.stopPropagation();
+                      this.adjustClimateTemp(entityId, 1);
+                    }}
+                  >+</button>
+                </div>
+              </div>
+              <div class="control-row modes-row">
+                <span class="control-label">${this.localize('mode')}</span>
+                <div class="mode-buttons">
+                  ${modes.map(
+                    (m) => html`
+                      <button
+                        class="mode-btn ${mode === m ? 'active' : ''}"
+                        @click=${(e: Event) => {
+                          e.stopPropagation();
+                          this.setClimateMode(entityId, m);
+                        }}
+                      >
+                        ${this.localizeHvacMode(m)}
+                      </button>
+                    `
+                  )}
+                </div>
+              </div>
+            </div>
+          `;
+        })}
+      </div>
+    `;
+  }
+
+  private renderFanControls(): TemplateResult {
+    const fanEntities = this.getFanEntities();
+    if (fanEntities.length === 0) {
+      return html``;
+    }
+
+    return html`
+      <div class="device-controls">
+        <div class="device-controls-title">${this.localize('fan_controls')}</div>
+        ${fanEntities.map((entityId) => {
+          const percentage = this.getFanPercentage(entityId);
+
+          return html`
+            <div class="device-control-card">
+              <div class="device-control-name">${this.getFriendlyName(entityId)}</div>
+              <div class="control-row">
+                <span class="control-label">${this.localize('speed')}</span>
+                <div class="temp-controls">
+                  <button
+                    class="ctrl-btn"
+                    @click=${(e: Event) => {
+                      e.stopPropagation();
+                      this.adjustFanPercentage(entityId, -1);
+                    }}
+                  >−</button>
+                  <span class="temp-value">${percentage}%</span>
+                  <button
+                    class="ctrl-btn"
+                    @click=${(e: Event) => {
+                      e.stopPropagation();
+                      this.adjustFanPercentage(entityId, 1);
+                    }}
+                  >+</button>
+                </div>
+              </div>
+            </div>
+          `;
+        })}
+      </div>
+    `;
   }
   
   
@@ -754,6 +1027,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             })}
           </svg>
         </div>
+        ${this.renderClimateControls()}
+        ${this.renderFanControls()}
       </ha-card>
     `;
   }
@@ -931,13 +1206,113 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .enable-switch:focus {
         box-shadow: 0 0 0 2px var(--primary-color-alpha, rgba(3, 169, 244, 0.2));
       }
+
+      .device-controls {
+        padding: 8px 12px 12px 12px;
+        border-top: 1px solid var(--divider-color, #e5e7eb);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .device-controls-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--secondary-text-color, #6b7280);
+      }
+
+      .device-control-card {
+        background: var(--secondary-background-color, #f3f4f6);
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .device-control-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--primary-text-color, #212121);
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .modes-row {
+        align-items: flex-start;
+      }
+
+      .control-label {
+        font-size: 0.75rem;
+        color: var(--secondary-text-color, #6b7280);
+        flex-shrink: 0;
+      }
+
+      .temp-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .temp-value {
+        min-width: 42px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--primary-text-color, #212121);
+      }
+
+      .ctrl-btn,
+      .mode-btn {
+        border: 1px solid var(--divider-color, #d1d5db);
+        background: var(--card-background-color, #ffffff);
+        color: var(--primary-text-color, #212121);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.15s, border-color 0.15s;
+      }
+
+      .ctrl-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+        line-height: 1;
+      }
+
+      .mode-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: flex-end;
+      }
+
+      .mode-btn {
+        padding: 4px 8px;
+        font-size: 0.72rem;
+      }
+
+      .mode-btn.active {
+        background: var(--primary-color, #03a9f4);
+        border-color: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, #ffffff);
+      }
+
+      .ctrl-btn:hover,
+      .mode-btn:hover {
+        border-color: var(--primary-color, #03a9f4);
+      }
       
     `;
   }
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 5.7.0-beta.5  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.2.0  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

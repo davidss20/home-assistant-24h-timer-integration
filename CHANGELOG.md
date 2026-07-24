@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-24
+
+### Added
+- ❄️ **Climate controls on the card** — when a `climate.*` entity is selected, temperature (+/−) and HVAC mode buttons (cool/heat/auto/dry/fan) appear under the timer
+- 🌀 **Fan controls on the card** — when a `fan.*` entity is selected, speed percentage (+/−) controls appear
+- 🔧 Service `timer_24h.set_entity_settings` to save per-entity climate/fan settings
+- Settings are applied automatically when the timer turns the entity on
+
+### Fixed
+- Climate entities are correctly detected as on/off (`heat`/`cool`/… vs only `on`)
+
 ## [1.1.1] - 2025-12-14
 
 ### 🎉 Official Release

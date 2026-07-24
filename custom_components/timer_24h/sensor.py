@@ -14,9 +14,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_CONTROLLED_ENTITIES,
     ATTR_CURRENT_SLOT,
+    ATTR_ENTITY_SETTINGS,
     ATTR_HOME_STATUS,
     ATTR_LAST_UPDATE,
     ATTR_TIME_SLOTS,
+    CONF_ENTITY_SETTINGS,
     DOMAIN,
     STATE_ACTIVE,
     STATE_BLOCKED,
@@ -80,6 +82,9 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             ATTR_CURRENT_SLOT: current_slot.copy() if current_slot else None,
             ATTR_HOME_STATUS: self.coordinator.home_status,
             ATTR_CONTROLLED_ENTITIES: self.config_entry.options.get("entities", []),
+            ATTR_ENTITY_SETTINGS: self.config_entry.options.get(
+                CONF_ENTITY_SETTINGS, {}
+            ),
             ATTR_LAST_UPDATE: datetime.now().isoformat(),
             "enabled": self.coordinator.enabled,
         }

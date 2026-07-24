@@ -19,11 +19,16 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import (
     ATTR_HOUR,
+    ATTR_HVAC_MODE,
     ATTR_MINUTE,
+    ATTR_PERCENTAGE,
     ATTR_SLOTS,
+    ATTR_TARGET_ENTITY_ID,
+    ATTR_TEMPERATURE,
     DOMAIN,
     SERVICE_CLEAR_ALL,
     SERVICE_SET_ENABLED,
+    SERVICE_SET_ENTITY_SETTINGS,
     SERVICE_SET_SLOTS,
     SERVICE_TOGGLE_SLOT,
 )
@@ -230,6 +235,44 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         
         _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
 
+    async def handle_set_entity_settings(call: ServiceCall) -> None:
+        """Handle the set_entity_settings service call."""
+        entity_id = call.data.get("entity_id")
+        target_entity_id = call.data.get(ATTR_TARGET_ENTITY_ID)
+        temperature = call.data.get(ATTR_TEMPERATURE)
+        hvac_mode = call.data.get(ATTR_HVAC_MODE)
+        percentage = call.data.get(ATTR_PERCENTAGE)
+
+        _LOGGER.info(
+            "🔵 SERVICE CALLED: set_entity_settings(entity=%s, target=%s, temp=%s, mode=%s, pct=%s)",
+            entity_id,
+            target_entity_id,
+            temperature,
+            hvac_mode,
+            percentage,
+        )
+
+        for entry_id, data in hass.data[DOMAIN].items():
+            if isinstance(data, dict) and "coordinator" in data:
+                coordinator = data["coordinator"]
+
+                entity_registry = er.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (
+                        entity_entry.config_entry_id
+                        == coordinator.config_entry.entry_id
+                        and entity_entry.entity_id == entity_id
+                    ):
+                        await coordinator.async_set_entity_settings(
+                            target_entity_id=target_entity_id,
+                            temperature=temperature,
+                            hvac_mode=hvac_mode,
+                            percentage=percentage,
+                        )
+                        return
+
+        _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
+
     # Register services if not already registered
     if not hass.services.has_service(DOMAIN, SERVICE_TOGGLE_SLOT):
         hass.services.async_register(
@@ -279,6 +322,24 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 {
                     vol.Required("entity_id"): cv.entity_id,
                     vol.Required("enabled"): cv.boolean,
+                }
+            ),
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_ENTITY_SETTINGS):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_ENTITY_SETTINGS,
+            handle_set_entity_settings,
+            schema=vol.Schema(
+                {
+                    vol.Required("entity_id"): cv.entity_id,
+                    vol.Required(ATTR_TARGET_ENTITY_ID): cv.entity_id,
+                    vol.Optional(ATTR_TEMPERATURE): vol.Coerce(float),
+                    vol.Optional(ATTR_HVAC_MODE): cv.string,
+                    vol.Optional(ATTR_PERCENTAGE): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=100)
+                    ),
                 }
             ),
         )

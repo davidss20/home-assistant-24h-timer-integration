@@ -26,6 +26,7 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 - **🕐 24-Hour Circular Timer** with half-hour segments
 - **🎯 Activation Conditions** - control when entities activate based on any sensor/state
 - **🔧 Automatic Entity Control** according to schedule
+- **❄️ Climate & Fan Controls** - temperature/mode (AC) and speed (fan) buttons appear on the card when those entities are selected
 - **🎯 Multiple Instances** - create as many timers as you need
 - **💾 Automatic State Persistence** - settings saved automatically
 - **🌍 Multi-Language Support** with RTL support
@@ -135,8 +136,8 @@ show_title: true  # Show the timer name at the top
 
 - `light.*` - Lights
 - `switch.*` - Switches
-- `fan.*` - Fans
-- `climate.*` - Climate control
+- `fan.*` - Fans (speed controls appear on the card)
+- `climate.*` - Climate / AC (temperature & mode controls appear on the card)
 - `media_player.*` - Media players
 - `cover.*` - Covers and blinds
 - `input_boolean.*` - Virtual switches
@@ -161,8 +162,12 @@ show_title: true  # Show the timer name at the top
    - Leave empty to always activate entities
 
 3. **🔧 Entity Control**: If activation conditions are met and the time is active, entities will turn on automatically
+   - For **climate** entities: applies the selected HVAC mode and temperature from the card
+   - For **fan** entities: applies the selected speed percentage from the card
 
-4. **💾 Persistence**: Settings are automatically saved in the integration
+4. **❄️ Climate / Fan Buttons**: When a climate or fan entity is in the controlled list, extra buttons appear under the timer to set temperature/mode or fan speed. These settings are used whenever the timer turns that entity on.
+
+5. **💾 Persistence**: Settings are automatically saved in the integration
 
 ## 🎨 Card Appearance
 
