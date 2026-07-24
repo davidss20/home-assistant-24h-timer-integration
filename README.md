@@ -439,7 +439,11 @@ You can change timer settings at any time:
 4. Edit the settings
 5. Click **"Submit"**
 
-**Activation conditions** can also be edited from the Lovelace card by clicking the Active/Inactive status badge (saved to the integration, not card YAML).
+**Activation conditions** can also be edited from:
+- The Lovelace **card editor** (Activation Conditions section)
+- The card itself (center dialog or Active/Inactive status badge)
+
+Changes are saved to the integration (not card YAML).
 
 ## 🌍 Hebrew Support
 

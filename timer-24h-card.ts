@@ -336,6 +336,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         conditions_hint: 'Saved to the integration (works in background). Empty = always active.',
         save: 'Save',
         remove: 'Remove',
+        condition_met: 'Met',
+        condition_not_met: 'Not met',
+        edit_conditions: 'Edit',
       },
       he: {
         active: 'פעיל',
@@ -370,6 +373,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         conditions_hint: 'נשמר באינטגרציה (עובד ברקע). ריק = תמיד פעיל.',
         save: 'שמור',
         remove: 'הסר',
+        condition_met: 'מתקיים',
+        condition_not_met: 'לא מתקיים',
+        edit_conditions: 'ערוך',
       },
     };
     
@@ -564,16 +570,21 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   private handleCenterClick(event?: Event): void {
     event?.stopPropagation();
     event?.preventDefault();
-    const status = this.getControlledEntitiesStatus();
-    if (status.total > 0) {
-      this.showEntitiesDialog = true;
-    }
+    this.draftConditionSensors = this.getConditionSensors();
+    this.draftConditionLogic = this.getConditionLogic();
+    this.showEntitiesDialog = true;
   }
 
   private closeEntitiesDialog(event?: Event): void {
     event?.stopPropagation();
     event?.preventDefault();
     this.showEntitiesDialog = false;
+  }
+
+  private isConditionMet(entityId: string): boolean {
+    const state = this.hass?.states[entityId]?.state;
+    if (!state) return false;
+    return ['on', 'home', 'true', '1', 'yes'].includes(state.toLowerCase());
   }
 
   private getConditionSensors(): string[] {
@@ -653,13 +664,93 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     }
   }
 
-  private renderConditionsDialog(): TemplateResult {
-    if (!this.showConditionsDialog) return html``;
-
+  private renderConditionsEditor(): TemplateResult {
     const selected = new Set(this.draftConditionSensors);
     const available = this.getAvailableConditionSensors().filter(
       (id) => !selected.has(id)
     );
+
+    return html`
+      <p class="conditions-hint">${this.localize('conditions_hint')}</p>
+
+      <div class="conditions-section">
+        <div class="conditions-label">${this.localize('condition_logic')}</div>
+        <div class="logic-toggle">
+          <button
+            type="button"
+            class="logic-btn ${this.draftConditionLogic === 'OR' ? 'active' : ''}"
+            @click=${() => this.setDraftConditionLogic('OR')}
+          >${this.localize('logic_or')}</button>
+          <button
+            type="button"
+            class="logic-btn ${this.draftConditionLogic === 'AND' ? 'active' : ''}"
+            @click=${() => this.setDraftConditionLogic('AND')}
+          >${this.localize('logic_and')}</button>
+        </div>
+      </div>
+
+      <div class="conditions-section">
+        ${this.draftConditionSensors.length === 0
+          ? html`<div class="no-entities">${this.localize('no_conditions')}</div>`
+          : html`
+              <ul class="entities-list">
+                ${this.draftConditionSensors.map((entityId) => {
+                  const met = this.isConditionMet(entityId);
+                  return html`
+                    <li class="entity-item ${met ? 'on' : 'off'}">
+                      <ha-icon icon="${this.getEntityIcon(entityId)}"></ha-icon>
+                      <span class="entity-name">${this.getFriendlyName(entityId)}</span>
+                      <span class="entity-state ${met ? 'on' : 'off'}">
+                        ${met
+                          ? this.localize('condition_met')
+                          : this.localize('condition_not_met')}
+                      </span>
+                      <button
+                        type="button"
+                        class="remove-btn"
+                        @click=${() => this.removeConditionSensor(entityId)}
+                        aria-label="${this.localize('remove')}"
+                      >×</button>
+                    </li>
+                  `;
+                })}
+              </ul>
+            `}
+      </div>
+
+      <div class="conditions-section">
+        <label class="conditions-label" for="add-condition">
+          ${this.localize('add_condition')}
+        </label>
+        <select
+          id="add-condition"
+          class="condition-select"
+          @change=${this.addConditionSensor}
+        >
+          <option value="">-- ${this.localize('add_condition')} --</option>
+          ${available.map(
+            (entityId) => html`
+              <option value="${entityId}">
+                ${this.getFriendlyName(entityId)} (${entityId})
+              </option>
+            `
+          )}
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="save-conditions-btn"
+        ?disabled=${this.conditionsSaving}
+        @click=${() => this.saveActivationConditions()}
+      >
+        ${this.localize('save')}
+      </button>
+    `;
+  }
+
+  private renderConditionsDialog(): TemplateResult {
+    if (!this.showConditionsDialog) return html``;
 
     return html`
       <div
@@ -682,75 +773,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             >×</button>
           </div>
           <div class="dialog-body">
-            <p class="conditions-hint">${this.localize('conditions_hint')}</p>
-
-            <div class="conditions-section">
-              <div class="conditions-label">${this.localize('condition_logic')}</div>
-              <div class="logic-toggle">
-                <button
-                  type="button"
-                  class="logic-btn ${this.draftConditionLogic === 'OR' ? 'active' : ''}"
-                  @click=${() => this.setDraftConditionLogic('OR')}
-                >${this.localize('logic_or')}</button>
-                <button
-                  type="button"
-                  class="logic-btn ${this.draftConditionLogic === 'AND' ? 'active' : ''}"
-                  @click=${() => this.setDraftConditionLogic('AND')}
-                >${this.localize('logic_and')}</button>
-              </div>
-            </div>
-
-            <div class="conditions-section">
-              ${this.draftConditionSensors.length === 0
-                ? html`<div class="no-entities">${this.localize('no_conditions')}</div>`
-                : html`
-                    <ul class="entities-list">
-                      ${this.draftConditionSensors.map(
-                        (entityId) => html`
-                          <li class="entity-item">
-                            <ha-icon icon="${this.getEntityIcon(entityId)}"></ha-icon>
-                            <span class="entity-name">${this.getFriendlyName(entityId)}</span>
-                            <button
-                              type="button"
-                              class="remove-btn"
-                              @click=${() => this.removeConditionSensor(entityId)}
-                              aria-label="${this.localize('remove')}"
-                            >×</button>
-                          </li>
-                        `
-                      )}
-                    </ul>
-                  `}
-            </div>
-
-            <div class="conditions-section">
-              <label class="conditions-label" for="add-condition">
-                ${this.localize('add_condition')}
-              </label>
-              <select
-                id="add-condition"
-                class="condition-select"
-                @change=${this.addConditionSensor}
-              >
-                <option value="">-- ${this.localize('add_condition')} --</option>
-                ${available.map(
-                  (entityId) => html`
-                    <option value="${entityId}">
-                      ${this.getFriendlyName(entityId)} (${entityId})
-                    </option>
-                  `
-                )}
-              </select>
-            </div>
-
-            <button
-              type="button"
-              class="save-conditions-btn"
-              ?disabled=${this.conditionsSaving}
-              @click=${() => this.saveActivationConditions()}
-            >
-              ${this.localize('save')}
-            </button>
+            ${this.renderConditionsEditor()}
           </div>
         </div>
       </div>
@@ -791,7 +814,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         @pointerdown=${this.closeEntitiesDialog}
       >
         <div
-          class="dialog-content"
+          class="dialog-content conditions-dialog"
           @click=${(e: Event) => e.stopPropagation()}
           @pointerdown=${(e: Event) => e.stopPropagation()}
         >
@@ -805,24 +828,32 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             >×</button>
           </div>
           <div class="dialog-body">
-            ${status.entities.length === 0
-              ? html`<div class="no-entities">${this.localize('no_entities')}</div>`
-              : html`
-                  <ul class="entities-list">
-                    ${status.entities.map((entityId) => {
-                      const isOn = this.isEntityOn(entityId);
-                      return html`
-                        <li class="entity-item ${isOn ? 'on' : 'off'}">
-                          <ha-icon icon="${this.getEntityIcon(entityId)}"></ha-icon>
-                          <span class="entity-name">${this.getFriendlyName(entityId)}</span>
-                          <span class="entity-state ${isOn ? 'on' : 'off'}">
-                            ${isOn ? this.localize('on') : this.localize('off')}
-                          </span>
-                        </li>
-                      `;
-                    })}
-                  </ul>
-                `}
+            <div class="dialog-section">
+              <div class="conditions-label">${this.localize('entities_list')}</div>
+              ${status.entities.length === 0
+                ? html`<div class="no-entities">${this.localize('no_entities')}</div>`
+                : html`
+                    <ul class="entities-list">
+                      ${status.entities.map((entityId) => {
+                        const isOn = this.isEntityOn(entityId);
+                        return html`
+                          <li class="entity-item ${isOn ? 'on' : 'off'}">
+                            <ha-icon icon="${this.getEntityIcon(entityId)}"></ha-icon>
+                            <span class="entity-name">${this.getFriendlyName(entityId)}</span>
+                            <span class="entity-state ${isOn ? 'on' : 'off'}">
+                              ${isOn ? this.localize('on') : this.localize('off')}
+                            </span>
+                          </li>
+                        `;
+                      })}
+                    </ul>
+                  `}
+            </div>
+
+            <div class="dialog-section dialog-section-divider">
+              <div class="conditions-label">${this.localize('activation_conditions')}</div>
+              ${this.renderConditionsEditor()}
+            </div>
           </div>
         </div>
       </div>
@@ -1308,7 +1339,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                   cy="${centerY}" 
                   r="${innerRadius}" 
                   fill="${indicatorColor}"
-                  style="cursor: ${status.total > 0 ? 'pointer' : 'default'};"
+                  style="cursor: pointer;"
                   @click="${(e: Event) => this.handleCenterClick(e)}">
                 </circle>
                 
@@ -1859,6 +1890,16 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         max-width: 360px;
       }
 
+      .dialog-section {
+        margin-bottom: 4px;
+      }
+
+      .dialog-section-divider {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--divider-color, #e5e7eb);
+      }
+
       .conditions-hint {
         margin: 0 0 12px 0;
         font-size: 0.8rem;
@@ -1947,7 +1988,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.2.7  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.2.8  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
