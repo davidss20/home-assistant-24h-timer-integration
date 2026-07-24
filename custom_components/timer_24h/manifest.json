@@ -1,13 +1,13 @@
 {
   "domain": "timer_24h",
   "name": "Timer 24H",
+  "after_dependencies": ["http", "lovelace"],
   "codeowners": ["@davidss20"],
   "config_flow": true,
   "documentation": "https://github.com/davidss20/home-assistant-24h-timer-integration",
   "integration_type": "device",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/davidss20/home-assistant-24h-timer-integration/issues",
-  "after_dependencies": ["http", "lovelace"],
   "requirements": [],
-  "version": "1.2.2"
+  "version": "1.2.3"
 }
