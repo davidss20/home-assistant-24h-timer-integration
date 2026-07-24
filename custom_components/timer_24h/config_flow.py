@@ -79,10 +79,6 @@ class Timer24HConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options=user_input,
             )
 
-        # Get available entities
-        controlled_entities = _filter_entities(self.hass, SUPPORTED_ENTITY_DOMAINS)
-        sensor_entities = _filter_entities(self.hass, SUPPORTED_SENSOR_DOMAINS)
-
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -116,22 +112,21 @@ class Timer24HConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> Timer24HOptionsFlow:
         """Get the options flow for this handler."""
-        return Timer24HOptionsFlow(config_entry)
+        return Timer24HOptionsFlow()
 
 
 class Timer24HOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for Timer 24H."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # Preserve runtime options not shown in this form
+            # (time_slots, enabled, entity_settings, etc.)
+            new_options = {**self.config_entry.options, **user_input}
+            return self.async_create_entry(title="", data=new_options)
 
         options = self.config_entry.options
         data_schema = vol.Schema(
@@ -166,4 +161,3 @@ class Timer24HOptionsFlow(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(step_id="init", data_schema=data_schema)
-

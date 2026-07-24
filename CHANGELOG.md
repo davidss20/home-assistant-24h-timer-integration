@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-07-24
+
+### Fixed
+- ⚙️ **#2** Config/options gear crash on HA 2025.12+ (`config_entry` setter removed) — options flow loads again
+- 🏷️ **#5** Entity ID / name duplication (`sensor.name_name`) — entity now uses device name only
+- 🖱️ **#6** Clicking the center circle opens the controlled entities list dialog again
+- 💾 Options save no longer wipes `time_slots` / `enabled` / `entity_settings`
+
+### Changed
+- 🧹 **#4** Stop tracking `node_modules` in git; keep `custom_components/timer_24h/dist` for HACS installs; fix `.gitignore` so root `/dist/` does not ignore integration dist
+
 ## [1.2.0] - 2026-07-24
 
 ### Added

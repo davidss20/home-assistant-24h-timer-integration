@@ -6,7 +6,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+/dist/
 downloads/
 eggs/
 .eggs/
@@ -59,6 +59,10 @@ home-assistant_v2.db*
 
 # Build files
 *.js.map
+
+# Keep integration frontend artifacts for HACS installs (no build step required)
+!custom_components/timer_24h/dist/
+!custom_components/timer_24h/dist/**
 
 # Temporary files
 *.tmp

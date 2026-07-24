@@ -39,6 +39,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private config!: Timer24HCardConfig;
   @state() private currentTime: Date = new Date();
+  @state() private showEntitiesDialog: boolean = false;
   
   private updateInterval?: number;
   private clickTimeout?: number;
@@ -299,6 +300,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         auto: 'Auto',
         dry: 'Dry',
         fan_only: 'Fan',
+        entities_list: 'Controlled Entities',
+        close: 'Close',
+        no_entities: 'No entities configured',
       },
       he: {
         active: 'פעיל',
@@ -321,6 +325,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         auto: 'אוטו',
         dry: 'ייבוש',
         fan_only: 'מאוורר',
+        entities_list: 'ישויות מבוקרות',
+        close: 'סגור',
+        no_entities: 'לא הוגדרו ישויות',
       },
     };
     
@@ -497,6 +504,73 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     const step = Number(state?.attributes?.percentage_step ?? 10);
     const next = Math.min(100, Math.max(0, this.getFanPercentage(entityId) + delta * step));
     await this.updateEntitySettings(entityId, { percentage: next });
+  }
+
+  private handleCenterClick(event?: Event): void {
+    event?.stopPropagation();
+    const status = this.getControlledEntitiesStatus();
+    if (status.total > 0) {
+      this.showEntitiesDialog = true;
+    }
+  }
+
+  private closeEntitiesDialog(): void {
+    this.showEntitiesDialog = false;
+  }
+
+  private getEntityIcon(entityId: string): string {
+    const state = this.hass.states[entityId];
+    if (state?.attributes.icon) {
+      return state.attributes.icon;
+    }
+    const domain = entityId.split('.')[0];
+    const defaultIcons: Record<string, string> = {
+      light: 'mdi:lightbulb',
+      switch: 'mdi:toggle-switch',
+      fan: 'mdi:fan',
+      climate: 'mdi:thermostat',
+      media_player: 'mdi:cast',
+      cover: 'mdi:window-shutter',
+      input_boolean: 'mdi:toggle-switch-outline',
+    };
+    return defaultIcons[domain] || 'mdi:toggle-switch';
+  }
+
+  private renderEntitiesDialog(): TemplateResult {
+    if (!this.showEntitiesDialog) return html``;
+
+    const status = this.getControlledEntitiesStatus();
+
+    return html`
+      <div class="dialog-overlay" @click="${this.closeEntitiesDialog}">
+        <div class="dialog-content" @click="${(e: Event) => e.stopPropagation()}">
+          <div class="dialog-header">
+            <span class="dialog-title">${this.localize('entities_list')}</span>
+            <button class="dialog-close" @click="${this.closeEntitiesDialog}" aria-label="${this.localize('close')}">×</button>
+          </div>
+          <div class="dialog-body">
+            ${status.entities.length === 0
+              ? html`<div class="no-entities">${this.localize('no_entities')}</div>`
+              : html`
+                  <ul class="entities-list">
+                    ${status.entities.map((entityId) => {
+                      const isOn = this.isEntityOn(entityId);
+                      return html`
+                        <li class="entity-item ${isOn ? 'on' : 'off'}">
+                          <ha-icon icon="${this.getEntityIcon(entityId)}"></ha-icon>
+                          <span class="entity-name">${this.getFriendlyName(entityId)}</span>
+                          <span class="entity-state ${isOn ? 'on' : 'off'}">
+                            ${isOn ? this.localize('on') : this.localize('off')}
+                          </span>
+                        </li>
+                      `;
+                    })}
+                  </ul>
+                `}
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   private renderClimateControls(): TemplateResult {
@@ -911,7 +985,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                   cx="${centerX}" 
                   cy="${centerY}" 
                   r="${innerRadius}" 
-                  fill="${indicatorColor}">
+                  fill="${indicatorColor}"
+                  style="cursor: ${status.total > 0 ? 'pointer' : 'default'};"
+                  @click="${(e: Event) => this.handleCenterClick(e)}">
                 </circle>
                 
                 <!-- Status text -->
@@ -1029,6 +1105,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         </div>
         ${this.renderClimateControls()}
         ${this.renderFanControls()}
+        ${this.renderEntitiesDialog()}
       </ha-card>
     `;
   }
@@ -1306,13 +1383,140 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .mode-btn:hover {
         border-color: var(--primary-color, #03a9f4);
       }
+
+      /* Entities dialog */
+      .dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+      }
+
+      .dialog-content {
+        background: var(--card-background-color, white);
+        border-radius: 12px;
+        width: 320px;
+        max-width: 90vw;
+        max-height: 70vh;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .dialog-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--divider-color, #e5e7eb);
+        background: var(--primary-background-color, #f5f5f5);
+      }
+
+      .dialog-title {
+        font-size: 1rem;
+        font-weight: bold;
+        color: var(--primary-text-color, #212121);
+      }
+
+      .dialog-close {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        color: var(--secondary-text-color, #666);
+        padding: 4px 8px;
+        line-height: 1;
+        border-radius: 4px;
+      }
+
+      .dialog-close:hover {
+        background-color: var(--secondary-background-color, #e0e0e0);
+      }
+
+      .dialog-body {
+        padding: 12px;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+
+      .entities-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .entity-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        background: var(--secondary-background-color, #f5f5f5);
+      }
+
+      .entity-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .entity-item.on {
+        background: rgba(16, 185, 129, 0.15);
+      }
+
+      .entity-item ha-icon {
+        --mdc-icon-size: 22px;
+        color: var(--secondary-text-color, #666);
+      }
+
+      .entity-item.on ha-icon {
+        color: #10b981;
+      }
+
+      .entity-name {
+        flex: 1;
+        font-size: 0.9rem;
+        color: var(--primary-text-color, #212121);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .entity-state {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+      }
+
+      .entity-state.on {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.2);
+      }
+
+      .entity-state.off {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.15);
+      }
+
+      .no-entities {
+        text-align: center;
+        color: var(--secondary-text-color, #666);
+        padding: 16px;
+        font-size: 0.9rem;
+      }
       
     `;
   }
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.2.0  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.2.1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

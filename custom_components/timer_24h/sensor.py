@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +43,9 @@ async def async_setup_entry(
 class Timer24HEntity(CoordinatorEntity, SensorEntity):
     """Representation of a Timer 24H entity."""
 
+    # Use device name only (avoid "Name Name" / duplicated entity_id)
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_icon = "mdi:timer-outline"
 
     def __init__(self, coordinator, config_entry: ConfigEntry) -> None:
@@ -50,14 +53,18 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.config_entry = config_entry
         self._attr_unique_id = config_entry.entry_id
-        self._attr_name = config_entry.options.get("name", config_entry.title)
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, config_entry.entry_id)},
-            "name": self._attr_name,
-            "manufacturer": "Timer 24H",
-            "model": "24 Hour Timer",
-            "sw_version": "5.6.0",
-        }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        name = self.config_entry.options.get("name", self.config_entry.title)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            name=name,
+            manufacturer="Timer 24H",
+            model="24 Hour Timer",
+            sw_version="1.2.1",
+        )
 
     @property
     def state(self) -> str:
@@ -93,4 +100,3 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
-
