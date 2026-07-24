@@ -343,6 +343,19 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return mode;
   }
 
+  private getHvacModeIcon(mode: string): string {
+    const icons: Record<string, string> = {
+      cool: 'mdi:snowflake',
+      heat: 'mdi:fire',
+      heat_cool: 'mdi:sun-snowflake-variant',
+      auto: 'mdi:thermostat-auto',
+      dry: 'mdi:water-percent',
+      fan_only: 'mdi:fan',
+      off: 'mdi:power',
+    };
+    return icons[mode] || 'mdi:thermostat';
+  }
+
   private handleSlotClick(event: Event, hour: number, minute: number): void {
     // Stop event propagation to prevent multiple triggers
     event.stopPropagation();
@@ -606,8 +619,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           return html`
             <div class="device-control-card">
               <div class="device-control-name">${this.getFriendlyName(entityId)}</div>
-              <div class="control-row">
-                <span class="control-label">${this.localize('temperature')}</span>
+              <div class="control-row single-row">
+                <ha-icon class="control-icon" icon="mdi:thermometer"></ha-icon>
                 <div class="temp-controls">
                   <button
                     class="ctrl-btn"
@@ -625,20 +638,18 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
                     }}
                   >+</button>
                 </div>
-              </div>
-              <div class="control-row modes-row">
-                <span class="control-label">${this.localize('mode')}</span>
                 <div class="mode-buttons">
                   ${modes.map(
                     (m) => html`
                       <button
                         class="mode-btn ${mode === m ? 'active' : ''}"
+                        title="${this.localizeHvacMode(m)}"
                         @click=${(e: Event) => {
                           e.stopPropagation();
                           this.setClimateMode(entityId, m);
                         }}
                       >
-                        ${this.localizeHvacMode(m)}
+                        <ha-icon icon="${this.getHvacModeIcon(m)}"></ha-icon>
                       </button>
                     `
                   )}
@@ -665,8 +676,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
           return html`
             <div class="device-control-card">
               <div class="device-control-name">${this.getFriendlyName(entityId)}</div>
-              <div class="control-row">
-                <span class="control-label">${this.localize('speed')}</span>
+              <div class="control-row single-row">
+                <ha-icon class="control-icon" icon="mdi:fan"></ha-icon>
                 <div class="temp-controls">
                   <button
                     class="ctrl-btn"
@@ -1362,25 +1373,22 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         gap: 8px;
       }
 
-      .device-controls-title {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--secondary-text-color, #6b7280);
-      }
-
       .device-control-card {
         background: var(--secondary-background-color, #f3f4f6);
         border-radius: 8px;
         padding: 8px 10px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
       }
 
       .device-control-name {
         font-size: 0.85rem;
         font-weight: 600;
         color: var(--primary-text-color, #212121);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .control-row {
@@ -1390,12 +1398,13 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         gap: 8px;
       }
 
-      .modes-row {
-        align-items: flex-start;
+      .control-row.single-row {
+        flex-wrap: wrap;
+        justify-content: flex-start;
       }
 
-      .control-label {
-        font-size: 0.75rem;
+      .control-icon {
+        --mdc-icon-size: 18px;
         color: var(--secondary-text-color, #6b7280);
         flex-shrink: 0;
       }
@@ -1403,7 +1412,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       .temp-controls {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        flex-shrink: 0;
       }
 
       .temp-value {
@@ -1435,12 +1445,20 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
-        justify-content: flex-end;
+        margin-inline-start: auto;
       }
 
       .mode-btn {
-        padding: 4px 8px;
-        font-size: 0.72rem;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mode-btn ha-icon {
+        --mdc-icon-size: 18px;
       }
 
       .mode-btn.active {

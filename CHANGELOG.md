@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.5] - 2026-07-24
+
+### Changed
+- 🏷️ Climate/fan controls show only the device `friendly_name` (no section title like "מאוורר"/"מזגן")
+- 🎛️ Temperature/speed and mode controls are on one row, with icons instead of text labels
+
 ## [1.2.4] - 2026-07-24
 
 ### Changed
 - 🔘 Enable timer switch moves into the header between the title and active/inactive status
-- ❄️🌀 Climate/fan controls no longer show a redundant section title; device `friendly_name` is shown
 
 ### Fixed
 - 🖱️ Entities dialog open/close was delayed/stuck because `shouldUpdate` ignored `showEntitiesDialog` — now updates immediately
