@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Repository layout: Lovelace source lives in `src/`, secondary docs in `docs/`, helper scripts in `scripts/`
+- `npm run build` writes the card directly to `custom_components/timer_24h/dist/`
+- README and version metadata aligned to integration version `1.1.3`
+
+### Removed
+- Unused frontend experiments (`timer-24h-card-fixed.ts`, `timer-24h-card-clean.js`) and committed `node_modules`
+
 ## [1.1.3] - 2025-12-14
 
 ### 🎉 Official Release
