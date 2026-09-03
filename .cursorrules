@@ -4,30 +4,16 @@
 
 ### Documentation Files Policy
 
-**NEVER create additional documentation/guide files (*.md) unless explicitly requested!**
+### Documentation Files Policy
 
-**Allowed documentation files ONLY:**
-- ✅ `README.md` - Main project documentation (can be updated)
-- ✅ `CHANGELOG.md` - Version history (can be updated)
+Keep user-facing docs in `README.md` and `CHANGELOG.md`. Secondary docs belong in `docs/` (architecture, examples, HACS notes, historical release notes).
 
-**FORBIDDEN to create:**
-- ❌ Any other `.md` files (guides, tutorials, info files, etc.)
-- ❌ `CONTRIBUTING.md`
-- ❌ `UPGRADE_INSTRUCTIONS.md`
-- ❌ `CACHE_BUSTING_INFO.md`
-- ❌ `SUMMARY_OF_CHANGES.md`
-- ❌ Any other documentation files
+Do **not** add new markdown files in the repository root.
 
-**Rationale:**
-- Keep documentation centralized in README.md
-- Avoid documentation sprawl
-- Maintain single source of truth
-- Reduce maintenance burden
-
-**When user asks for documentation:**
-1. Update existing `README.md` or `CHANGELOG.md`
-2. Add to code comments/docstrings
-3. Only create new `.md` file if user **explicitly** requests it by name
+When adding documentation:
+1. Prefer updating `README.md`, `CHANGELOG.md`, or an existing file under `docs/`
+2. Only create a new `docs/*.md` file when the content does not fit those
+3. Do not create files such as `SUMMARY_OF_CHANGES.md`, `CACHE_BUSTING_INFO.md`, or `UPGRADE_INSTRUCTIONS.md` in the root
 
 ---
 
