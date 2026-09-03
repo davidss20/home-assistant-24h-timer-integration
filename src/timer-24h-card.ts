@@ -374,122 +374,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
 
-  private renderDividingLines() {
-    const lines = [];
-    const centerX = 200;
-    const centerY = 200;
-    const outerRadius = 180;
-    const innerRadius = 50;
-    
-    for (let i = 0; i < 24; i++) {
-      const angle = (i * 360 / 24 - 90) * (Math.PI / 180);
-      const xInner = centerX + innerRadius * Math.cos(angle);
-      const yInner = centerY + innerRadius * Math.sin(angle);
-      const xOuter = centerX + outerRadius * Math.cos(angle);
-      const yOuter = centerY + outerRadius * Math.sin(angle);
-      
-      lines.push(html`
-        <line 
-          x1="${xInner}" 
-          y1="${yInner}" 
-          x2="${xOuter}" 
-          y2="${yOuter}" 
-          stroke="#e5e7eb" 
-          stroke-width="1">
-        </line>
-      `);
-    }
-    
-    return lines;
-  }
-
-  private renderOuterSectors() {
-    const sectors = [];
-    const centerX = 200;
-    const centerY = 200;
-    const outerRadius = 180;
-    const innerRadius = 50;
-    const timeSlots = this.getTimeSlots();
-    
-    for (let hour = 0; hour < 24; hour++) {
-      const sectorPath = this.createSectorPath(hour, 24, innerRadius, outerRadius, centerX, centerY);
-      const textPos = this.getTextPosition(hour, 24, (innerRadius + outerRadius) / 2, centerX, centerY);
-      const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
-      const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
-      const labelY = textPos.y + 3;
-      const slot = timeSlots.find(s => s.hour === hour && s.minute === 0);
-      const isActive = slot?.isActive || false;
-      const isCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() < 30;
-      
-      sectors.push(html`
-        <path 
-          d="${sectorPath}" 
-          fill="${isActive ? '#10b981' : '#ffffff'}"
-          stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
-          stroke-width="${isCurrent ? '3' : '1'}"
-          style="cursor: pointer; transition: all 0.2s;"
-          @click="${() => this.toggleTimeSlot(hour, 0)}">
-        </path>
-        <text 
-          x="${textPos.x}" 
-          y="${labelY}" 
-          text-anchor="middle" 
-          font-size="15" 
-          font-weight="bold"
-          transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
-          style="pointer-events: none; user-select: none; font-weight: bold;"
-          fill="${isActive ? '#ffffff' : '#374151'}">
-          ${this.getTimeLabel(hour, 0)}
-        </text>
-      `);
-    }
-    
-    return sectors;
-  }
-
-  private renderInnerSectors() {
-    const sectors = [];
-    const centerX = 200;
-    const centerY = 200;
-    const innerRadius = 50;
-    const timeSlots = this.getTimeSlots();
-    
-    for (let hour = 0; hour < 24; hour++) {
-      const sectorPath = this.createSectorPath(hour, 24, 0, innerRadius, centerX, centerY);
-      const textPos = this.getTextPosition(hour, 24, innerRadius / 2, centerX, centerY);
-      const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
-      const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
-      const labelY = textPos.y + 2;
-      const slot = timeSlots.find(s => s.hour === hour && s.minute === 30);
-      const isActive = slot?.isActive || false;
-      const isCurrent = this.currentTime.getHours() === hour && this.currentTime.getMinutes() >= 30;
-      
-      sectors.push(html`
-        <path 
-          d="${sectorPath}" 
-          fill="${isActive ? '#10b981' : '#f8f9fa'}"
-          stroke="${isCurrent ? '#ff6b6b' : '#e5e7eb'}"
-          stroke-width="${isCurrent ? '3' : '1'}"
-          style="cursor: pointer; transition: all 0.2s;"
-          @click="${() => this.toggleTimeSlot(hour, 30)}">
-        </path>
-        <text 
-          x="${textPos.x}" 
-          y="${labelY}" 
-          text-anchor="middle" 
-          font-size="11" 
-          font-weight="bold"
-          transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
-          style="pointer-events: none; user-select: none; font-weight: bold;"
-          fill="${isActive ? '#ffffff' : '#6b7280'}">
-          ${this.getTimeLabel(hour, 30)}
-        </text>
-      `);
-    }
-    
-    return sectors;
-  }
-
   protected render(): TemplateResult {
     if (!this.hass || !this.config.entity) {
       return html`
@@ -914,14 +798,28 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   }
 }
 
+interface LovelaceCustomCard {
+  type: string;
+  name: string;
+  description: string;
+  preview?: boolean;
+  documentationURL?: string;
+}
+
+declare global {
+  interface Window {
+    customCards: LovelaceCustomCard[];
+  }
+}
+
 console.info(
   '%c  TIMER-24H-CARD  %c  Version 1.1.3  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
 
-(window as any).customCards = (window as any).customCards || [];
-(window as any).customCards.push({
+window.customCards = window.customCards || [];
+window.customCards.push({
   type: 'timer-24h-card',
   name: 'Timer 24H Card',
   description: '24 Hour Timer Card with automatic entity control',

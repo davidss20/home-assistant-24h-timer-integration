@@ -25,9 +25,10 @@ venv/
 env/
 ENV/
 
-# IDE
+# IDE / editor tooling
 .vscode/
 .idea/
+.cursorrules
 *.swp
 *.swo
 *~

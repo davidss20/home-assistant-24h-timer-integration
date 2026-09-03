@@ -1,13 +1,14 @@
 # Timer 24H for Home Assistant
 
-Timer 24H is a Home Assistant custom integration with a visual 24-hour Lovelace card. It lets you tap half-hour segments on a circular clock to set a daily schedule, then turns entities on or off according to that schedule and optional activation conditions.
-
-![Timer 24H Icon](icon.svg)
-
+[![CI](https://github.com/davidss20/home-assistant-24h-timer-integration/actions/workflows/ci.yml/badge.svg)](https://github.com/davidss20/home-assistant-24h-timer-integration/actions/workflows/ci.yml)
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://hacs.xyz/)
 [![GitHub Release](https://img.shields.io/github/release/davidss20/home-assistant-24h-timer-integration.svg?style=for-the-badge&color=blue)](https://github.com/davidss20/home-assistant-24h-timer-integration/releases)
 [![License](https://img.shields.io/github/license/davidss20/home-assistant-24h-timer-integration.svg?style=for-the-badge&color=green)](LICENSE)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow.svg?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/davidss20)
+
+Timer 24H is a Home Assistant custom integration with a visual 24-hour Lovelace card. Tap half-hour segments on a circular clock to set a daily schedule; the integration turns entities on or off according to that schedule and optional activation conditions.
+
+![Timer 24H Icon](icon.svg)
 
 ## Demo / Screenshots
 
@@ -21,22 +22,22 @@ Home Assistant scheduling can become cumbersome when you want to change a recurr
 ## Features
 
 - 24-hour circular timer with 30-minute segments
-- Automatic control of lights, switches, fans, climate, covers, and similar entities
+- Automatic entity control (lights, switches, fans, climate, covers, and similar domains)
 - Optional activation conditions (presence, Shabbat mode, vacation, or any on/off sensor)
-- Multiple timer instances
-- Schedule and enabled-state persistence across restarts
+- Multiple timer instances via Config Flow
+- Persistent timer state across Home Assistant restarts
 - Multi-language UI, including Hebrew RTL
 - Lovelace card installed and registered automatically with cache busting
 
 ## Tech Stack
 
-- **Python** — Home Assistant custom integration (Config Flow, DataUpdateCoordinator, sensor entity, services)
+- **Python** — Home Assistant custom integration: Config Flow, DataUpdateCoordinator, sensor entity, and services
 - **TypeScript + Lit** — Lovelace custom card
-- **HACS** — distribution as a custom integration repository
+- **HACS** — install as a custom integration repository
 
 ## Architecture
 
-The Python integration owns the schedule and entity control. The card is a UI over a `sensor.timer_24h_*` entity: it reads `time_slots` and related attributes, then calls integration services such as `timer_24h.toggle_slot`.
+The Python integration owns schedule state, persistence, and entity control. The card is UI only: it reads a `sensor.timer_24h_*` entity and calls services such as `timer_24h.toggle_slot`.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a concise component map.
 
@@ -122,7 +123,8 @@ The sensor states are `active`, `idle`, and `blocked`. Useful attributes: `time_
 ## Development
 
 ```bash
-npm install
+npm ci
+npm run lint
 npm run build
 ```
 
@@ -136,7 +138,7 @@ Local card previews (no Home Assistant): `docs/preview/preview.html`
 
 ## Contributing
 
-Issues and pull requests are welcome. Please keep changes focused, do not commit `node_modules` or secrets, and run `npm run build` if you touch the Lovelace card.
+Issues and pull requests are welcome. Keep changes focused, do not commit `node_modules` or secrets, and run `npm run lint` and `npm run build` if you touch the Lovelace card.
 
 ## License
 
@@ -144,4 +146,4 @@ MIT. See [LICENSE](LICENSE).
 
 ---
 
-[Buy Me A Coffee](https://buymeacoffee.com/davidss20) · [Issues](https://github.com/davidss20/home-assistant-24h-timer-integration/issues) · [Discussions](https://github.com/davidss20/home-assistant-24h-timer-integration/discussions)
+[Buy Me A Coffee](https://buymeacoffee.com/davidss20) · [Issues](https://github.com/davidss20/home-assistant-24h-timer-integration/issues)
