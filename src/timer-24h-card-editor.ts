@@ -177,7 +177,7 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
       composed: true,
     });
     // Dispatch event using the built-in method from HTMLElement
-    (this as any).dispatchEvent(event);
+    this.dispatchEvent(event);
   }
 
   static get styles(): CSSResultGroup {
