@@ -13,9 +13,8 @@ Timer 24H is a Home Assistant custom integration with a visual 24-hour Lovelace 
 ## Demo / Screenshots
 
 ![Timer 24H Preview](images/preview.jpg)
-![Timer 24H Preview 2](images/preview1.jpg)
 
-*24-hour circular timer with automatic entity control and optional activation conditions*
+*Multiple Timer 24H cards on a Home Assistant dashboard: lighting, climate, and fan schedules with Hebrew UI*
 
 Home Assistant scheduling can become cumbersome when you want to change a recurring daily schedule quickly. Timer 24H gives that schedule a visual 24-hour interface instead of a stack of automations.
 
