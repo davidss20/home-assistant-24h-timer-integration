@@ -83,8 +83,7 @@ Perfect for:
 **Screenshots/Preview:**
 ```
 Preview images available in repository:
-https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/images/preview.jpg
-https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/images/preview1.jpg
+https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/images/dashboard.jpg
 ```
 
 ---
