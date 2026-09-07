@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.10] - 2026-09-07
+
+### Added
+- ⏱️ 15- and 30-minute views are both available again (card editor and timer Configure)
+
 ## [1.3.0-beta.9] - 2026-09-07
 
 ### Fixed

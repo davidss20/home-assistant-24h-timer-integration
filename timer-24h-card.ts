@@ -18,9 +18,6 @@ interface Timer24HCardConfig extends LovelaceCardConfig {
   show_enable_switch?: boolean;
 }
 
-// Keep in sync with ENABLE_THIRTY_MINUTE_UI in custom_components/timer_24h/const.py
-const ENABLE_THIRTY_MINUTE_UI = false;
-
 interface TimeSlot {
   hour: number;
   minute: number;
@@ -235,9 +232,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   }
 
   private getSlotResolution(): 15 | 30 {
-    if (!ENABLE_THIRTY_MINUTE_UI) {
-      return 15;
-    }
     const value = Number(this.getEntityState()?.attributes?.slot_resolution);
     return value === 30 ? 30 : 15;
   }
@@ -2129,7 +2123,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.9  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.10  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

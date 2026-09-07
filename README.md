@@ -24,7 +24,7 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 ## ✨ Key Features
 
-- **🕐 24-Hour Circular Timer** with 15-minute slots
+- **🕐 24-Hour Circular Timer** with 15-minute or classic 30-minute slots
 - **🎯 Activation Conditions** - control when entities activate based on any sensor/state
 - **🔧 Automatic Entity Control** according to schedule
 - **❄️ Climate & Fan Controls** - temperature/mode (AC) and speed (fan) buttons appear on the card when those entities are selected
@@ -125,6 +125,7 @@ show_title: true  # Show the timer name at the top
 | `entities` | list | ❌ | List of entities to control automatically |
 | `home_sensors` | list | ❌ | Activation condition sensors (e.g., home presence, Shabbat mode, vacation) |
 | `home_logic` | string | ❌ | Condition logic: OR or AND |
+| `slot_resolution` | string | ❌ | Slot interval: `15` or `30` minutes (also in the card editor) |
 
 ### Card Settings
 
@@ -153,9 +154,10 @@ show_title: true  # Show the timer name at the top
 
 ## 🎯 How It Works
 
-1. **🎨 Setting Times**: Click on segments in the circle or on the pointing triangle
-   - **Outer circle**: Full hours (00:00, 01:00, etc.)
-   - **Inner circle**: Half hours (00:30, 01:30, etc.)
+1. **🎨 Setting Times**: Click on segments in the circle
+   - **15-minute view**: tap an hour, then tap a quarter (`:00` / `:15` / `:30` / `:45`)
+   - **30-minute view**: outer ring = full hours, inner ring = half hours
+   - Switch between views from the card editor or timer Configure
 
 2. **🎯 Activation Conditions**: The integration checks configured sensors every minute
    - **OR**: At least one condition must be met (active/on/true)
@@ -299,6 +301,7 @@ The timer sensor exposes several attributes that you can use in automations and 
 | `home_logic` | string | Condition logic (`OR` / `AND`) |
 | `controlled_entities` | list | List of entities controlled by the timer |
 | `enabled` | boolean | Whether the timer is enabled |
+| `slot_resolution` | int | View interval: `15` or `30` minutes |
 | `last_update` | string | Last update timestamp |
 
 ### Automation Examples
