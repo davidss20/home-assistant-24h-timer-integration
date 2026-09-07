@@ -14,11 +14,9 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 <div align="center">
 
-<img src="images/preview.svg" alt="Timer 24H 15-minute and 30-minute preview" width="860">
+<img src="https://raw.githubusercontent.com/davidss20/home-assistant-24h-timer-integration/main/images/preview.svg" alt="Timer 24H 15-minute and 30-minute preview" width="860">
 
 *Left: 30-minute classic rings. Right: 15-minute quarters (blue outline = selected hour). Red = current time.*
-
-[Open interactive HTML preview](https://htmlpreview.github.io/?https://github.com/davidss20/home-assistant-24h-timer-integration/blob/main/docs/preview/card-preview.html?v=3)
 
 </div>
 
