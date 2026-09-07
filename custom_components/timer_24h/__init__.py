@@ -24,6 +24,7 @@ from .const import (
     ATTR_HVAC_MODE,
     ATTR_MINUTE,
     ATTR_PERCENTAGE,
+    ATTR_SLOT_RESOLUTION,
     ATTR_SLOTS,
     ATTR_TARGET_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -32,6 +33,7 @@ from .const import (
     SERVICE_SET_ACTIVATION_CONDITIONS,
     SERVICE_SET_ENABLED,
     SERVICE_SET_ENTITY_SETTINGS,
+    SERVICE_SET_SLOT_RESOLUTION,
     SERVICE_SET_SLOTS,
     SERVICE_TOGGLE_SLOT,
 )
@@ -312,6 +314,33 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
         _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
 
+    async def handle_set_slot_resolution(call: ServiceCall) -> None:
+        """Handle the set_slot_resolution service call."""
+        entity_id = call.data.get("entity_id")
+        resolution = call.data.get(ATTR_SLOT_RESOLUTION)
+
+        _LOGGER.info(
+            "🔵 SERVICE CALLED: set_slot_resolution(entity=%s, resolution=%s)",
+            entity_id,
+            resolution,
+        )
+
+        for entry_id, data in hass.data[DOMAIN].items():
+            if isinstance(data, dict) and "coordinator" in data:
+                coordinator = data["coordinator"]
+
+                entity_registry = er.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (
+                        entity_entry.config_entry_id
+                        == coordinator.config_entry.entry_id
+                        and entity_entry.entity_id == entity_id
+                    ):
+                        await coordinator.async_set_slot_resolution(int(resolution))
+                        return
+
+        _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
+
     # Register services if not already registered
     if not hass.services.has_service(DOMAIN, SERVICE_TOGGLE_SLOT):
         hass.services.async_register(
@@ -395,6 +424,21 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                         cv.ensure_list, [cv.entity_id]
                     ),
                     vol.Optional(ATTR_HOME_LOGIC): vol.In(["OR", "AND"]),
+                }
+            ),
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_SLOT_RESOLUTION):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_SLOT_RESOLUTION,
+            handle_set_slot_resolution,
+            schema=vol.Schema(
+                {
+                    vol.Required("entity_id"): cv.entity_id,
+                    vol.Required(ATTR_SLOT_RESOLUTION): vol.All(
+                        vol.Coerce(int), vol.In([15, 30])
+                    ),
                 }
             ),
         )

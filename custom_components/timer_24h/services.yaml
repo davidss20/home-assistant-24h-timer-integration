@@ -170,3 +170,27 @@ set_activation_conditions:
           options:
             - "OR"
             - "AND"
+
+set_slot_resolution:
+  name: Set slot interval
+  description: >
+    Switch the timer between 15-minute and 30-minute views. Saved to the
+    integration options, so every card for this timer updates together.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    slot_resolution:
+      name: Slot interval
+      description: 15 minutes (each quarter separately) or 30 minutes (classic two-ring view).
+      required: true
+      selector:
+        select:
+          options:
+            - "15"
+            - "30"

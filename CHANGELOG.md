@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.2] - 2026-09-07
+
+### Added
+- 🎛️ Slot interval (15 / 30 minutes) in the Lovelace card editor; saved to the timer, not card YAML
+
 ## [1.3.0-beta.1] - 2026-09-07
 
 ### Added

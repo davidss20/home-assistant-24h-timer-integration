@@ -91,6 +91,20 @@
           "description": "The timer entity to control"
         }
       }
+    },
+    "set_slot_resolution": {
+      "name": "Set Slot Interval",
+      "description": "Switch the timer between 15-minute and 30-minute views",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The timer entity to control"
+        },
+        "slot_resolution": {
+          "name": "Slot interval",
+          "description": "15 or 30 minutes"
+        }
+      }
     }
   }
 }

@@ -32,6 +32,7 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
   @state() private draftLogic: 'OR' | 'AND' = 'OR';
   @state() private conditionsSaving = false;
   @state() private conditionsDirty = false;
+  @state() private slotResolutionSaving = false;
   private lastSyncedEntity = '';
 
   public setConfig(config: Timer24HCardConfig): void {
@@ -190,6 +191,36 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
 
         ${selectedEntity
           ? html`
+              <div class="config-row">
+                <label>Slot interval</label>
+                <div class="logic-toggle">
+                  <button
+                    type="button"
+                    class="logic-btn ${this.getSlotResolution() === 15 ? 'active' : ''}"
+                    ?disabled=${this.slotResolutionSaving}
+                    @click=${() => this.setSlotResolution(15)}
+                  >
+                    15 minutes
+                  </button>
+                  <button
+                    type="button"
+                    class="logic-btn ${this.getSlotResolution() === 30 ? 'active' : ''}"
+                    ?disabled=${this.slotResolutionSaving}
+                    @click=${() => this.setSlotResolution(30)}
+                  >
+                    30 minutes
+                  </button>
+                </div>
+                <div class="help-text">
+                  Saved to the timer (not this card). 15 min: tap each quarter.
+                  30 min: classic two-ring view.
+                </div>
+              </div>
+            `
+          : ''}
+
+        ${selectedEntity
+          ? html`
               <div class="conditions-panel">
                 <h3>Activation Conditions</h3>
                 <p class="help-text">
@@ -310,6 +341,30 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
     const target = ev.target as HTMLInputElement;
     this.config = { ...this.config, show_enable_switch: target.checked };
     this.configChanged();
+  }
+
+  private getSlotResolution(): 15 | 30 {
+    if (!this.config?.entity || !this.hass) return 15;
+    const value = Number(
+      this.hass.states[this.config.entity]?.attributes?.slot_resolution
+    );
+    return value === 30 ? 30 : 15;
+  }
+
+  private async setSlotResolution(resolution: 15 | 30): Promise<void> {
+    if (!this.hass || !this.config?.entity || this.slotResolutionSaving) return;
+    if (this.getSlotResolution() === resolution) return;
+    this.slotResolutionSaving = true;
+    try {
+      await this.hass.callService('timer_24h', 'set_slot_resolution', {
+        entity_id: this.config.entity,
+        slot_resolution: resolution,
+      });
+    } catch (error) {
+      console.error('Failed to set slot interval:', error);
+    } finally {
+      this.slotResolutionSaving = false;
+    }
   }
 
   private setLogic(logic: 'OR' | 'AND'): void {
@@ -471,6 +526,11 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
         background: var(--primary-color);
         border-color: var(--primary-color);
         color: var(--text-primary-color, #fff);
+      }
+
+      .logic-btn:disabled {
+        opacity: 0.6;
+        cursor: default;
       }
 
       .sensor-list {

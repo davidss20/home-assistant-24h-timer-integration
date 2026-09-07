@@ -584,6 +584,30 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             self._home_status,
         )
 
+    async def async_set_slot_resolution(self, resolution: int) -> None:
+        """Switch 15/30-minute view. Same 96-slot store; pairing only changes."""
+        if resolution not in (SLOT_RESOLUTION_15, SLOT_RESOLUTION_30):
+            _LOGGER.warning("Invalid slot_resolution %s", resolution)
+            return
+
+        self._slot_resolution = resolution
+        new_options = {
+            **self.config_entry.options,
+            CONF_SLOT_RESOLUTION: str(resolution),
+        }
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, options=new_options
+        )
+        self.async_set_updated_data(
+            {
+                "time_slots": self._time_slots,
+                "home_status": self._home_status,
+                "enabled": self._enabled,
+                CONF_SLOT_RESOLUTION: resolution,
+            }
+        )
+        _LOGGER.info("✅ Slot resolution updated to %s minutes", resolution)
+
     def _minutes_for_toggle(self, minute: int) -> list[int]:
         """Minutes affected by a toggle, honoring 30-minute grouping."""
         if minute not in SLOT_MINUTES:

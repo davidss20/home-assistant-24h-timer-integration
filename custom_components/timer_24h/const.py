@@ -30,6 +30,7 @@ SERVICE_CLEAR_ALL: Final = "clear_all"
 SERVICE_SET_ENABLED: Final = "set_enabled"
 SERVICE_SET_ENTITY_SETTINGS: Final = "set_entity_settings"
 SERVICE_SET_ACTIVATION_CONDITIONS: Final = "set_activation_conditions"
+SERVICE_SET_SLOT_RESOLUTION: Final = "set_slot_resolution"
 
 # Attributes
 ATTR_TIME_SLOTS: Final = "time_slots"

@@ -2118,7 +2118,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.1  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

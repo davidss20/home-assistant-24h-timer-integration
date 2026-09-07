@@ -91,6 +91,20 @@
           "description": "ישות הטיימר לשליטה"
         }
       }
+    },
+    "set_slot_resolution": {
+      "name": "הגדרת מרווח משבצות",
+      "description": "החלפה בין תצוגת 15 דקות ל-30 דקות",
+      "fields": {
+        "entity_id": {
+          "name": "ישות",
+          "description": "ישות הטיימר לשליטה"
+        },
+        "slot_resolution": {
+          "name": "מרווח משבצות",
+          "description": "15 או 30 דקות"
+        }
+      }
     }
   }
 }
