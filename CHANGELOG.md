@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.4] - 2026-09-07
+
+### Changed
+- 🧭 Hour labels sit flush against the outer edge of the clock
+
 ## [1.3.0-beta.3] - 2026-09-07
 
 ### Fixed

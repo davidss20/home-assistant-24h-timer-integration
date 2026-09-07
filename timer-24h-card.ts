@@ -1188,7 +1188,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         const hourOn = [0, 15].every(m => timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive);
         return this.renderSectorLabel(
           hour,
-          (middleRadius + outerRadius) / 2,
+          outerRadius - 7,
           centerX,
           centerY,
           this.getTimeLabel(hour, 0),
@@ -1263,7 +1263,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         );
         return this.renderSectorLabel(
           hour,
-          (middleRadius + outerRadius) / 2,
+          outerRadius - 7,
           centerX,
           centerY,
           hour.toString().padStart(2, '0'),
@@ -2119,7 +2119,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.3  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
