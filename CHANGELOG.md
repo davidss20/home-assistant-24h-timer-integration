@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-07
+
+### Added
+- ⏱️ 15-minute slot mode (96 quarters) alongside the classic 30-minute two-ring view
+- 🎛️ Choose 15 or 30 minutes from the Lovelace card editor or timer Configure
+- 🟦 15-minute card: tap an hour to select it (blue), then tap a quarter (`:00` / `:15` / `:30` / `:45`)
+- 🕒 Hover tooltip shows the exact slot time
+- 🖼️ Live clock preview in the Lovelace Add Card picker
+
+### Changed
+- Timers store 96 quarter-hour slots. Existing 48-slot schedules are migrated (`:00` also turns on `:15`, `:30` also turns on `:45`)
+- New timers default to 15-minute view; existing timers keep 30-minute view until you change the setting
+- In 15-minute view, tapping the outer ring fills the whole hour if any quarter is still off; turning a quarter off affects only that cube
+- 30-minute view shows two rings only (no 15-minute dividing lines)
+
 ## [1.3.0-beta.12] - 2026-09-07
 
 ### Fixed

@@ -18,7 +18,7 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 *Left: 30-minute classic rings. Right: 15-minute quarters (blue outline = selected hour). Red = current time.*
 
-[Open interactive HTML preview](https://htmlpreview.github.io/?https://github.com/davidss20/home-assistant-24h-timer-integration/blob/beta/1.3.0/docs/preview/card-preview.html)
+[Open interactive HTML preview](https://htmlpreview.github.io/?https://github.com/davidss20/home-assistant-24h-timer-integration/blob/main/docs/preview/card-preview.html)
 
 </div>
 
@@ -89,6 +89,7 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 4. Enter the details:
    - **Timer Name** (e.g., "Lighting", "Water Heater")
    - **Select Entities to Control** (lights, switches, fans, etc.)
+   - **Slot interval** — `15` minutes (quarters) or `30` minutes (classic two rings)
    - **Activation Conditions** (optional) - Sensors that determine when timer activates entities
    - **Condition Logic** (OR/AND)
 5. Click **"Submit"**
@@ -105,7 +106,7 @@ The card is automatically installed with the integration.
 2. Click **"Add Card"**
 3. Search for **"Timer 24H Card"**
 4. Select the timer entity you created
-5. Customize additional settings (optional)
+5. Optionally choose **15 minutes** or **30 minutes** (saved to the timer, not the card)
 
 #### Via YAML
 
@@ -175,10 +176,11 @@ show_title: true  # Show the timer name at the top
 ## 🎨 Card Appearance
 
 - **🟢 Green**: Active segments
-- **⚪ Gray**: Inactive segments
-- **🔵 Blue**: Current segment (blue border)
-- **🟢 Green**: System active (conditions met) — click to edit conditions
-- **🟡 Yellow**: System inactive (conditions not met) — click to edit conditions
+- **⚪ White / gray**: Inactive segments
+- **🔵 Blue outline**: Selected hour in 15-minute view
+- **🔴 Red outline**: Current time slot
+- **🟢 Green status**: Conditions met — click to edit conditions
+- **🟡 Yellow status**: Conditions not met — click to edit conditions
 
 ## 🔧 Services
 
@@ -193,7 +195,7 @@ service: timer_24h.toggle_slot
 data:
   entity_id: sensor.timer_24h_lighting
   hour: 14
-  minute: 30  # 0 or 30
+  minute: 30  # 0, 15, 30, or 45
 ```
 
 ### `timer_24h.set_slots`
@@ -452,6 +454,12 @@ The integration includes full Hebrew support:
 - **📝 Hebrew Interface** - All texts in Hebrew
 - **🔄 RTL Support** - Right-to-left text direction
 - **⚙️ Hebrew Editor** - Configuration interface in Hebrew
+
+### 15 / 30 minutes
+
+- **15 דקות**: לחיצה על שעה בוחרת אותה (מסגרת כחולה), לחיצה על רבע מדליקה/מכבה אותו. לחיצה על הטבעת החיצונית מדליקה את כל השעה.
+- **30 דקות**: שתי טבעות קלאסיות — שעה בחוץ, חצי שעה בפנים.
+- מחליפים בתפריט עריכת הכרטיס או ב-Configure של הטיימר.
 
 ## 🔧 Troubleshooting
 

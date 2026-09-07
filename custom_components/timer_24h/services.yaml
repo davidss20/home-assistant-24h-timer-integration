@@ -1,6 +1,6 @@
 toggle_slot:
   name: Toggle time slot
-  description: Toggle a half-hour time slot on or off.
+  description: Toggle a time slot on or off (15- or 30-minute view).
   fields:
     entity_id:
       name: Timer entity
@@ -22,14 +22,14 @@ toggle_slot:
           mode: box
     minute:
       name: Minute
-      description: Minute of the slot (0 or 30).
+      description: Minute of the slot (0, 15, 30, or 45).
       required: true
       example: 0
       selector:
         number:
           min: 0
-          max: 30
-          step: 30
+          max: 45
+          step: 15
           mode: box
 
 set_slots:
