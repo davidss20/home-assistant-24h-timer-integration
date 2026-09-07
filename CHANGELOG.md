@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.5] - 2026-09-07
+
+### Fixed
+- 🧭 Hour labels sit in the middle of the outer band (15-min) and the outer half-hour ring (30-min)
+
 ## [1.3.0-beta.4] - 2026-09-07
 
 ### Changed
