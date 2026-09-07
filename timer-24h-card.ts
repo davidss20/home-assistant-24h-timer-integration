@@ -1187,6 +1187,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             stroke-width="1"
             style="cursor: pointer; transition: all 0.2s;"
             @click="${clickHandler}">
+            <title>${this.getTimeLabel(hour, band.m)}</title>
           </path>
         `;
       }))}
@@ -1251,6 +1252,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             stroke-width="${selected ? '2.5' : '1'}"
             style="cursor: pointer; transition: all 0.2s;"
             @click="${clickHandler}">
+            <title>${this.getTimeLabel(hour, band.m)}</title>
           </path>
           ${selected && band.m !== 0
             ? this.renderSectorLabel(
@@ -2127,7 +2129,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.7  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.8  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

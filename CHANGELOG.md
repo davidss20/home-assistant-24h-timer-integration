@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.8] - 2026-09-07
+
+### Added
+- 🕒 Hover tooltip on each slot shows the exact time (for example `22:30`)
+
 ## [1.3.0-beta.7] - 2026-09-07
 
 ### Changed
