@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.11] - 2026-09-07
+
+### Changed
+- ⏱️ 30-minute view uses two rings only; the 15-minute dividing lines are hidden
+
 ## [1.3.0-beta.10] - 2026-09-07
 
 ### Added

@@ -1159,16 +1159,16 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     middleRadius: number,
     outerRadius: number,
   ) {
-    const bands: { m: number; pair: number; a: number; b: number }[] = [
-      { m: 0, pair: 0, a: (middleRadius + outerRadius) / 2, b: outerRadius },
-      { m: 15, pair: 0, a: middleRadius, b: (middleRadius + outerRadius) / 2 },
-      { m: 30, pair: 30, a: (innerRadius + middleRadius) / 2, b: middleRadius },
-      { m: 45, pair: 30, a: innerRadius, b: (innerRadius + middleRadius) / 2 },
+    const bands: { pair: number; minutes: number[]; a: number; b: number }[] = [
+      { pair: 0, minutes: [0, 15], a: middleRadius, b: outerRadius },
+      { pair: 30, minutes: [30, 45], a: innerRadius, b: middleRadius },
     ];
 
     return svg`
       ${Array.from({ length: 24 }, (_, hour) => bands.map(band => {
-        const isActive = timeSlots.find(s => s.hour === hour && s.minute === band.m)?.isActive || false;
+        const isActive = band.minutes.every(
+          m => timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive
+        );
         const sectorPath = this.createSectorPath(hour, 24, band.a, band.b, centerX, centerY);
         const clickHandler = (e: Event) => {
           this.handleSlotClick(e, hour, band.pair);
@@ -1176,12 +1176,12 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         return svg`
           <path
             d="${sectorPath}"
-            fill="${isActive ? '#10b981' : (band.m === 0 ? '#ffffff' : '#f8f9fa')}"
+            fill="${isActive ? '#10b981' : (band.pair === 0 ? '#ffffff' : '#f8f9fa')}"
             stroke="#e5e7eb"
             stroke-width="1"
             style="cursor: pointer; transition: all 0.2s;"
             @click="${clickHandler}">
-            <title>${this.getTimeLabel(hour, band.m)}</title>
+            <title>${this.getTimeLabel(hour, band.pair)}</title>
           </path>
         `;
       }))}
@@ -2123,7 +2123,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.10  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.11  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
