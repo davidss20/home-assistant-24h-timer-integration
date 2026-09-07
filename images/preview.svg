@@ -38,100 +38,100 @@
 <line x1="187.06" y1="151.70" x2="153.41" y2="26.13" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 200.00 85.00 L 200.00 20.00 A 180 180 0 0 1 246.59 26.13 L 229.76 88.92 A 115 115 0 0 0 200.00 85.00" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 200.00 150.00 L 200.00 85.00 A 115 115 0 0 1 229.76 88.92 L 212.94 151.70 A 50 50 0 0 0 200.00 150.00" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="219.25" y="53.76" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-82.50 219.25 53.76)" style="direction:ltr" fill="#374151">00:00</text>
-<text x="210.77" y="118.21" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(-82.50 210.77 118.21)" style="direction:ltr" fill="#6b7280">00:30</text>
+<g transform="translate(219.25 53.76) rotate(-82.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">00:00</text></g>
+<g transform="translate(210.77 118.21) rotate(-82.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">00:30</text></g>
 <path d="M 229.76 88.92 L 246.59 26.13 A 180 180 0 0 1 290.00 44.12 L 257.50 100.41 A 115 115 0 0 0 229.76 88.92" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 212.94 151.70 L 229.76 88.92 A 115 115 0 0 1 257.50 100.41 L 225.00 156.70 A 50 50 0 0 0 212.94 151.70" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="256.45" y="63.73" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-67.50 256.45 63.73)" style="direction:ltr" fill="#374151">01:00</text>
-<text x="231.57" y="123.78" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(-67.50 231.57 123.78)" style="direction:ltr" fill="#6b7280">01:30</text>
+<g transform="translate(256.45 63.73) rotate(-67.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">01:00</text></g>
+<g transform="translate(231.57 123.78) rotate(-67.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">01:30</text></g>
 <path d="M 257.50 100.41 L 290.00 44.12 A 180 180 0 0 1 327.28 72.72 L 281.32 118.68 A 115 115 0 0 0 257.50 100.41" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 225.00 156.70 L 257.50 100.41 A 115 115 0 0 1 281.32 118.68 L 235.36 164.64 A 50 50 0 0 0 225.00 156.70" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="289.79" y="82.98" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-52.50 289.79 82.98)" style="direction:ltr" fill="#374151">02:00</text>
-<text x="250.22" y="134.55" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(-52.50 250.22 134.55)" style="direction:ltr" fill="#6b7280">02:30</text>
+<g transform="translate(289.79 82.98) rotate(-52.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">02:00</text></g>
+<g transform="translate(250.22 134.55) rotate(-52.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">02:30</text></g>
 <path d="M 281.32 118.68 L 327.28 72.72 A 180 180 0 0 1 355.88 110.00 L 299.59 142.50 A 115 115 0 0 0 281.32 118.68" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 235.36 164.64 L 281.32 118.68 A 115 115 0 0 1 299.59 142.50 L 243.30 175.00 A 50 50 0 0 0 235.36 164.64" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="317.02" y="110.21" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-37.50 317.02 110.21)" style="direction:ltr" fill="#374151">03:00</text>
-<text x="265.45" y="149.78" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(-37.50 265.45 149.78)" style="direction:ltr" fill="#6b7280">03:30</text>
+<g transform="translate(317.02 110.21) rotate(-37.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">03:00</text></g>
+<g transform="translate(265.45 149.78) rotate(-37.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">03:30</text></g>
 <path d="M 299.59 142.50 L 355.88 110.00 A 180 180 0 0 1 373.87 153.41 L 311.08 170.24 A 115 115 0 0 0 299.59 142.50" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 243.30 175.00 L 299.59 142.50 A 115 115 0 0 1 311.08 170.24 L 248.30 187.06 A 50 50 0 0 0 243.30 175.00" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="336.27" y="143.55" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-22.50 336.27 143.55)" style="direction:ltr" fill="#374151">04:00</text>
-<text x="276.22" y="168.43" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(-22.50 276.22 168.43)" style="direction:ltr" fill="#6b7280">04:30</text>
+<g transform="translate(336.27 143.55) rotate(-22.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">04:00</text></g>
+<g transform="translate(276.22 168.43) rotate(-22.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">04:30</text></g>
 <path d="M 311.08 170.24 L 373.87 153.41 A 180 180 0 0 1 380.00 200.00 L 315.00 200.00 A 115 115 0 0 0 311.08 170.24" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 248.30 187.06 L 311.08 170.24 A 115 115 0 0 1 315.00 200.00 L 250.00 200.00 A 50 50 0 0 0 248.30 187.06" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="346.24" y="180.75" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-7.50 346.24 180.75)" style="direction:ltr" fill="#374151">05:00</text>
-<text x="281.79" y="189.23" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(-7.50 281.79 189.23)" style="direction:ltr" fill="#6b7280">05:30</text>
+<g transform="translate(346.24 180.75) rotate(-7.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">05:00</text></g>
+<g transform="translate(281.79 189.23) rotate(-7.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">05:30</text></g>
 <path d="M 315.00 200.00 L 380.00 200.00 A 180 180 0 0 1 373.87 246.59 L 311.08 229.76 A 115 115 0 0 0 315.00 200.00" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 250.00 200.00 L 315.00 200.00 A 115 115 0 0 1 311.08 229.76 L 248.30 212.94 A 50 50 0 0 0 250.00 200.00" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="346.24" y="219.25" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(7.50 346.24 219.25)" style="direction:ltr" fill="#ffffff">06:00</text>
-<text x="281.79" y="210.77" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(7.50 281.79 210.77)" style="direction:ltr" fill="#ffffff">06:30</text>
+<g transform="translate(346.24 219.25) rotate(7.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">06:00</text></g>
+<g transform="translate(281.79 210.77) rotate(7.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">06:30</text></g>
 <path d="M 311.08 229.76 L 373.87 246.59 A 180 180 0 0 1 355.88 290.00 L 299.59 257.50 A 115 115 0 0 0 311.08 229.76" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 248.30 212.94 L 311.08 229.76 A 115 115 0 0 1 299.59 257.50 L 243.30 225.00 A 50 50 0 0 0 248.30 212.94" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="336.27" y="256.45" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(22.50 336.27 256.45)" style="direction:ltr" fill="#ffffff">07:00</text>
-<text x="276.22" y="231.57" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(22.50 276.22 231.57)" style="direction:ltr" fill="#ffffff">07:30</text>
+<g transform="translate(336.27 256.45) rotate(22.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">07:00</text></g>
+<g transform="translate(276.22 231.57) rotate(22.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">07:30</text></g>
 <path d="M 299.59 257.50 L 355.88 290.00 A 180 180 0 0 1 327.28 327.28 L 281.32 281.32 A 115 115 0 0 0 299.59 257.50" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 243.30 225.00 L 299.59 257.50 A 115 115 0 0 1 281.32 281.32 L 235.36 235.36 A 50 50 0 0 0 243.30 225.00" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="317.02" y="289.79" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(37.50 317.02 289.79)" style="direction:ltr" fill="#ffffff">08:00</text>
-<text x="265.45" y="250.22" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(37.50 265.45 250.22)" style="direction:ltr" fill="#ffffff">08:30</text>
+<g transform="translate(317.02 289.79) rotate(37.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">08:00</text></g>
+<g transform="translate(265.45 250.22) rotate(37.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">08:30</text></g>
 <path d="M 281.32 281.32 L 327.28 327.28 A 180 180 0 0 1 290.00 355.88 L 257.50 299.59 A 115 115 0 0 0 281.32 281.32" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 235.36 235.36 L 281.32 281.32 A 115 115 0 0 1 257.50 299.59 L 225.00 243.30 A 50 50 0 0 0 235.36 235.36" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="289.79" y="317.02" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(52.50 289.79 317.02)" style="direction:ltr" fill="#374151">09:00</text>
-<text x="250.22" y="265.45" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(52.50 250.22 265.45)" style="direction:ltr" fill="#6b7280">09:30</text>
+<g transform="translate(289.79 317.02) rotate(52.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">09:00</text></g>
+<g transform="translate(250.22 265.45) rotate(52.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">09:30</text></g>
 <path d="M 257.50 299.59 L 290.00 355.88 A 180 180 0 0 1 246.59 373.87 L 229.76 311.08 A 115 115 0 0 0 257.50 299.59" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 225.00 243.30 L 257.50 299.59 A 115 115 0 0 1 229.76 311.08 L 212.94 248.30 A 50 50 0 0 0 225.00 243.30" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="256.45" y="336.27" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(67.50 256.45 336.27)" style="direction:ltr" fill="#374151">10:00</text>
-<text x="231.57" y="276.22" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(67.50 231.57 276.22)" style="direction:ltr" fill="#6b7280">10:30</text>
+<g transform="translate(256.45 336.27) rotate(67.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">10:00</text></g>
+<g transform="translate(231.57 276.22) rotate(67.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">10:30</text></g>
 <path d="M 229.76 311.08 L 246.59 373.87 A 180 180 0 0 1 200.00 380.00 L 200.00 315.00 A 115 115 0 0 0 229.76 311.08" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 212.94 248.30 L 229.76 311.08 A 115 115 0 0 1 200.00 315.00 L 200.00 250.00 A 50 50 0 0 0 212.94 248.30" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="219.25" y="346.24" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(82.50 219.25 346.24)" style="direction:ltr" fill="#ffffff">11:00</text>
-<text x="210.77" y="281.79" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(82.50 210.77 281.79)" style="direction:ltr" fill="#ffffff">11:30</text>
+<g transform="translate(219.25 346.24) rotate(82.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">11:00</text></g>
+<g transform="translate(210.77 281.79) rotate(82.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">11:30</text></g>
 <path d="M 200.00 315.00 L 200.00 380.00 A 180 180 0 0 1 153.41 373.87 L 170.24 311.08 A 115 115 0 0 0 200.00 315.00" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 200.00 250.00 L 200.00 315.00 A 115 115 0 0 1 170.24 311.08 L 187.06 248.30 A 50 50 0 0 0 200.00 250.00" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="180.75" y="346.24" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(277.50 180.75 346.24)" style="direction:ltr" fill="#374151">12:00</text>
-<text x="189.23" y="281.79" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(277.50 189.23 281.79)" style="direction:ltr" fill="#6b7280">12:30</text>
+<g transform="translate(180.75 346.24) rotate(277.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">12:00</text></g>
+<g transform="translate(189.23 281.79) rotate(277.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">12:30</text></g>
 <path d="M 170.24 311.08 L 153.41 373.87 A 180 180 0 0 1 110.00 355.88 L 142.50 299.59 A 115 115 0 0 0 170.24 311.08" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 187.06 248.30 L 170.24 311.08 A 115 115 0 0 1 142.50 299.59 L 175.00 243.30 A 50 50 0 0 0 187.06 248.30" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="143.55" y="336.27" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(292.50 143.55 336.27)" style="direction:ltr" fill="#374151">13:00</text>
-<text x="168.43" y="276.22" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(292.50 168.43 276.22)" style="direction:ltr" fill="#6b7280">13:30</text>
+<g transform="translate(143.55 336.27) rotate(292.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">13:00</text></g>
+<g transform="translate(168.43 276.22) rotate(292.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">13:30</text></g>
 <path d="M 142.50 299.59 L 110.00 355.88 A 180 180 0 0 1 72.72 327.28 L 118.68 281.32 A 115 115 0 0 0 142.50 299.59" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 175.00 243.30 L 142.50 299.59 A 115 115 0 0 1 118.68 281.32 L 164.64 235.36 A 50 50 0 0 0 175.00 243.30" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="110.21" y="317.02" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(307.50 110.21 317.02)" style="direction:ltr" fill="#374151">14:00</text>
-<text x="149.78" y="265.45" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(307.50 149.78 265.45)" style="direction:ltr" fill="#6b7280">14:30</text>
+<g transform="translate(110.21 317.02) rotate(307.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">14:00</text></g>
+<g transform="translate(149.78 265.45) rotate(307.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">14:30</text></g>
 <path d="M 118.68 281.32 L 72.72 327.28 A 180 180 0 0 1 44.12 290.00 L 100.41 257.50 A 115 115 0 0 0 118.68 281.32" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 164.64 235.36 L 118.68 281.32 A 115 115 0 0 1 100.41 257.50 L 156.70 225.00 A 50 50 0 0 0 164.64 235.36" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="82.98" y="289.79" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(322.50 82.98 289.79)" style="direction:ltr" fill="#374151">15:00</text>
-<text x="134.55" y="250.22" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(322.50 134.55 250.22)" style="direction:ltr" fill="#6b7280">15:30</text>
+<g transform="translate(82.98 289.79) rotate(322.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">15:00</text></g>
+<g transform="translate(134.55 250.22) rotate(322.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">15:30</text></g>
 <path d="M 100.41 257.50 L 44.12 290.00 A 180 180 0 0 1 26.13 246.59 L 88.92 229.76 A 115 115 0 0 0 100.41 257.50" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 156.70 225.00 L 100.41 257.50 A 115 115 0 0 1 88.92 229.76 L 151.70 212.94 A 50 50 0 0 0 156.70 225.00" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="63.73" y="256.45" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(337.50 63.73 256.45)" style="direction:ltr" fill="#374151">16:00</text>
-<text x="123.78" y="231.57" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(337.50 123.78 231.57)" style="direction:ltr" fill="#6b7280">16:30</text>
+<g transform="translate(63.73 256.45) rotate(337.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">16:00</text></g>
+<g transform="translate(123.78 231.57) rotate(337.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">16:30</text></g>
 <path d="M 88.92 229.76 L 26.13 246.59 A 180 180 0 0 1 20.00 200.00 L 85.00 200.00 A 115 115 0 0 0 88.92 229.76" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 151.70 212.94 L 88.92 229.76 A 115 115 0 0 1 85.00 200.00 L 150.00 200.00 A 50 50 0 0 0 151.70 212.94" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="53.76" y="219.25" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(352.50 53.76 219.25)" style="direction:ltr" fill="#374151">17:00</text>
-<text x="118.21" y="210.77" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(352.50 118.21 210.77)" style="direction:ltr" fill="#6b7280">17:30</text>
+<g transform="translate(53.76 219.25) rotate(352.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">17:00</text></g>
+<g transform="translate(118.21 210.77) rotate(352.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">17:30</text></g>
 <path d="M 85.00 200.00 L 20.00 200.00 A 180 180 0 0 1 26.13 153.41 L 88.92 170.24 A 115 115 0 0 0 85.00 200.00" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 150.00 200.00 L 85.00 200.00 A 115 115 0 0 1 88.92 170.24 L 151.70 187.06 A 50 50 0 0 0 150.00 200.00" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="53.76" y="180.75" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(367.50 53.76 180.75)" style="direction:ltr" fill="#ffffff">18:00</text>
-<text x="118.21" y="189.23" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(367.50 118.21 189.23)" style="direction:ltr" fill="#ffffff">18:30</text>
+<g transform="translate(53.76 180.75) rotate(367.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">18:00</text></g>
+<g transform="translate(118.21 189.23) rotate(367.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">18:30</text></g>
 <path d="M 88.92 170.24 L 26.13 153.41 A 180 180 0 0 1 44.12 110.00 L 100.41 142.50 A 115 115 0 0 0 88.92 170.24" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 151.70 187.06 L 88.92 170.24 A 115 115 0 0 1 100.41 142.50 L 156.70 175.00 A 50 50 0 0 0 151.70 187.06" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="63.73" y="143.55" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(382.50 63.73 143.55)" style="direction:ltr" fill="#ffffff">19:00</text>
-<text x="123.78" y="168.43" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(382.50 123.78 168.43)" style="direction:ltr" fill="#ffffff">19:30</text>
+<g transform="translate(63.73 143.55) rotate(382.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">19:00</text></g>
+<g transform="translate(123.78 168.43) rotate(382.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">19:30</text></g>
 <path d="M 100.41 142.50 L 44.12 110.00 A 180 180 0 0 1 72.72 72.72 L 118.68 118.68 A 115 115 0 0 0 100.41 142.50" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 156.70 175.00 L 100.41 142.50 A 115 115 0 0 1 118.68 118.68 L 164.64 164.64 A 50 50 0 0 0 156.70 175.00" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="82.98" y="110.21" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(397.50 82.98 110.21)" style="direction:ltr" fill="#ffffff">20:00</text>
-<text x="134.55" y="149.78" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(397.50 134.55 149.78)" style="direction:ltr" fill="#ffffff">20:30</text>
+<g transform="translate(82.98 110.21) rotate(397.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">20:00</text></g>
+<g transform="translate(134.55 149.78) rotate(397.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">20:30</text></g>
 <path d="M 118.68 118.68 L 72.72 72.72 A 180 180 0 0 1 110.00 44.12 L 142.50 100.41 A 115 115 0 0 0 118.68 118.68" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 164.64 164.64 L 118.68 118.68 A 115 115 0 0 1 142.50 100.41 L 175.00 156.70 A 50 50 0 0 0 164.64 164.64" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
-<text x="110.21" y="82.98" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(412.50 110.21 82.98)" style="direction:ltr" fill="#ffffff">21:00</text>
-<text x="149.78" y="134.55" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(412.50 149.78 134.55)" style="direction:ltr" fill="#ffffff">21:30</text>
+<g transform="translate(110.21 82.98) rotate(412.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">21:00</text></g>
+<g transform="translate(149.78 134.55) rotate(412.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">21:30</text></g>
 <path d="M 142.50 100.41 L 110.00 44.12 A 180 180 0 0 1 153.41 26.13 L 170.24 88.92 A 115 115 0 0 0 142.50 100.41" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 175.00 156.70 L 142.50 100.41 A 115 115 0 0 1 170.24 88.92 L 187.06 151.70 A 50 50 0 0 0 175.00 156.70" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="143.55" y="63.73" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(427.50 143.55 63.73)" style="direction:ltr" fill="#374151">22:00</text>
-<text x="168.43" y="123.78" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(427.50 168.43 123.78)" style="direction:ltr" fill="#6b7280">22:30</text>
+<g transform="translate(143.55 63.73) rotate(427.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">22:00</text></g>
+<g transform="translate(168.43 123.78) rotate(427.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">22:30</text></g>
 <path d="M 170.24 88.92 L 153.41 26.13 A 180 180 0 0 1 200.00 20.00 L 200.00 85.00 A 115 115 0 0 0 170.24 88.92" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 187.06 151.70 L 170.24 88.92 A 115 115 0 0 1 200.00 85.00 L 200.00 150.00 A 50 50 0 0 0 187.06 151.70" fill="#f8f9fa" stroke="#e5e7eb" stroke-width="1"/>
-<text x="180.75" y="53.76" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(442.50 180.75 53.76)" style="direction:ltr" fill="#374151">23:00</text>
-<text x="189.23" y="118.21" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(442.50 189.23 118.21)" style="direction:ltr" fill="#6b7280">23:30</text>
+<g transform="translate(180.75 53.76) rotate(442.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">23:00</text></g>
+<g transform="translate(189.23 118.21) rotate(442.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#6b7280">23:30</text></g>
 <path d="M 142.50 299.59 L 110.00 355.88 A 180 180 0 0 1 72.72 327.28 L 118.68 281.32 A 115 115 0 0 0 142.50 299.59" fill="none" stroke="#ff6b6b" stroke-width="5" stroke-linejoin="round"/>
 <circle cx="200" cy="200" r="50" fill="#10b981"/>
 <text x="200" y="205" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">ON</text>
@@ -223,11 +223,11 @@
 <path d="M 212.94 248.30 L 221.35 279.69 A 82.5 82.5 0 0 1 200.00 282.50 L 200.00 250.00 A 50 50 0 0 0 212.94 248.30" fill="#10b981" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 200.00 347.50 L 200.00 380.00 A 180 180 0 0 1 153.41 373.87 L 161.82 342.47 A 147.5 147.5 0 0 0 200.00 347.50" fill="#10b981" stroke="#3b82f6" stroke-width="2.5"/>
 <path d="M 200.00 315.00 L 200.00 347.50 A 147.5 147.5 0 0 1 161.82 342.47 L 170.24 311.08 A 115 115 0 0 0 200.00 315.00" fill="#ffffff" stroke="#3b82f6" stroke-width="2.5"/>
-<text x="182.87" y="330.13" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(277.50 182.87 330.13)" style="direction:ltr" fill="#374151">15</text>
+<g transform="translate(182.87 330.13) rotate(277.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#374151">15</text></g>
 <path d="M 200.00 282.50 L 200.00 315.00 A 115 115 0 0 1 170.24 311.08 L 178.65 279.69 A 82.5 82.5 0 0 0 200.00 282.50" fill="#10b981" stroke="#3b82f6" stroke-width="2.5"/>
-<text x="187.11" y="297.91" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(277.50 187.11 297.91)" style="direction:ltr" fill="#ffffff">30</text>
+<g transform="translate(187.11 297.91) rotate(277.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#ffffff">30</text></g>
 <path d="M 200.00 250.00 L 200.00 282.50 A 82.5 82.5 0 0 1 178.65 279.69 L 187.06 248.30 A 50 50 0 0 0 200.00 250.00" fill="#ffffff" stroke="#3b82f6" stroke-width="2.5"/>
-<text x="191.35" y="265.68" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="9" font-weight="700" transform="rotate(277.50 191.35 265.68)" style="direction:ltr" fill="#374151">45</text>
+<g transform="translate(191.35 265.68) rotate(277.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="700" style="direction:ltr" fill="#374151">45</text></g>
 <path d="M 161.82 342.47 L 153.41 373.87 A 180 180 0 0 1 110.00 355.88 L 126.25 327.74 A 147.5 147.5 0 0 0 161.82 342.47" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 170.24 311.08 L 161.82 342.47 A 147.5 147.5 0 0 1 126.25 327.74 L 142.50 299.59 A 115 115 0 0 0 170.24 311.08" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 178.65 279.69 L 170.24 311.08 A 115 115 0 0 1 142.50 299.59 L 158.75 271.45 A 82.5 82.5 0 0 0 178.65 279.69" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
@@ -272,30 +272,30 @@
 <path d="M 170.24 88.92 L 161.82 57.53 A 147.5 147.5 0 0 1 200.00 52.50 L 200.00 85.00 A 115 115 0 0 0 170.24 88.92" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 178.65 120.31 L 170.24 88.92 A 115 115 0 0 1 200.00 85.00 L 200.00 117.50 A 82.5 82.5 0 0 0 178.65 120.31" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
 <path d="M 187.06 151.70 L 178.65 120.31 A 82.5 82.5 0 0 1 200.00 117.50 L 200.00 150.00 A 50 50 0 0 0 187.06 151.70" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
-<text x="221.37" y="37.65" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-82.50 221.37 37.65)" style="direction:ltr" fill="#374151">00</text>
-<text x="262.66" y="48.71" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-67.50 262.66 48.71)" style="direction:ltr" fill="#374151">01</text>
-<text x="299.68" y="70.09" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-52.50 299.68 70.09)" style="direction:ltr" fill="#374151">02</text>
-<text x="329.91" y="100.32" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-37.50 329.91 100.32)" style="direction:ltr" fill="#374151">03</text>
-<text x="351.29" y="137.34" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-22.50 351.29 137.34)" style="direction:ltr" fill="#374151">04</text>
-<text x="362.35" y="178.63" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(-7.50 362.35 178.63)" style="direction:ltr" fill="#374151">05</text>
-<text x="362.35" y="221.37" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(7.50 362.35 221.37)" style="direction:ltr" fill="#ffffff">06</text>
-<text x="351.29" y="262.66" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(22.50 351.29 262.66)" style="direction:ltr" fill="#ffffff">07</text>
-<text x="329.91" y="299.68" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(37.50 329.91 299.68)" style="direction:ltr" fill="#ffffff">08</text>
-<text x="299.68" y="329.91" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(52.50 299.68 329.91)" style="direction:ltr" fill="#374151">09</text>
-<text x="262.66" y="351.29" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(67.50 262.66 351.29)" style="direction:ltr" fill="#374151">10</text>
-<text x="221.37" y="362.35" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(82.50 221.37 362.35)" style="direction:ltr" fill="#ffffff">11</text>
-<text x="178.63" y="362.35" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(277.50 178.63 362.35)" style="direction:ltr" fill="#374151">12</text>
-<text x="137.34" y="351.29" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(292.50 137.34 351.29)" style="direction:ltr" fill="#374151">13</text>
-<text x="100.32" y="329.91" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(307.50 100.32 329.91)" style="direction:ltr" fill="#374151">14</text>
-<text x="70.09" y="299.68" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(322.50 70.09 299.68)" style="direction:ltr" fill="#374151">15</text>
-<text x="48.71" y="262.66" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(337.50 48.71 262.66)" style="direction:ltr" fill="#374151">16</text>
-<text x="37.65" y="221.37" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(352.50 37.65 221.37)" style="direction:ltr" fill="#374151">17</text>
-<text x="37.65" y="178.63" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(367.50 37.65 178.63)" style="direction:ltr" fill="#ffffff">18</text>
-<text x="48.71" y="137.34" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(382.50 48.71 137.34)" style="direction:ltr" fill="#ffffff">19</text>
-<text x="70.09" y="100.32" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(397.50 70.09 100.32)" style="direction:ltr" fill="#ffffff">20</text>
-<text x="100.32" y="70.09" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(412.50 100.32 70.09)" style="direction:ltr" fill="#ffffff">21</text>
-<text x="137.34" y="48.71" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(427.50 137.34 48.71)" style="direction:ltr" fill="#374151">22</text>
-<text x="178.63" y="37.65" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle" font-size="11" font-weight="700" transform="rotate(442.50 178.63 37.65)" style="direction:ltr" fill="#374151">23</text>
+<g transform="translate(221.37 37.65) rotate(-82.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">00</text></g>
+<g transform="translate(262.66 48.71) rotate(-67.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">01</text></g>
+<g transform="translate(299.68 70.09) rotate(-52.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">02</text></g>
+<g transform="translate(329.91 100.32) rotate(-37.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">03</text></g>
+<g transform="translate(351.29 137.34) rotate(-22.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">04</text></g>
+<g transform="translate(362.35 178.63) rotate(-7.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">05</text></g>
+<g transform="translate(362.35 221.37) rotate(7.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">06</text></g>
+<g transform="translate(351.29 262.66) rotate(22.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">07</text></g>
+<g transform="translate(329.91 299.68) rotate(37.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">08</text></g>
+<g transform="translate(299.68 329.91) rotate(52.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">09</text></g>
+<g transform="translate(262.66 351.29) rotate(67.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">10</text></g>
+<g transform="translate(221.37 362.35) rotate(82.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">11</text></g>
+<g transform="translate(178.63 362.35) rotate(277.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">12</text></g>
+<g transform="translate(137.34 351.29) rotate(292.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">13</text></g>
+<g transform="translate(100.32 329.91) rotate(307.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">14</text></g>
+<g transform="translate(70.09 299.68) rotate(322.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">15</text></g>
+<g transform="translate(48.71 262.66) rotate(337.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">16</text></g>
+<g transform="translate(37.65 221.37) rotate(352.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">17</text></g>
+<g transform="translate(37.65 178.63) rotate(367.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">18</text></g>
+<g transform="translate(48.71 137.34) rotate(382.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">19</text></g>
+<g transform="translate(70.09 100.32) rotate(397.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">20</text></g>
+<g transform="translate(100.32 70.09) rotate(412.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#ffffff">21</text></g>
+<g transform="translate(137.34 48.71) rotate(427.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">22</text></g>
+<g transform="translate(178.63 37.65) rotate(442.50)"><text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="11" font-weight="700" style="direction:ltr" fill="#374151">23</text></g>
 <path d="M 126.25 327.74 L 110.00 355.88 A 180 180 0 0 1 72.72 327.28 L 95.70 304.30 A 147.5 147.5 0 0 0 126.25 327.74" fill="none" stroke="#ff6b6b" stroke-width="4" stroke-linejoin="round"/>
 <circle cx="200" cy="200" r="50" fill="#10b981"/>
 <text x="200" y="205" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">ON</text>

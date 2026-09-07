@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Timer 24H — live preview</title>
+  <!-- preview-labels-v3 -->
   <style>
     :root {
       --bg: #f4f6f8;
@@ -16,8 +17,10 @@
       --now: #ff6b6b;
     }
     * { box-sizing: border-box; }
-    body {
+    html, body {
       margin: 0;
+      direction: ltr;
+      unicode-bidi: isolate;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -65,8 +68,16 @@
       border-color: var(--select);
       color: #fff;
     }
-    svg.clock { width: 100%; height: auto; display: block; touch-action: manipulation; }
+    svg.clock {
+      width: 100%;
+      height: auto;
+      display: block;
+      touch-action: manipulation;
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
     svg.clock path { cursor: pointer; }
+    svg.clock text { direction: ltr; unicode-bidi: isolate; }
     .hint { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 10px 8px 0; min-height: 2.4em; }
   </style>
 </head>
@@ -134,10 +145,11 @@
     }
     function textEl(i, n, r, str, size, fill) {
       const p = textPos(i, n, r);
-      return `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central"
-        alignment-baseline="middle" font-size="${size}" font-weight="700"
-        transform="rotate(${rot(i, n)} ${p.x} ${p.y})" fill="${fill}"
-        style="pointer-events:none; user-select:none; direction:ltr">${str}</text>`;
+      const deg = rot(i, n);
+      return `<g transform="translate(${p.x} ${p.y}) rotate(${deg})" style="pointer-events:none">
+        <text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="${size}"
+          font-weight="700" fill="${fill}" style="direction:ltr; unicode-bidi:isolate">${str}</text>
+      </g>`;
     }
     function toggle(h, minutes) {
       const allOn = minutes.every((m) => has(h, m));
@@ -148,7 +160,7 @@
     }
     function render() {
       const now = nowSlot();
-      let html = `<svg class="clock" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      let html = `<svg class="clock" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" direction="ltr">
         <circle cx="${CX}" cy="${CY}" r="${R_OUT}" fill="none" stroke="${STROKE}" stroke-width="2"/>
         <circle cx="${CX}" cy="${CY}" r="${R_MID}" fill="none" stroke="#d1d5db" stroke-width="1.5"/>
         <circle cx="${CX}" cy="${CY}" r="${R_IN}" fill="none" stroke="${STROKE}" stroke-width="2"/>`;
