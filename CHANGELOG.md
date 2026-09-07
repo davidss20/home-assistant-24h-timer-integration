@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.7] - 2026-09-07
+
+### Changed
+- 🟢 Turning on the outer hour ring lights the whole hour; turning a quarter off affects only that quarter
+
 ## [1.3.0-beta.6] - 2026-09-07
 
 ### Changed

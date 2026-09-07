@@ -611,15 +611,51 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         )
         _LOGGER.info("✅ Slot resolution updated to %s minutes", resolution)
 
-    def _minutes_for_toggle(self, minute: int) -> list[int]:
-        """Minutes affected by a toggle, honoring 30-minute grouping."""
+    def _toggle_target(self, hour: int, minute: int) -> tuple[list[int], bool]:
+        """Return minutes and new state for a slot click.
+
+        In 15-minute mode, turning the outer ring on lights the whole hour.
+        Turning any quarter off affects only that quarter.
+        """
         if minute not in SLOT_MINUTES:
-            return [minute]
+            matching = [
+                slot
+                for slot in self._time_slots
+                if slot["hour"] == hour and slot["minute"] == minute
+            ]
+            all_on = bool(matching) and all(slot["isActive"] for slot in matching)
+            return [minute], not all_on
+
         if self.slot_resolution == SLOT_RESOLUTION_30:
-            if minute in (0, 15):
-                return [0, 15]
-            return [30, 45]
-        return [minute]
+            minutes = [0, 15] if minute in (0, 15) else [30, 45]
+            matching = [
+                slot
+                for slot in self._time_slots
+                if slot["hour"] == hour and slot["minute"] in minutes
+            ]
+            all_on = bool(matching) and all(slot["isActive"] for slot in matching)
+            return minutes, not all_on
+
+        if minute == 0:
+            outer = next(
+                (
+                    slot
+                    for slot in self._time_slots
+                    if slot["hour"] == hour and slot["minute"] == 0
+                ),
+                None,
+            )
+            if outer is not None and not outer["isActive"]:
+                return list(SLOT_MINUTES), True
+            return [0], False
+
+        matching = [
+            slot
+            for slot in self._time_slots
+            if slot["hour"] == hour and slot["minute"] == minute
+        ]
+        all_on = bool(matching) and all(slot["isActive"] for slot in matching)
+        return [minute], not all_on
 
     async def async_toggle_slot(self, hour: int, minute: int) -> None:
         """Toggle a time slot."""
@@ -630,14 +666,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         _LOGGER.info("📋 Active slots BEFORE toggle: %s", ", ".join(active_before) if active_before else "None")
         
         slot_found = False
-        minutes = self._minutes_for_toggle(minute)
-        matching = [
-            slot
-            for slot in self._time_slots
-            if slot["hour"] == hour and slot["minute"] in minutes
-        ]
-        all_on = bool(matching) and all(slot["isActive"] for slot in matching)
-        new_state = not all_on
+        minutes, new_state = self._toggle_target(hour, minute)
 
         new_slots = []
         for slot in self._time_slots:
