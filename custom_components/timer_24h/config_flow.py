@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_HOME_LOGIC,
     DEFAULT_SLOT_RESOLUTION,
+    ENABLE_THIRTY_MINUTE_UI,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,11 +100,16 @@ class Timer24HConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_HOME_LOGIC, default=DEFAULT_HOME_LOGIC): vol.In(
                     ["OR", "AND"]
                 ),
-                vol.Optional(
-                    CONF_SLOT_RESOLUTION, default=DEFAULT_SLOT_RESOLUTION
-                ): vol.In(["15", "30"]),
             }
         )
+        if ENABLE_THIRTY_MINUTE_UI:
+            data_schema = data_schema.extend(
+                {
+                    vol.Optional(
+                        CONF_SLOT_RESOLUTION, default=DEFAULT_SLOT_RESOLUTION
+                    ): vol.In(["15", "30"]),
+                }
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -162,11 +168,16 @@ class Timer24HOptionsFlow(config_entries.OptionsFlow):
                     CONF_HOME_LOGIC,
                     default=options.get(CONF_HOME_LOGIC, DEFAULT_HOME_LOGIC),
                 ): vol.In(["OR", "AND"]),
-                vol.Optional(
-                    CONF_SLOT_RESOLUTION,
-                    default=options.get(CONF_SLOT_RESOLUTION, "30"),
-                ): vol.In(["15", "30"]),
             }
         )
+        if ENABLE_THIRTY_MINUTE_UI:
+            data_schema = data_schema.extend(
+                {
+                    vol.Optional(
+                        CONF_SLOT_RESOLUTION,
+                        default=options.get(CONF_SLOT_RESOLUTION, "30"),
+                    ): vol.In(["15", "30"]),
+                }
+            )
 
         return self.async_show_form(step_id="init", data_schema=data_schema)

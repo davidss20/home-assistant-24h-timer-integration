@@ -16,6 +16,9 @@ interface Timer24HCardConfig {
   show_enable_switch?: boolean;
 }
 
+// Keep in sync with ENABLE_THIRTY_MINUTE_UI in custom_components/timer_24h/const.py
+const ENABLE_THIRTY_MINUTE_UI = false;
+
 const CONDITION_DOMAINS = [
   'person',
   'device_tracker',
@@ -189,7 +192,7 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
           </div>
         </div>
 
-        ${selectedEntity
+        ${ENABLE_THIRTY_MINUTE_UI && selectedEntity
           ? html`
               <div class="config-row">
                 <label>Slot interval</label>

@@ -19,6 +19,8 @@ DEFAULT_SLOT_RESOLUTION: Final = "15"
 SLOT_MINUTES: Final = (0, 15, 30, 45)
 SLOT_RESOLUTION_15: Final = 15
 SLOT_RESOLUTION_30: Final = 30
+# Hidden for now: set True to show the 15/30 setting again after community feedback.
+ENABLE_THIRTY_MINUTE_UI: Final = False
 DEFAULT_CLIMATE_TEMPERATURE: Final = 24
 DEFAULT_CLIMATE_HVAC_MODE: Final = "cool"
 DEFAULT_FAN_PERCENTAGE: Final = 50

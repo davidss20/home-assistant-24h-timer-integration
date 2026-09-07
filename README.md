@@ -14,16 +14,17 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 <div align="center">
 
-![Timer 24H Preview](https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/images/preview.jpg)
-![Timer 24H Preview 2](https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/images/preview1.jpg)
+<img src="images/preview.svg" alt="Timer 24H 15-minute and 30-minute preview" width="860">
 
-*24-hour circular timer with automatic entity control and flexible activation conditions*
+*Left: 30-minute classic rings. Right: 15-minute quarters (blue outline = selected hour). Red = current time.*
+
+[Open interactive HTML preview](https://htmlpreview.github.io/?https://github.com/davidss20/home-assistant-24h-timer-integration/blob/beta/1.3.0/docs/preview/card-preview.html)
 
 </div>
 
 ## ✨ Key Features
 
-- **🕐 24-Hour Circular Timer** with half-hour segments
+- **🕐 24-Hour Circular Timer** with 15-minute slots
 - **🎯 Activation Conditions** - control when entities activate based on any sensor/state
 - **🔧 Automatic Entity Control** according to schedule
 - **❄️ Climate & Fan Controls** - temperature/mode (AC) and speed (fan) buttons appear on the card when those entities are selected
@@ -291,7 +292,7 @@ The timer sensor exposes several attributes that you can use in automations and 
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
-| `time_slots` | list | All 48 time slots (30-minute segments) |
+| `time_slots` | list | All 96 time slots (15-minute segments) |
 | `current_slot` | dict | Current time slot with hour, minute, and isActive |
 | `home_status` | boolean | Whether activation conditions are met |
 | `home_sensors` | list | Activation condition entity IDs |
@@ -439,11 +440,7 @@ You can change timer settings at any time:
 4. Edit the settings
 5. Click **"Submit"**
 
-**Activation conditions** can also be edited from:
-- The Lovelace **card editor** (Activation Conditions section)
-- The card itself (center dialog or Active/Inactive status badge)
-
-Changes are saved to the integration (not card YAML).
+**Activation conditions** can also be edited from the Lovelace **card editor**. Changes are saved to the integration (not card YAML).
 
 ## 🌍 Hebrew Support
 

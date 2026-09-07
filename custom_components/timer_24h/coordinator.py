@@ -24,6 +24,7 @@ from .const import (
     SLOT_RESOLUTION_15,
     SLOT_RESOLUTION_30,
     CONF_SLOT_RESOLUTION,
+    ENABLE_THIRTY_MINUTE_UI,
     UPDATE_INTERVAL,
 )
 
@@ -287,6 +288,8 @@ class Timer24HCoordinator(DataUpdateCoordinator):
     @property
     def slot_resolution(self) -> int:
         """Return slot resolution in minutes (15 or 30)."""
+        if not ENABLE_THIRTY_MINUTE_UI:
+            return SLOT_RESOLUTION_15
         return self._slot_resolution
 
     def get_current_slot(self) -> dict[str, Any] | None:
@@ -612,7 +615,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         """Minutes affected by a toggle, honoring 30-minute grouping."""
         if minute not in SLOT_MINUTES:
             return [minute]
-        if self._slot_resolution == SLOT_RESOLUTION_30:
+        if self.slot_resolution == SLOT_RESOLUTION_30:
             if minute in (0, 15):
                 return [0, 15]
             return [30, 45]

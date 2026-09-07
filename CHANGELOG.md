@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.6] - 2026-09-07
+
+### Changed
+- ⏱️ 15-minute view only for now. The 30-minute option is hidden and can be turned back on after community feedback.
+
 ## [1.3.0-beta.5] - 2026-09-07
 
 ### Fixed
