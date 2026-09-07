@@ -8,13 +8,15 @@
           "name": "Timer-Name",
           "entities": "Zu steuernde Entitäten",
           "home_sensors": "Aktivierungsbedingungen (optional)",
-          "home_logic": "Bedingungslogik"
+          "home_logic": "Bedingungslogik",
+          "slot_resolution": "Zeitintervall"
         },
         "data_description": {
           "name": "Geben Sie Ihrem Timer einen beschreibenden Namen",
           "entities": "Wählen Sie Entitäten aus, die automatisch von diesem Timer gesteuert werden",
           "home_sensors": "Wählen Sie Sensoren/Entitäten aus, die bestimmen, wann der Timer aktiviert werden soll (z.B.: Anwesenheit zu Hause, Sabbat-Modus, Urlaubsmodus, Temperatur). Leer lassen, um immer zu aktivieren.",
-          "home_logic": "OR: Timer aktiviert sich, wenn IRGENDEINE Bedingung erfüllt ist. AND: Timer aktiviert sich nur, wenn ALLE Bedingungen erfüllt sind."
+          "home_logic": "OR: Timer aktiviert sich, wenn IRGENDEINE Bedingung erfüllt ist. AND: Timer aktiviert sich nur, wenn ALLE Bedingungen erfüllt sind.",
+          "slot_resolution": "15 Minuten: jedes Viertel einzeln. 30 Minuten: klassische Zwei-Ring-Ansicht."
         }
       }
     },
@@ -34,13 +36,15 @@
           "name": "Timer-Name",
           "entities": "Zu steuernde Entitäten",
           "home_sensors": "Aktivierungsbedingungen (optional)",
-          "home_logic": "Bedingungslogik"
+          "home_logic": "Bedingungslogik",
+          "slot_resolution": "Zeitintervall"
         },
         "data_description": {
           "name": "Geben Sie Ihrem Timer einen beschreibenden Namen",
           "entities": "Wählen Sie Entitäten aus, die automatisch von diesem Timer gesteuert werden",
           "home_sensors": "Wählen Sie Sensoren/Entitäten aus, die bestimmen, wann der Timer aktiviert werden soll (z.B.: Anwesenheit zu Hause, Sabbat-Modus, Urlaubsmodus, Temperatur). Leer lassen, um immer zu aktivieren.",
-          "home_logic": "OR: Timer aktiviert sich, wenn IRGENDEINE Bedingung erfüllt ist. AND: Timer aktiviert sich nur, wenn ALLE Bedingungen erfüllt sind."
+          "home_logic": "OR: Timer aktiviert sich, wenn IRGENDEINE Bedingung erfüllt ist. AND: Timer aktiviert sich nur, wenn ALLE Bedingungen erfüllt sind.",
+          "slot_resolution": "15 Minuten: jedes Viertel einzeln. 30 Minuten: klassische Zwei-Ring-Ansicht."
         }
       }
     }
@@ -90,5 +94,3 @@
     }
   }
 }
-
-

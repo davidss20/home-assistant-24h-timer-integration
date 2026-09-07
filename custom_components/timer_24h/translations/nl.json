@@ -8,13 +8,15 @@
           "name": "Timer Naam",
           "entities": "Te Besturen Entities",
           "home_sensors": "Activeringsvoorwaarden (optioneel)",
-          "home_logic": "Voorwaardenlogica"
+          "home_logic": "Voorwaardenlogica",
+          "slot_resolution": "Tijdinterval"
         },
         "data_description": {
           "name": "Geef uw timer een beschrijvende naam",
           "entities": "Selecteer entities die automatisch door deze timer worden bestuurd",
           "home_sensors": "Selecteer sensoren/entities die bepalen wanneer de timer moet activeren (bijv: aanwezigheid thuis, Sabbat-modus, vakantiemodus, temperatuur). Laat leeg om altijd te activeren.",
-          "home_logic": "OR: Timer activeert als ELKE voorwaarde voldaan is. AND: Timer activeert alleen als ALLE voorwaarden voldaan zijn."
+          "home_logic": "OR: Timer activeert als ELKE voorwaarde voldaan is. AND: Timer activeert alleen als ALLE voorwaarden voldaan zijn.",
+          "slot_resolution": "15 minuten: elk kwartier apart. 30 minuten: klassieke weergave met twee ringen."
         }
       }
     },
@@ -34,13 +36,15 @@
           "name": "Timer Naam",
           "entities": "Te Besturen Entities",
           "home_sensors": "Activeringsvoorwaarden (optioneel)",
-          "home_logic": "Voorwaardenlogica"
+          "home_logic": "Voorwaardenlogica",
+          "slot_resolution": "Tijdinterval"
         },
         "data_description": {
           "name": "Geef uw timer een beschrijvende naam",
           "entities": "Selecteer entities die automatisch door deze timer worden bestuurd",
           "home_sensors": "Selecteer sensoren/entities die bepalen wanneer de timer moet activeren (bijv: aanwezigheid thuis, Sabbat-modus, vakantiemodus, temperatuur). Laat leeg om altijd te activeren.",
-          "home_logic": "OR: Timer activeert als ELKE voorwaarde voldaan is. AND: Timer activeert alleen als ALLE voorwaarden voldaan zijn."
+          "home_logic": "OR: Timer activeert als ELKE voorwaarde voldaan is. AND: Timer activeert alleen als ALLE voorwaarden voldaan zijn.",
+          "slot_resolution": "15 minuten: elk kwartier apart. 30 minuten: klassieke weergave met twee ringen."
         }
       }
     }
@@ -90,5 +94,3 @@
     }
   }
 }
-
-

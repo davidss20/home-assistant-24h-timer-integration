@@ -121,6 +121,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Timer 24H from a config entry."""
     coordinator = Timer24HCoordinator(hass, entry)
+    await coordinator.async_persist_migration_if_needed()
     await coordinator.async_config_entry_first_refresh()
 
     # Setup state listeners for immediate response to condition changes
@@ -321,7 +322,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 {
                     vol.Required("entity_id"): cv.entity_id,
                     vol.Required(ATTR_HOUR): cv.positive_int,
-                    vol.Required(ATTR_MINUTE): vol.In([0, 30]),
+                    vol.Required(ATTR_MINUTE): vol.In([0, 15, 30, 45]),
                 }
             ),
         )

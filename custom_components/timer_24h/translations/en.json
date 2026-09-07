@@ -8,13 +8,15 @@
           "name": "Timer Name",
           "entities": "Entities to Control",
           "home_sensors": "Activation Conditions (optional)",
-          "home_logic": "Condition Logic"
+          "home_logic": "Condition Logic",
+          "slot_resolution": "Slot interval"
         },
         "data_description": {
           "name": "Give your timer a descriptive name",
           "entities": "Select entities that will be automatically controlled by this timer",
           "home_sensors": "Select sensors/entities that determine when timer should activate (e.g., home presence, Shabbat mode, vacation mode, temperature). Leave empty to always activate.",
-          "home_logic": "OR: Timer activates if ANY condition is met. AND: Timer activates only if ALL conditions are met."
+          "home_logic": "OR: Timer activates if ANY condition is met. AND: Timer activates only if ALL conditions are met.",
+          "slot_resolution": "15 minutes: tap each quarter separately. 30 minutes: classic two-ring view; each tap covers half an hour."
         }
       }
     },
@@ -34,13 +36,15 @@
           "name": "Timer Name",
           "entities": "Entities to Control",
           "home_sensors": "Activation Conditions (optional)",
-          "home_logic": "Condition Logic"
+          "home_logic": "Condition Logic",
+          "slot_resolution": "Slot interval"
         },
         "data_description": {
           "name": "Give your timer a descriptive name",
           "entities": "Select entities that will be automatically controlled by this timer",
           "home_sensors": "Select sensors/entities that determine when timer should activate (e.g., home presence, Shabbat mode, vacation mode, temperature). Leave empty to always activate.",
-          "home_logic": "OR: Timer activates if ANY condition is met. AND: Timer activates only if ALL conditions are met."
+          "home_logic": "OR: Timer activates if ANY condition is met. AND: Timer activates only if ALL conditions are met.",
+          "slot_resolution": "15 minutes: tap each quarter separately. 30 minutes: classic two-ring view; each tap covers half an hour."
         }
       }
     }
@@ -60,7 +64,7 @@
         },
         "minute": {
           "name": "Minute",
-          "description": "Minute (0 or 30)"
+          "description": "Minute (0, 15, 30, or 45)"
         }
       }
     },

@@ -8,13 +8,15 @@
           "name": "Nazwa Timera",
           "entities": "Encje do Kontroli",
           "home_sensors": "Warunki Aktywacji (opcjonalnie)",
-          "home_logic": "Logika Warunków"
+          "home_logic": "Logika Warunków",
+          "slot_resolution": "Interwal"
         },
         "data_description": {
           "name": "Nadaj timerowi opisową nazwę",
           "entities": "Wybierz encje, które będą automatycznie kontrolowane przez ten timer",
           "home_sensors": "Wybierz czujniki/encje określające, kiedy timer powinien się aktywować (np: obecność w domu, tryb Szabatu, tryb wakacyjny, temperatura). Pozostaw puste, aby zawsze aktywować.",
-          "home_logic": "OR: Timer aktywuje się, gdy KTÓRYKOLWIEK warunek jest spełniony. AND: Timer aktywuje się tylko gdy WSZYSTKIE warunki są spełnione."
+          "home_logic": "OR: Timer aktywuje się, gdy KTÓRYKOLWIEK warunek jest spełniony. AND: Timer aktywuje się tylko gdy WSZYSTKIE warunki są spełnione.",
+          "slot_resolution": "15 minut: kazda cwiartka osobno. 30 minut: klasyczny widok dwoch pierscieni."
         }
       }
     },
@@ -34,13 +36,15 @@
           "name": "Nazwa Timera",
           "entities": "Encje do Kontroli",
           "home_sensors": "Warunki Aktywacji (opcjonalnie)",
-          "home_logic": "Logika Warunków"
+          "home_logic": "Logika Warunków",
+          "slot_resolution": "Interwal"
         },
         "data_description": {
           "name": "Nadaj timerowi opisową nazwę",
           "entities": "Wybierz encje, które będą automatycznie kontrolowane przez ten timer",
           "home_sensors": "Wybierz czujniki/encje określające, kiedy timer powinien się aktywować (np: obecność w domu, tryb Szabatu, tryb wakacyjny, temperatura). Pozostaw puste, aby zawsze aktywować.",
-          "home_logic": "OR: Timer aktywuje się, gdy KTÓRYKOLWIEK warunek jest spełniony. AND: Timer aktywuje się tylko gdy WSZYSTKIE warunki są spełnione."
+          "home_logic": "OR: Timer aktywuje się, gdy KTÓRYKOLWIEK warunek jest spełniony. AND: Timer aktywuje się tylko gdy WSZYSTKIE warunki są spełnione.",
+          "slot_resolution": "15 minut: kazda cwiartka osobno. 30 minut: klasyczny widok dwoch pierscieni."
         }
       }
     }
@@ -90,5 +94,3 @@
     }
   }
 }
-
-

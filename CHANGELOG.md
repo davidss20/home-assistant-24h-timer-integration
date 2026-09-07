@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.1] - 2026-09-07
+
+### Added
+- ⏱️ Optional 15-minute slot interval (96 slots) alongside the classic 30-minute view
+- 🎛️ Slot interval setting in the timer Configure dialog (`15` or `30` minutes)
+- 🟦 15-minute card: tap an hour to select it, then tap a quarter (`:00` / `:15` / `:30` / `:45`) to toggle
+- 🔴 Current quarter is highlighted in red; the center ON button is unchanged
+
+### Changed
+- Timers store 96 quarter-hour slots internally. Existing 48-slot schedules are migrated (`:00` also turns on `:15`, `:30` also turns on `:45`) and keep the 30-minute UI until you change the setting
+- New timers default to 15-minute interval
+
 ## [1.2.8] - 2026-07-24
 
 ### Added

@@ -44,6 +44,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @state() private draftConditionSensors: string[] = [];
   @state() private draftConditionLogic: 'OR' | 'AND' = 'OR';
   @state() private conditionsSaving: boolean = false;
+  @state() private selectedHour: number | null = null;
   
   private updateInterval?: number;
   private clickTimeout?: number;
@@ -101,7 +102,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       changedProps.has('showConditionsDialog') ||
       changedProps.has('draftConditionSensors') ||
       changedProps.has('draftConditionLogic') ||
-      changedProps.has('conditionsSaving')
+      changedProps.has('conditionsSaving') ||
+      changedProps.has('selectedHour')
     ) {
       return true;
     }
@@ -126,6 +128,10 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       
       if (oldSlots !== newSlots) {
         console.log('🔄 Time slots changed, updating card');
+        return true;
+      }
+
+      if (oldState?.attributes.slot_resolution !== newState?.attributes.slot_resolution) {
         return true;
       }
       
@@ -193,7 +199,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     
     this.updateInterval = window.setInterval(() => {
       this.updateCurrentTime();
-    }, 30000);
+    }, 15000);
   }
 
   private updateCurrentTime(): void {
@@ -214,13 +220,24 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       const slots: TimeSlot[] = [];
       for (let hour = 0; hour < 24; hour++) {
         slots.push({ hour, minute: 0, isActive: false });
+        slots.push({ hour, minute: 15, isActive: false });
         slots.push({ hour, minute: 30, isActive: false });
+        slots.push({ hour, minute: 45, isActive: false });
       }
       return slots;
     }
     
     // Return server state directly - no optimistic updates
     return entity.attributes.time_slots;
+  }
+
+  private getSlotResolution(): 15 | 30 {
+    const value = Number(this.getEntityState()?.attributes?.slot_resolution);
+    return value === 30 ? 30 : 15;
+  }
+
+  private currentQuarterMinute(): number {
+    return Math.floor(this.currentTime.getMinutes() / 15) * 15;
   }
 
   private getHomeStatus(): boolean {
@@ -423,6 +440,26 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     
     // Call the toggle function
     console.log(`✅ Processing click on ${key}`);
+    this.toggleTimeSlot(hour, minute);
+  }
+
+  private handleFifteenClick(event: Event, hour: number, minute: number): void {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (this.clickTimeout) {
+      return;
+    }
+
+    this.clickTimeout = window.setTimeout(() => {
+      this.clickTimeout = undefined;
+    }, 300);
+
+    if (this.selectedHour !== hour) {
+      this.selectedHour = hour;
+      return;
+    }
+
     this.toggleTimeSlot(hour, minute);
   }
 
@@ -1025,9 +1062,24 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     outerRadius: number
   ) {
     const hour = this.currentTime.getHours();
-    const isOuter = this.currentTime.getMinutes() < 30;
-    const r0 = isOuter ? middleRadius : innerRadius;
-    const r1 = isOuter ? outerRadius : middleRadius;
+    const quarter = this.currentQuarterMinute();
+    let r0 = innerRadius;
+    let r1 = middleRadius;
+    if (this.getSlotResolution() === 15) {
+      const bands = [
+        { m: 0, a: (middleRadius + outerRadius) / 2, b: outerRadius },
+        { m: 15, a: middleRadius, b: (middleRadius + outerRadius) / 2 },
+        { m: 30, a: (innerRadius + middleRadius) / 2, b: middleRadius },
+        { m: 45, a: innerRadius, b: (innerRadius + middleRadius) / 2 },
+      ];
+      const band = bands.find(b => b.m === quarter) || bands[0];
+      r0 = band.a;
+      r1 = band.b;
+    } else {
+      const isOuter = this.currentTime.getMinutes() < 30;
+      r0 = isOuter ? middleRadius : innerRadius;
+      r1 = isOuter ? outerRadius : middleRadius;
+    }
     // Half of stroke-width so the frame sits fully inside the slot
     const strokeWidth = 3;
     const inset = strokeWidth / 2;
@@ -1067,6 +1119,160 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
   private getTimeLabel(hour: number, minute: number): string {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  }
+
+  private renderThirtyMinuteSectors(
+    timeSlots: TimeSlot[],
+    centerX: number,
+    centerY: number,
+    innerRadius: number,
+    middleRadius: number,
+    outerRadius: number,
+  ) {
+    const bands: { m: number; pair: number; a: number; b: number }[] = [
+      { m: 0, pair: 0, a: (middleRadius + outerRadius) / 2, b: outerRadius },
+      { m: 15, pair: 0, a: middleRadius, b: (middleRadius + outerRadius) / 2 },
+      { m: 30, pair: 30, a: (innerRadius + middleRadius) / 2, b: middleRadius },
+      { m: 45, pair: 30, a: innerRadius, b: (innerRadius + middleRadius) / 2 },
+    ];
+
+    return svg`
+      ${Array.from({ length: 24 }, (_, hour) => bands.map(band => {
+        const isActive = timeSlots.find(s => s.hour === hour && s.minute === band.m)?.isActive || false;
+        const sectorPath = this.createSectorPath(hour, 24, band.a, band.b, centerX, centerY);
+        const clickHandler = (e: Event) => {
+          this.handleSlotClick(e, hour, band.pair);
+        };
+        return svg`
+          <path
+            d="${sectorPath}"
+            fill="${isActive ? '#10b981' : (band.m === 0 ? '#ffffff' : '#f8f9fa')}"
+            stroke="#e5e7eb"
+            stroke-width="1"
+            style="cursor: pointer; transition: all 0.2s;"
+            @click="${clickHandler}">
+          </path>
+        `;
+      }))}
+      ${Array.from({ length: 24 }, (_, hour) => {
+        const hourOn = [0, 15].every(m => timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive);
+        const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
+        const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
+        const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
+        const labelY = textPos.y + 3;
+        return svg`
+          <text
+            x="${textPos.x}"
+            y="${labelY}"
+            text-anchor="middle"
+            font-size="11"
+            font-weight="bold"
+            transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
+            style="pointer-events: none; user-select: none;"
+            fill="${hourOn ? '#ffffff' : '#374151'}">
+            ${this.getTimeLabel(hour, 0)}
+          </text>
+        `;
+      })}
+      ${Array.from({ length: 24 }, (_, hour) => {
+        const halfOn = [30, 45].every(m => timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive);
+        const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
+        const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
+        const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
+        const labelY = textPos.y + 2;
+        return svg`
+          <text
+            x="${textPos.x}"
+            y="${labelY}"
+            text-anchor="middle"
+            font-size="9"
+            font-weight="bold"
+            transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
+            style="pointer-events: none; user-select: none;"
+            fill="${halfOn ? '#ffffff' : '#6b7280'}">
+            ${this.getTimeLabel(hour, 30)}
+          </text>
+        `;
+      })}
+    `;
+  }
+
+  private renderFifteenMinuteSectors(
+    timeSlots: TimeSlot[],
+    centerX: number,
+    centerY: number,
+    innerRadius: number,
+    middleRadius: number,
+    outerRadius: number,
+  ) {
+    const bands: { m: number; a: number; b: number }[] = [
+      { m: 0, a: (middleRadius + outerRadius) / 2, b: outerRadius },
+      { m: 15, a: middleRadius, b: (middleRadius + outerRadius) / 2 },
+      { m: 30, a: (innerRadius + middleRadius) / 2, b: middleRadius },
+      { m: 45, a: innerRadius, b: (innerRadius + middleRadius) / 2 },
+    ];
+    const selectColor = '#3b82f6';
+
+    return svg`
+      ${Array.from({ length: 24 }, (_, hour) => bands.map(band => {
+        const isActive = timeSlots.find(s => s.hour === hour && s.minute === band.m)?.isActive || false;
+        const selected = this.selectedHour === hour;
+        const sectorPath = this.createSectorPath(hour, 24, band.a, band.b, centerX, centerY);
+        const clickHandler = (e: Event) => {
+          this.handleFifteenClick(e, hour, band.m);
+        };
+        const minuteLabel = selected && band.m !== 0
+          ? this.getTextPosition(hour, 24, (band.a + band.b) / 2, centerX, centerY)
+          : null;
+        const minuteAngle = this.getSectorCenterAngleDeg(hour, 24);
+        const minuteRot = this.getUprightTextRotationDeg(minuteAngle);
+        return svg`
+          <path
+            d="${sectorPath}"
+            fill="${isActive ? '#10b981' : '#ffffff'}"
+            stroke="${selected ? selectColor : '#e5e7eb'}"
+            stroke-width="${selected ? '2.5' : '1'}"
+            style="cursor: pointer; transition: all 0.2s;"
+            @click="${clickHandler}">
+          </path>
+          ${minuteLabel ? svg`
+            <text
+              x="${minuteLabel.x}"
+              y="${minuteLabel.y + 2}"
+              text-anchor="middle"
+              font-size="9"
+              font-weight="bold"
+              transform="rotate(${minuteRot} ${minuteLabel.x} ${minuteLabel.y + 2})"
+              style="pointer-events: none; user-select: none;"
+              fill="${isActive ? '#ffffff' : '#374151'}">
+              ${band.m}
+            </text>
+          ` : ''}
+        `;
+      }))}
+      ${Array.from({ length: 24 }, (_, hour) => {
+        const allOn = [0, 15, 30, 45].every(m =>
+          timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive
+        );
+        const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
+        const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
+        const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
+        const labelY = textPos.y + 3;
+        return svg`
+          <text
+            x="${textPos.x}"
+            y="${labelY}"
+            text-anchor="middle"
+            font-size="11"
+            font-weight="bold"
+            transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
+            style="pointer-events: none; user-select: none;"
+            fill="${allOn ? '#ffffff' : '#374151'}">
+            ${hour.toString().padStart(2, '0')}
+          </text>
+        `;
+      })}
+    `;
   }
 
   private renderDividingLines() {
@@ -1371,85 +1577,9 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
               `;
             })()}
             
-            <!-- Outer sectors (full hours) -->
-            ${Array.from({ length: 24 }, (_, index) => {
-              const hour = index;  // Explicitly capture the index value
-              const slot = timeSlots.find(s => s.hour === hour && s.minute === 0);
-              const isActive = slot?.isActive || false;
-              const sectorPath = this.createSectorPath(hour, 24, middleRadius, outerRadius, centerX, centerY);
-              const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
-              const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
-              const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
-              const labelY = textPos.y + 3;
-              
-              // Create a bound handler with explicit parameters
-              const clickHandler = (e: Event) => {
-                console.log(`🎯 Outer sector clicked: index=${index}, hour=${hour}`);
-                this.handleSlotClick(e, hour, 0);
-              };
-              
-              return svg`
-                <path 
-                  d="${sectorPath}" 
-                  fill="${isActive ? '#10b981' : '#ffffff'}"
-                  stroke="#e5e7eb"
-                  stroke-width="1"
-                  style="cursor: pointer; transition: all 0.2s;"
-                  @click="${clickHandler}">
-                </path>
-                <text 
-                  x="${textPos.x}" 
-                  y="${labelY}" 
-                  text-anchor="middle" 
-                  font-size="11" 
-                  font-weight="bold"
-                  transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
-                  style="pointer-events: none; user-select: none;"
-                  fill="${isActive ? '#ffffff' : '#374151'}">
-                  ${this.getTimeLabel(hour, 0)}
-                </text>
-              `;
-            })}
-            
-            <!-- Inner sectors (half hours) -->
-            ${Array.from({ length: 24 }, (_, index) => {
-              const hour = index;  // Explicitly capture the index value
-              const slot = timeSlots.find(s => s.hour === hour && s.minute === 30);
-              const isActive = slot?.isActive || false;
-              const sectorPath = this.createSectorPath(hour, 24, innerRadius, middleRadius, centerX, centerY);
-              const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
-              const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
-              const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
-              const labelY = textPos.y + 2;
-              
-              // Create a bound handler with explicit parameters
-              const clickHandler = (e: Event) => {
-                console.log(`🎯 Inner sector clicked: index=${index}, hour=${hour}`);
-                this.handleSlotClick(e, hour, 30);
-              };
-              
-              return svg`
-                <path 
-                  d="${sectorPath}" 
-                  fill="${isActive ? '#10b981' : '#f8f9fa'}"
-                  stroke="#e5e7eb"
-                  stroke-width="1"
-                  style="cursor: pointer; transition: all 0.2s;"
-                  @click="${clickHandler}">
-                </path>
-                <text 
-                  x="${textPos.x}" 
-                  y="${labelY}" 
-                  text-anchor="middle" 
-                  font-size="9" 
-                  font-weight="bold"
-                  transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
-                  style="pointer-events: none; user-select: none;"
-                  fill="${isActive ? '#ffffff' : '#6b7280'}">
-                  ${this.getTimeLabel(hour, 30)}
-                </text>
-              `;
-            })}
+            ${this.getSlotResolution() === 15
+              ? this.renderFifteenMinuteSectors(timeSlots, centerX, centerY, innerRadius, middleRadius, outerRadius)
+              : this.renderThirtyMinuteSectors(timeSlots, centerX, centerY, innerRadius, middleRadius, outerRadius)}
 
             <!-- Current time highlight (drawn last so all sides stay uniform) -->
             ${this.renderCurrentTimeHighlight(centerX, centerY, innerRadius, middleRadius, outerRadius)}
@@ -1988,7 +2118,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.2.8  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

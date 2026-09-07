@@ -8,13 +8,15 @@
           "name": "Nombre del Temporizador",
           "entities": "Entidades a Controlar",
           "home_sensors": "Condiciones de Activación (opcional)",
-          "home_logic": "Lógica de Condiciones"
+          "home_logic": "Lógica de Condiciones",
+          "slot_resolution": "Intervalo"
         },
         "data_description": {
           "name": "Dale a tu temporizador un nombre descriptivo",
           "entities": "Selecciona entidades que serán controladas automáticamente por este temporizador",
           "home_sensors": "Selecciona sensores/entidades que determinan cuándo se debe activar el temporizador (ej: presencia en casa, modo Shabat, modo vacaciones, temperatura). Deja vacío para activar siempre.",
-          "home_logic": "OR: El temporizador se activa si SE CUMPLE CUALQUIER condición. AND: El temporizador se activa solo si SE CUMPLEN TODAS las condiciones."
+          "home_logic": "OR: El temporizador se activa si SE CUMPLE CUALQUIER condición. AND: El temporizador se activa solo si SE CUMPLEN TODAS las condiciones.",
+          "slot_resolution": "15 minutos: cada cuarto por separado. 30 minutos: vista clasica de dos anillos."
         }
       }
     },
@@ -34,13 +36,15 @@
           "name": "Nombre del Temporizador",
           "entities": "Entidades a Controlar",
           "home_sensors": "Condiciones de Activación (opcional)",
-          "home_logic": "Lógica de Condiciones"
+          "home_logic": "Lógica de Condiciones",
+          "slot_resolution": "Intervalo"
         },
         "data_description": {
           "name": "Dale a tu temporizador un nombre descriptivo",
           "entities": "Selecciona entidades que serán controladas automáticamente por este temporizador",
           "home_sensors": "Selecciona sensores/entidades que determinan cuándo se debe activar el temporizador (ej: presencia en casa, modo Shabat, modo vacaciones, temperatura). Deja vacío para activar siempre.",
-          "home_logic": "OR: El temporizador se activa si SE CUMPLE CUALQUIER condición. AND: El temporizador se activa solo si SE CUMPLEN TODAS las condiciones."
+          "home_logic": "OR: El temporizador se activa si SE CUMPLE CUALQUIER condición. AND: El temporizador se activa solo si SE CUMPLEN TODAS las condiciones.",
+          "slot_resolution": "15 minutos: cada cuarto por separado. 30 minutos: vista clasica de dos anillos."
         }
       }
     }
@@ -90,5 +94,3 @@
     }
   }
 }
-
-

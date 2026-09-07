@@ -10,10 +10,15 @@ CONF_ENTITIES: Final = "entities"
 CONF_HOME_SENSORS: Final = "home_sensors"
 CONF_HOME_LOGIC: Final = "home_logic"
 CONF_ENTITY_SETTINGS: Final = "entity_settings"
+CONF_SLOT_RESOLUTION: Final = "slot_resolution"
 
 # Defaults
 DEFAULT_NAME: Final = "Timer 24H"
 DEFAULT_HOME_LOGIC: Final = "OR"
+DEFAULT_SLOT_RESOLUTION: Final = "15"
+SLOT_MINUTES: Final = (0, 15, 30, 45)
+SLOT_RESOLUTION_15: Final = 15
+SLOT_RESOLUTION_30: Final = 30
 DEFAULT_CLIMATE_TEMPERATURE: Final = 24
 DEFAULT_CLIMATE_HVAC_MODE: Final = "cool"
 DEFAULT_FAN_PERCENTAGE: Final = 50
@@ -38,6 +43,7 @@ ATTR_LAST_UPDATE: Final = "last_update"
 ATTR_HOUR: Final = "hour"
 ATTR_MINUTE: Final = "minute"
 ATTR_SLOTS: Final = "slots"
+ATTR_SLOT_RESOLUTION: Final = "slot_resolution"
 ATTR_TARGET_ENTITY_ID: Final = "target_entity_id"
 ATTR_TEMPERATURE: Final = "temperature"
 ATTR_HVAC_MODE: Final = "hvac_mode"

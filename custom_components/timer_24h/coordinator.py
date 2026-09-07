@@ -20,6 +20,10 @@ from .const import (
     DEFAULT_FAN_PERCENTAGE,
     DEFAULT_HOME_LOGIC,
     DOMAIN,
+    SLOT_MINUTES,
+    SLOT_RESOLUTION_15,
+    SLOT_RESOLUTION_30,
+    CONF_SLOT_RESOLUTION,
     UPDATE_INTERVAL,
 )
 
@@ -33,17 +37,32 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self.config_entry = config_entry
         self.hass = hass
-        self._time_slots: list[dict[str, Any]] = self._initialize_time_slots()
+        self._time_slots: list[dict[str, Any]]
         self._home_status: bool = True
         self._enabled: bool = True
+        self._slot_resolution: int = SLOT_RESOLUTION_15
+        self._needs_persist: bool = False
         self._last_controlled_states: dict[str, Any] = {}
         self._state_change_unsubscribe = None
-        
-        # Load saved time slots from options
-        if "time_slots" in config_entry.options:
-            self._time_slots = config_entry.options["time_slots"]
-        
-        # Load saved enabled state from options
+
+        saved_slots = config_entry.options.get("time_slots")
+        self._time_slots, was_legacy = self._normalize_time_slots(saved_slots)
+
+        saved_resolution = config_entry.options.get(CONF_SLOT_RESOLUTION)
+        if saved_resolution in ("15", "30", 15, 30):
+            self._slot_resolution = int(saved_resolution)
+        elif was_legacy:
+            self._slot_resolution = SLOT_RESOLUTION_30
+        else:
+            self._slot_resolution = SLOT_RESOLUTION_15
+
+        self._needs_persist = bool(
+            was_legacy
+            or saved_slots is None
+            or len(saved_slots) != 96
+            or CONF_SLOT_RESOLUTION not in config_entry.options
+        )
+
         if "enabled" in config_entry.options:
             self._enabled = config_entry.options["enabled"]
 
@@ -177,21 +196,78 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             blocking=False,
         )
 
-    def _initialize_time_slots(self) -> list[dict[str, Any]]:
-        """Initialize 48 time slots (24 hours × 2 = half hours)."""
-        slots = []
+    def _empty_slots(self) -> list[dict[str, Any]]:
+        """Create 96 quarter-hour slots."""
+        return [
+            {"hour": hour, "minute": minute, "isActive": False}
+            for hour in range(24)
+            for minute in SLOT_MINUTES
+        ]
+
+    def _normalize_time_slots(
+        self, saved: list[dict[str, Any]] | None
+    ) -> tuple[list[dict[str, Any]], bool]:
+        """Expand stored slots to 96 quarters. Copy :00→:15 and :30→:45 for legacy 30-min data."""
+        if not saved:
+            slots = self._empty_slots()
+            _LOGGER.info("Initialized %d unique time slots", len(slots))
+            return slots, False
+
+        lookup: dict[tuple[int, int], bool] = {}
+        minutes_seen: set[int] = set()
+        for slot in saved:
+            hour = slot.get("hour")
+            minute = slot.get("minute")
+            if hour is None or minute is None:
+                continue
+            hour_i = int(hour)
+            minute_i = int(minute)
+            lookup[(hour_i, minute_i)] = bool(slot.get("isActive", False))
+            minutes_seen.add(minute_i)
+
+        was_legacy = (
+            15 not in minutes_seen
+            and 45 not in minutes_seen
+            and (0 in minutes_seen or 30 in minutes_seen)
+        )
+
+        slots: list[dict[str, Any]] = []
         for hour in range(24):
-            slots.append({"hour": hour, "minute": 0, "isActive": False})
-            slots.append({"hour": hour, "minute": 30, "isActive": False})
-        
-        # Validate no duplicates
-        keys = [f"{s['hour']}:{s['minute']}" for s in slots]
-        if len(keys) != len(set(keys)):
-            _LOGGER.error("❌ DUPLICATE SLOTS DETECTED IN INITIALIZATION!")
-        else:
-            _LOGGER.info("✅ Initialized %d unique time slots", len(slots))
-        
-        return slots
+            for minute in SLOT_MINUTES:
+                if (hour, minute) in lookup:
+                    active = lookup[(hour, minute)]
+                elif was_legacy and minute == 15:
+                    active = lookup.get((hour, 0), False)
+                elif was_legacy and minute == 45:
+                    active = lookup.get((hour, 30), False)
+                else:
+                    active = False
+                slots.append({"hour": hour, "minute": minute, "isActive": active})
+
+        _LOGGER.info(
+            "Normalized %d time slots (legacy 30-min migrate: %s)",
+            len(slots),
+            was_legacy,
+        )
+        return slots, was_legacy
+
+    async def async_persist_migration_if_needed(self) -> None:
+        """Write migrated 15-minute slots and resolution back to the config entry."""
+        if not self._needs_persist:
+            return
+        time_slots_copy = [dict(slot) for slot in self._time_slots]
+        new_options = {
+            **self.config_entry.options,
+            "time_slots": time_slots_copy,
+            CONF_SLOT_RESOLUTION: str(self._slot_resolution),
+        }
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, options=new_options
+        )
+        self._needs_persist = False
+        _LOGGER.info(
+            "Persisted migrated slots (resolution=%s min)", self._slot_resolution
+        )
 
     @property
     def time_slots(self) -> list[dict[str, Any]]:
@@ -208,11 +284,16 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         """Return enabled status."""
         return self._enabled
 
+    @property
+    def slot_resolution(self) -> int:
+        """Return slot resolution in minutes (15 or 30)."""
+        return self._slot_resolution
+
     def get_current_slot(self) -> dict[str, Any] | None:
         """Get the current time slot."""
         now = datetime.now()
         hour = now.hour
-        minute = 0 if now.minute < 30 else 30
+        minute = (now.minute // 15) * 15
         
         for slot in self._time_slots:
             if slot["hour"] == hour and slot["minute"] == minute:
@@ -503,6 +584,16 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             self._home_status,
         )
 
+    def _minutes_for_toggle(self, minute: int) -> list[int]:
+        """Minutes affected by a toggle, honoring 30-minute grouping."""
+        if minute not in SLOT_MINUTES:
+            return [minute]
+        if self._slot_resolution == SLOT_RESOLUTION_30:
+            if minute in (0, 15):
+                return [0, 15]
+            return [30, 45]
+        return [minute]
+
     async def async_toggle_slot(self, hour: int, minute: int) -> None:
         """Toggle a time slot."""
         _LOGGER.info("🎯 Toggle slot called: hour=%s, minute=%s", hour, minute)
@@ -512,19 +603,30 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         _LOGGER.info("📋 Active slots BEFORE toggle: %s", ", ".join(active_before) if active_before else "None")
         
         slot_found = False
-        # CREATE A NEW LIST - this ensures HA detects the change!
+        minutes = self._minutes_for_toggle(minute)
+        matching = [
+            slot
+            for slot in self._time_slots
+            if slot["hour"] == hour and slot["minute"] in minutes
+        ]
+        all_on = bool(matching) and all(slot["isActive"] for slot in matching)
+        new_state = not all_on
+
         new_slots = []
         for slot in self._time_slots:
-            if slot["hour"] == hour and slot["minute"] == minute:
+            if slot["hour"] == hour and slot["minute"] in minutes:
                 old_state = slot["isActive"]
-                # Create new dict with toggled state
-                new_slot = {**slot, "isActive": not slot["isActive"]}
+                new_slot = {**slot, "isActive": new_state}
                 new_slots.append(new_slot)
-                _LOGGER.info("✅ Found and toggled slot %s:%02d: %s → %s", 
-                           hour, minute, old_state, new_slot["isActive"])
+                _LOGGER.info(
+                    "Toggled slot %s:%02d: %s → %s",
+                    hour,
+                    slot["minute"],
+                    old_state,
+                    new_state,
+                )
                 slot_found = True
             else:
-                # Keep other slots as-is (but create new dict)
                 new_slots.append({**slot})
         
         if not slot_found:

@@ -20,6 +20,7 @@ from .const import (
     ATTR_HOME_SENSORS,
     ATTR_HOME_STATUS,
     ATTR_LAST_UPDATE,
+    ATTR_SLOT_RESOLUTION,
     ATTR_TIME_SLOTS,
     CONF_ENTITY_SETTINGS,
     CONF_HOME_LOGIC,
@@ -68,7 +69,7 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             name=name,
             manufacturer="Timer 24H",
             model="24 Hour Timer",
-            sw_version="1.2.2",
+            sw_version="1.3.0-beta.1",
         )
 
     @property
@@ -105,6 +106,7 @@ class Timer24HEntity(CoordinatorEntity, SensorEntity):
             ),
             ATTR_LAST_UPDATE: datetime.now().isoformat(),
             "enabled": self.coordinator.enabled,
+            ATTR_SLOT_RESOLUTION: self.coordinator.slot_resolution,
         }
 
     @callback
