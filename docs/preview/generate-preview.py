@@ -85,53 +85,50 @@ def clock(on: set[tuple[int, int]], mode: int, selected: int | None, now_h: int,
             f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" '
             f'stroke="{STROKE}" stroke-width="1"/>'
         )
-    for hour in range(24):
-        for minute, inner, outer in BANDS:
-            active = (hour, minute) in on
-            fill = GREEN if active else (WHITE if minute == 0 or mode == 15 else "#f8f9fa")
-            selected_hour = mode == 15 and selected == hour
-            stroke = SELECT if selected_hour else STROKE
-            width = 2.5 if selected_hour else 1
-            parts.append(
-                f'<path d="{sector(hour, 24, inner, outer)}" fill="{fill}" '
-                f'stroke="{stroke}" stroke-width="{width}"/>'
-            )
-            if selected_hour and minute != 0:
-                tx, ty = text_pos(hour, 24, (inner + outer) / 2)
-                fill_t = "#ffffff" if active else INK
-                rdeg = rot(hour, 24)
+    def label(hour: int, radius: float, text: str, size: int, fill: str) -> None:
+        tx, ty = text_pos(hour, 24, radius)
+        rdeg = rot(hour, 24)
+        parts.append(
+            f'<text x="{tx:.2f}" y="{ty:.2f}" text-anchor="middle" '
+            f'dominant-baseline="central" alignment-baseline="middle" font-size="{size}" '
+            f'font-weight="700" transform="rotate({rdeg:.2f} {tx:.2f} {ty:.2f})" '
+            f'style="direction:ltr" fill="{fill}">{text}</text>'
+        )
+
+    if mode == 15:
+        for hour in range(24):
+            for minute, inner, outer in BANDS:
+                active = (hour, minute) in on
+                selected_hour = selected == hour
                 parts.append(
-                    f'<text x="{tx:.2f}" y="{ty + 2:.2f}" text-anchor="middle" font-size="9" '
-                    f'font-weight="700" transform="rotate({rdeg:.2f} {tx:.2f} {ty + 2:.2f})" '
-                    f'fill="{fill_t}">{minute}</text>'
+                    f'<path d="{sector(hour, 24, inner, outer)}" '
+                    f'fill="{GREEN if active else WHITE}" '
+                    f'stroke="{SELECT if selected_hour else STROKE}" '
+                    f'stroke-width="{2.5 if selected_hour else 1}"/>'
                 )
-    for hour in range(24):
-        if mode == 30:
-            hour_on = all((hour, minute) in on for minute in (0, 15))
-            tx, ty = text_pos(hour, 24, (R_MID + R_OUT) / 2)
-            rdeg = rot(hour, 24)
-            parts.append(
-                f'<text x="{tx:.2f}" y="{ty + 3:.2f}" text-anchor="middle" font-size="11" '
-                f'font-weight="700" transform="rotate({rdeg:.2f} {tx:.2f} {ty + 3:.2f})" '
-                f'fill="{"#ffffff" if hour_on else INK}">{pad(hour)}:00</text>'
-            )
-            half_on = all((hour, minute) in on for minute in (30, 45))
-            tx, ty = text_pos(hour, 24, (R_IN + R_MID) / 2)
-            rdeg = rot(hour, 24)
-            parts.append(
-                f'<text x="{tx:.2f}" y="{ty + 2:.2f}" text-anchor="middle" font-size="9" '
-                f'font-weight="700" transform="rotate({rdeg:.2f} {tx:.2f} {ty + 2:.2f})" '
-                f'fill="{"#ffffff" if half_on else MUTED}">{pad(hour)}:30</text>'
-            )
-        else:
+                if selected_hour and minute != 0:
+                    label(hour, (inner + outer) / 2, str(minute), 9, "#ffffff" if active else INK)
+        outer_label_r = (BANDS[0][1] + BANDS[0][2]) / 2
+        for hour in range(24):
             all_on = all((hour, minute) in on for minute in (0, 15, 30, 45))
-            tx, ty = text_pos(hour, 24, (R_MID + R_OUT) / 2)
-            rdeg = rot(hour, 24)
-            parts.append(
-                f'<text x="{tx:.2f}" y="{ty + 3:.2f}" text-anchor="middle" font-size="11" '
-                f'font-weight="700" transform="rotate({rdeg:.2f} {tx:.2f} {ty + 3:.2f})" '
-                f'fill="{"#ffffff" if all_on else INK}">{pad(hour)}</text>'
-            )
+            label(hour, outer_label_r, pad(hour), 11, "#ffffff" if all_on else INK)
+    else:
+        rings = (
+            (0, (0, 15), R_MID, R_OUT),
+            (30, (30, 45), R_IN, R_MID),
+        )
+        for hour in range(24):
+            for pair, minutes, inner, outer in rings:
+                active = all((hour, minute) in on for minute in minutes)
+                fill = GREEN if active else (WHITE if pair == 0 else "#f8f9fa")
+                parts.append(
+                    f'<path d="{sector(hour, 24, inner, outer)}" fill="{fill}" '
+                    f'stroke="{STROKE}" stroke-width="1"/>'
+                )
+            hour_on = all((hour, minute) in on for minute in (0, 15))
+            half_on = all((hour, minute) in on for minute in (30, 45))
+            label(hour, (R_MID + R_OUT) / 2, f"{pad(hour)}:00", 11, "#ffffff" if hour_on else INK)
+            label(hour, (R_IN + R_MID) / 2, f"{pad(hour)}:30", 9, "#ffffff" if half_on else MUTED)
     if mode == 15:
         band = next(item for item in BANDS if item[0] == now_m)
         highlight = sector(now_h, 24, band[1], band[2])

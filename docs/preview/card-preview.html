@@ -132,11 +132,12 @@
       if (deg > 90 || deg < -90) deg += 180;
       return deg;
     }
-    function textEl(i, n, r, str, size, fill, dy) {
+    function textEl(i, n, r, str, size, fill) {
       const p = textPos(i, n, r);
-      const y = p.y + (dy || 3);
-      return `<text x="${p.x}" y="${y}" text-anchor="middle" font-size="${size}" font-weight="700"
-        transform="rotate(${rot(i, n)} ${p.x} ${y})" fill="${fill}" style="pointer-events:none">${str}</text>`;
+      return `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central"
+        alignment-baseline="middle" font-size="${size}" font-weight="700"
+        transform="rotate(${rot(i, n)} ${p.x} ${p.y})" fill="${fill}"
+        style="pointer-events:none; user-select:none; direction:ltr">${str}</text>`;
     }
     function toggle(h, minutes) {
       const allOn = minutes.every((m) => has(h, m));
@@ -156,28 +157,38 @@
         html += `<line x1="${CX + R_IN * Math.cos(a)}" y1="${CY + R_IN * Math.sin(a)}"
           x2="${CX + R_OUT * Math.cos(a)}" y2="${CY + R_OUT * Math.sin(a)}" stroke="${STROKE}"/>`;
       }
-      for (let h = 0; h < 24; h++) {
-        for (const band of BANDS) {
-          const active = has(h, band.m);
-          const sel = mode === 15 && selected === h;
-          const fill = active ? GREEN : WHITE;
-          const click = mode === 15
-            ? `data-h="${h}" data-m="${band.m}"`
-            : `data-h="${h}" data-m="${band.m <= 15 ? 0 : 30}"`;
-          html += `<path d="${sector(h, 24, band.a, band.b)}" fill="${fill}" stroke="${sel ? SELECT : STROKE}"
-            stroke-width="${sel ? 2.5 : 1}" ${click}/>`;
-          if (sel && band.m !== 0) {
-            html += textEl(h, 24, (band.a + band.b) / 2, String(band.m), 9, active ? "#fff" : INK, 2);
+      if (mode === 15) {
+        for (let h = 0; h < 24; h++) {
+          for (const band of BANDS) {
+            const active = has(h, band.m);
+            const sel = selected === h;
+            html += `<path d="${sector(h, 24, band.a, band.b)}" fill="${active ? GREEN : WHITE}"
+              stroke="${sel ? SELECT : STROKE}" stroke-width="${sel ? 2.5 : 1}"
+              data-h="${h}" data-m="${band.m}"/>`;
+            if (sel && band.m !== 0) {
+              html += textEl(h, 24, (band.a + band.b) / 2, String(band.m), 9, active ? "#fff" : INK);
+            }
           }
         }
-      }
-      for (let h = 0; h < 24; h++) {
-        if (mode === 30) {
-          html += textEl(h, 24, (R_MID + R_OUT) / 2, pad(h) + ":00", 11, has(h, 0) && has(h, 15) ? "#fff" : INK, 3);
-          html += textEl(h, 24, (R_IN + R_MID) / 2, pad(h) + ":30", 9, has(h, 30) && has(h, 45) ? "#fff" : MUTED, 2);
-        } else {
+        const outerLabelR = (BANDS[0].a + BANDS[0].b) / 2;
+        for (let h = 0; h < 24; h++) {
           const allOn = [0, 15, 30, 45].every((m) => has(h, m));
-          html += textEl(h, 24, (R_MID + R_OUT) / 2, pad(h), 11, allOn ? "#fff" : INK, 3);
+          html += textEl(h, 24, outerLabelR, pad(h), 11, allOn ? "#fff" : INK);
+        }
+      } else {
+        const rings = [
+          { pair: 0, minutes: [0, 15], a: R_MID, b: R_OUT },
+          { pair: 30, minutes: [30, 45], a: R_IN, b: R_MID }
+        ];
+        for (let h = 0; h < 24; h++) {
+          for (const ring of rings) {
+            const active = ring.minutes.every((m) => has(h, m));
+            const fill = active ? GREEN : (ring.pair === 0 ? WHITE : "#f8f9fa");
+            html += `<path d="${sector(h, 24, ring.a, ring.b)}" fill="${fill}" stroke="${STROKE}"
+              stroke-width="1" data-h="${h}" data-m="${ring.pair}"/>`;
+          }
+          html += textEl(h, 24, (R_MID + R_OUT) / 2, pad(h) + ":00", 11, has(h, 0) && has(h, 15) ? "#fff" : INK);
+          html += textEl(h, 24, (R_IN + R_MID) / 2, pad(h) + ":30", 9, has(h, 30) && has(h, 45) ? "#fff" : MUTED);
         }
       }
       const nowBand = BANDS.find((b) => b.m === now.m);
@@ -195,7 +206,7 @@
       document.getElementById("stage").innerHTML = html;
       document.getElementById("hint").textContent = mode === 15
         ? "Tap an hour to select it (blue), then tap a quarter (00 / 15 / 30 / 45). Red = now."
-        : "Tap :00 to cover the first half-hour, :30 for the second. Red = now.";
+        : "Outer ring = the hour. Inner ring = the half-hour. Red = now.";
       document.getElementById("stage").querySelector("svg").addEventListener("click", (ev) => {
         const path = ev.target.closest("path");
         if (!path || path.dataset.h === undefined) return;
@@ -203,7 +214,13 @@
         const m = Number(path.dataset.m);
         if (mode === 15) {
           if (selected !== h) selected = h;
-          else toggle(h, [m]);
+          else if (m === 0) {
+            const allOn = [0, 15, 30, 45].every((min) => has(h, min));
+            if (!allOn) toggle(h, [0, 15, 30, 45]);
+            else toggle(h, [0]);
+          } else {
+            toggle(h, [m]);
+          }
         } else {
           toggle(h, m === 0 ? [0, 15] : [30, 45]);
         }
