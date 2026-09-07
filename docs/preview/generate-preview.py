@@ -89,10 +89,9 @@ def clock(on: set[tuple[int, int]], mode: int, selected: int | None, now_h: int,
         tx, ty = text_pos(hour, 24, radius)
         rdeg = rot(hour, 24)
         parts.append(
-            f'<text x="{tx:.2f}" y="{ty:.2f}" text-anchor="middle" '
-            f'dominant-baseline="central" alignment-baseline="middle" font-size="{size}" '
-            f'font-weight="700" transform="rotate({rdeg:.2f} {tx:.2f} {ty:.2f})" '
-            f'style="direction:ltr" fill="{fill}">{text}</text>'
+            f'<g transform="translate({tx:.2f} {ty:.2f}) rotate({rdeg:.2f})">'
+            f'<text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="{size}" '
+            f'font-weight="700" style="direction:ltr" fill="{fill}">{text}</text></g>'
         )
 
     if mode == 15:
