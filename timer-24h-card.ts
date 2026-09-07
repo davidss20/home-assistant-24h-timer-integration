@@ -1121,6 +1121,36 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
 
+  private renderSectorLabel(
+    hour: number,
+    radius: number,
+    centerX: number,
+    centerY: number,
+    text: string,
+    fontSize: number,
+    fill: string,
+  ) {
+    const pos = this.getTextPosition(hour, 24, radius, centerX, centerY);
+    const rotationDeg = this.getUprightTextRotationDeg(
+      this.getSectorCenterAngleDeg(hour, 24)
+    );
+    return svg`
+      <text
+        x="${pos.x}"
+        y="${pos.y}"
+        text-anchor="middle"
+        dominant-baseline="central"
+        alignment-baseline="middle"
+        font-size="${fontSize}"
+        font-weight="bold"
+        transform="rotate(${rotationDeg} ${pos.x} ${pos.y})"
+        style="pointer-events: none; user-select: none; direction: ltr;"
+        fill="${fill}">
+        ${text}
+      </text>
+    `;
+  }
+
   private renderThirtyMinuteSectors(
     timeSlots: TimeSlot[],
     centerX: number,
@@ -1156,43 +1186,27 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       }))}
       ${Array.from({ length: 24 }, (_, hour) => {
         const hourOn = [0, 15].every(m => timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive);
-        const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
-        const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
-        const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
-        const labelY = textPos.y + 3;
-        return svg`
-          <text
-            x="${textPos.x}"
-            y="${labelY}"
-            text-anchor="middle"
-            font-size="11"
-            font-weight="bold"
-            transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
-            style="pointer-events: none; user-select: none;"
-            fill="${hourOn ? '#ffffff' : '#374151'}">
-            ${this.getTimeLabel(hour, 0)}
-          </text>
-        `;
+        return this.renderSectorLabel(
+          hour,
+          (middleRadius + outerRadius) / 2,
+          centerX,
+          centerY,
+          this.getTimeLabel(hour, 0),
+          11,
+          hourOn ? '#ffffff' : '#374151',
+        );
       })}
       ${Array.from({ length: 24 }, (_, hour) => {
         const halfOn = [30, 45].every(m => timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive);
-        const textPos = this.getTextPosition(hour, 24, (innerRadius + middleRadius) / 2, centerX, centerY);
-        const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
-        const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
-        const labelY = textPos.y + 2;
-        return svg`
-          <text
-            x="${textPos.x}"
-            y="${labelY}"
-            text-anchor="middle"
-            font-size="9"
-            font-weight="bold"
-            transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
-            style="pointer-events: none; user-select: none;"
-            fill="${halfOn ? '#ffffff' : '#6b7280'}">
-            ${this.getTimeLabel(hour, 30)}
-          </text>
-        `;
+        return this.renderSectorLabel(
+          hour,
+          (innerRadius + middleRadius) / 2,
+          centerX,
+          centerY,
+          this.getTimeLabel(hour, 30),
+          9,
+          halfOn ? '#ffffff' : '#6b7280',
+        );
       })}
     `;
   }
@@ -1221,11 +1235,6 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         const clickHandler = (e: Event) => {
           this.handleFifteenClick(e, hour, band.m);
         };
-        const minuteLabel = selected && band.m !== 0
-          ? this.getTextPosition(hour, 24, (band.a + band.b) / 2, centerX, centerY)
-          : null;
-        const minuteAngle = this.getSectorCenterAngleDeg(hour, 24);
-        const minuteRot = this.getUprightTextRotationDeg(minuteAngle);
         return svg`
           <path
             d="${sectorPath}"
@@ -1235,42 +1244,32 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             style="cursor: pointer; transition: all 0.2s;"
             @click="${clickHandler}">
           </path>
-          ${minuteLabel ? svg`
-            <text
-              x="${minuteLabel.x}"
-              y="${minuteLabel.y + 2}"
-              text-anchor="middle"
-              font-size="9"
-              font-weight="bold"
-              transform="rotate(${minuteRot} ${minuteLabel.x} ${minuteLabel.y + 2})"
-              style="pointer-events: none; user-select: none;"
-              fill="${isActive ? '#ffffff' : '#374151'}">
-              ${band.m}
-            </text>
-          ` : ''}
+          ${selected && band.m !== 0
+            ? this.renderSectorLabel(
+                hour,
+                (band.a + band.b) / 2,
+                centerX,
+                centerY,
+                String(band.m),
+                9,
+                isActive ? '#ffffff' : '#374151',
+              )
+            : ''}
         `;
       }))}
       ${Array.from({ length: 24 }, (_, hour) => {
         const allOn = [0, 15, 30, 45].every(m =>
           timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive
         );
-        const textPos = this.getTextPosition(hour, 24, (middleRadius + outerRadius) / 2, centerX, centerY);
-        const angleDeg = this.getSectorCenterAngleDeg(hour, 24);
-        const rotationDeg = this.getUprightTextRotationDeg(angleDeg);
-        const labelY = textPos.y + 3;
-        return svg`
-          <text
-            x="${textPos.x}"
-            y="${labelY}"
-            text-anchor="middle"
-            font-size="11"
-            font-weight="bold"
-            transform="rotate(${rotationDeg} ${textPos.x} ${labelY})"
-            style="pointer-events: none; user-select: none;"
-            fill="${allOn ? '#ffffff' : '#374151'}">
-            ${hour.toString().padStart(2, '0')}
-          </text>
-        `;
+        return this.renderSectorLabel(
+          hour,
+          (middleRadius + outerRadius) / 2,
+          centerX,
+          centerY,
+          hour.toString().padStart(2, '0'),
+          11,
+          allOn ? '#ffffff' : '#374151',
+        );
       })}
     `;
   }
@@ -1680,6 +1679,8 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         max-height: 100%;
         display: block;
         object-fit: contain;
+        direction: ltr;
+        unicode-bidi: isolate;
       }
       
       @container (max-width: 250px) {
@@ -2118,7 +2119,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.2  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.3  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
