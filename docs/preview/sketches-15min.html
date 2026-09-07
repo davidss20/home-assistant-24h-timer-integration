@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>סקיצות 15 דקות — v7</title>
+  <style>
+    :root {
+      --bg: #111318;
+      --card: #1c1f26;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --line: #3c4043;
+      --green: #10b981;
+      --ok: #34d399;
+      --select: #3b82f6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 20px 16px 80px;
+    }
+
+    .sketch {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 28px;
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 3px 10px;
+      background: rgba(16,185,129,.18);
+      color: var(--ok);
+    }
+
+    .sketch h2 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+    }
+
+    .why {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 0 0 14px;
+    }
+
+    .stage-wrap { display: flex; justify-content: center; }
+
+    .phone {
+      width: 380px;
+      max-width: 100%;
+      background: #0d0f14;
+      border: 1px solid #2a2e36;
+      border-radius: 18px;
+      padding: 10px 10px 14px;
+    }
+
+    .clock-card {
+      background: #16181d;
+      border-radius: 12px;
+      padding: 8px 8px 12px;
+    }
+
+    .clock-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px 2px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .clock-title span.status {
+      font-size: 12px;
+      color: var(--ok);
+      font-weight: 600;
+    }
+
+    svg.clock {
+      width: 100%;
+      height: auto;
+      display: block;
+      touch-action: manipulation;
+    }
+
+    svg.clock path { cursor: pointer; }
+
+    .readout {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: ui-monospace, Consolas, monospace;
+      text-align: center;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article class="sketch" id="s6">
+      <div class="meta"><span class="badge">אופציה 6</span></div>
+      <h2>לחיצה על הריבועים וגם על המרכז</h2>
+      <p class="why">
+        בחירת שעה בכחול, אדום = עכשיו ביום. אפשר לסמן רבע על הפסים בעיגול או על ארבעת הרבעים במרכז.
+      </p>
+      <div class="stage-wrap"><div class="phone" data-stage></div></div>
+      <div class="readout" data-out></div>
+    </article>
+
+    <article class="sketch" id="s7">
+      <div class="meta"><span class="badge">אופציה 7</span></div>
+      <h2>רק לחיצה על הריבועים — המרכז לא משתנה</h2>
+      <p class="why">
+        אותו עיגול כמו 6, אבל המרכז נשאר כפתור ON. מסמנים רק על הריבועים של השעה שנבחרה (00 / 15 / 30 / 45).
+      </p>
+      <div class="stage-wrap"><div class="phone" data-stage></div></div>
+      <div class="readout" data-out></div>
+    </article>
+  </main>
+
+  <script>
+    const CX = 200, CY = 200, R_OUT = 180, R_IN = 50;
+    const GREEN = "#10b981";
+    const WHITE = "#ffffff";
+    const INK = "#374151";
+    const STROKE = "#e5e7eb";
+    const SELECT = "#3b82f6";
+    const NOW = "#ff6b6b";
+    const BANDS15 = [
+      { m: 0, a: 147.5, b: 180 },
+      { m: 15, a: 115, b: 147.5 },
+      { m: 30, a: 82.5, b: 115 },
+      { m: 45, a: 50, b: 82.5 }
+    ];
+
+    function nowSlot() {
+      const d = new Date();
+      return { h: d.getHours(), m: Math.floor(d.getMinutes() / 15) * 15 };
+    }
+    function pad(n) { return String(n).padStart(2, "0"); }
+    function key(h, m) { return h + ":" + pad(m); }
+    function label(h, m) { return pad(h) + ":" + pad(m); }
+
+    function sectorPath(i, n, rIn, rOut) {
+      const a0 = (i * 360 / n - 90) * Math.PI / 180;
+      const a1 = ((i + 1) * 360 / n - 90) * Math.PI / 180;
+      const x1 = CX + rIn * Math.cos(a0);
+      const y1 = CY + rIn * Math.sin(a0);
+      const x2 = CX + rOut * Math.cos(a0);
+      const y2 = CY + rOut * Math.sin(a0);
+      const x3 = CX + rOut * Math.cos(a1);
+      const y3 = CY + rOut * Math.sin(a1);
+      const x4 = CX + rIn * Math.cos(a1);
+      const y4 = CY + rIn * Math.sin(a1);
+      const large = (a1 - a0) <= Math.PI ? 0 : 1;
+      return `M ${x1} ${y1} L ${x2} ${y2} A ${rOut} ${rOut} 0 ${large} 1 ${x3} ${y3} L ${x4} ${y4} A ${rIn} ${rIn} 0 ${large} 0 ${x1} ${y1}`;
+    }
+
+    function textPos(i, n, r) {
+      const a = ((i + 0.5) * 360 / n - 90) * Math.PI / 180;
+      return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
+    }
+
+    function rot(i, n) {
+      let deg = (i + 0.5) * (360 / n) - 90;
+      if (deg > 90 || deg < -90) deg += 180;
+      return deg;
+    }
+
+    function textEl(i, n, r, str, size, fill, dy) {
+      const p = textPos(i, n, r);
+      const y = p.y + (dy || 3);
+      return `<text x="${p.x}" y="${y}" text-anchor="middle" font-size="${size}" font-weight="700"
+        transform="rotate(${rot(i, n)} ${p.x} ${y})" fill="${fill}"
+        style="pointer-events:none;user-select:none">${str}</text>`;
+    }
+
+    function pathEl(d, fill, extra, stroke, sw) {
+      return `<path d="${d}" fill="${fill}" stroke="${stroke || STROKE}" stroke-width="${sw || 1}" ${extra || ""}></path>`;
+    }
+
+    function centerOn() {
+      return `
+        <circle cx="${CX}" cy="${CY}" r="${R_IN}" fill="${GREEN}"></circle>
+        <text x="${CX}" y="${CY + 5}" text-anchor="middle" font-size="16" font-weight="700" fill="#fff"
+          style="pointer-events:none">ON</text>
+        <text x="${CX}" y="${CY + 20}" text-anchor="middle" font-size="9" fill="#fff" opacity="0.9"
+          style="pointer-events:none">1 entity</text>`;
+    }
+
+    function hourLines() {
+      let s = "";
+      for (let i = 0; i < 24; i++) {
+        const a = (i * 360 / 24 - 90) * Math.PI / 180;
+        s += `<line x1="${CX + R_IN * Math.cos(a)}" y1="${CY + R_IN * Math.sin(a)}"
+          x2="${CX + R_OUT * Math.cos(a)}" y2="${CY + R_OUT * Math.sin(a)}" stroke="${STROKE}" stroke-width="1"></line>`;
+      }
+      return s;
+    }
+
+    function makeSet(pairs) {
+      const s = new Set();
+      pairs.forEach(([h, m]) => s.add(key(h, m)));
+      return s;
+    }
+
+    function toggleSet(set, h, m) {
+      const k = key(h, m);
+      if (set.has(k)) set.delete(k); else set.add(k);
+    }
+
+    function hourState(set, h) {
+      const ms = [0, 15, 30, 45].map(m => set.has(key(h, m)));
+      return { ms, n: ms.filter(Boolean).length };
+    }
+
+    function cardShell(inner, tools) {
+      return `
+        <div class="clock-card">
+          <div class="clock-title"><span>תאורה</span><span class="status">פעיל</span></div>
+          <svg class="clock" viewBox="0 0 400 400">${inner}</svg>
+          ${tools || ""}
+        </div>`;
+    }
+
+    const demo = makeSet([
+      [7, 0], [7, 15], [7, 30], [7, 45],
+      [8, 0], [8, 15], [8, 30], [8, 45],
+      [18, 0], [18, 30],
+      [20, 0], [20, 15], [20, 30], [20, 45],
+      [21, 0], [21, 15],
+      [22, 30]
+    ]);
+
+    function clockSvg(state, useCenterPie) {
+      const now = nowSlot();
+      let svg = hourLines();
+      for (let h = 0; h < 24; h++) {
+        const selected = state.hour === h;
+        for (const b of BANDS15) {
+          const on = state.slots.has(key(h, b.m));
+          const isNow = now.h === h && now.m === b.m;
+          const extra = selected ? `data-a="${h}:${b.m}"` : `data-h="${h}"`;
+          let stroke = STROKE;
+          let sw = 1;
+          if (selected) { stroke = SELECT; sw = 2.5; }
+          if (isNow) { stroke = NOW; sw = 3; }
+          svg += pathEl(sectorPath(h, 24, b.a, b.b), on ? GREEN : WHITE, extra, stroke, sw);
+          if (selected && b.m !== 0) {
+            svg += textEl(h, 24, (b.a + b.b) / 2, String(b.m), 11, on ? "#fff" : INK, 2);
+          }
+        }
+        const st = hourState(state.slots, h);
+        const p = textPos(h, 24, 163);
+        svg += `<text x="${p.x}" y="${p.y + 3}" text-anchor="middle" font-size="13" font-weight="700"
+          transform="rotate(${rot(h, 24)} ${p.x} ${p.y + 3})"
+          fill="${st.n === 4 ? "#fff" : INK}" style="pointer-events:none">${pad(h)}</text>`;
+      }
+      if (useCenterPie && state.hour != null) {
+        const h = state.hour;
+        const st = hourState(state.slots, h);
+        const r = 48;
+        [[0, 0], [15, 1], [30, 2], [45, 3]].forEach(([m, i]) => {
+          svg += pathEl(sectorPath(i, 4, 0.1, r + 2), st.ms[i] ? GREEN : "#374151", `data-m="${m}"`, "#111318", 2);
+          const p = textPos(i, 4, r * 0.55);
+          svg += `<text x="${p.x}" y="${p.y + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff"
+            style="pointer-events:none">${pad(m)}</text>`;
+        });
+        svg += `<circle cx="${CX}" cy="${CY}" r="16" fill="#111318" data-close="1" style="cursor:pointer"></circle>
+          <text x="${CX}" y="${CY + 4}" text-anchor="middle" font-size="9" fill="#fff" data-close="1" style="cursor:pointer">${pad(h)}</text>`;
+      } else {
+        svg += centerOn();
+      }
+      return svg;
+    }
+
+    function bindClock(id, state, useCenterPie, render) {
+      const root = document.querySelector("#" + id + " [data-stage]");
+      const out = document.querySelector("#" + id + " [data-out]");
+      root.onclick = (e) => {
+        if (useCenterPie && e.target.closest("[data-close]")) {
+          state.hour = null;
+          out.textContent = "נסגר עורך — המרכז חזר לסטטוס ON";
+          render();
+          return;
+        }
+        if (useCenterPie) {
+          const qb = e.target.closest("[data-m]");
+          if (qb && state.hour != null) {
+            const m = Number(qb.dataset.m);
+            toggleSet(state.slots, state.hour, m);
+            out.textContent = "מרכז: " + label(state.hour, m);
+            render();
+            return;
+          }
+        }
+        const slot = e.target.closest("[data-a]");
+        if (slot) {
+          const [h, m] = slot.dataset.a.split(":").map(Number);
+          toggleSet(state.slots, h, m);
+          state.hour = h;
+          out.textContent = "ריבוע: " + label(h, m);
+          render();
+          return;
+        }
+        const hourEl = e.target.closest("[data-h]");
+        if (!hourEl) return;
+        state.hour = Number(hourEl.dataset.h);
+        out.textContent = "נבחרה שעה " + pad(state.hour);
+        render();
+      };
+    }
+
+    const s6 = { slots: new Set(demo), hour: 21 };
+    const s7 = { slots: new Set(demo), hour: 21 };
+
+    function render6() {
+      const hint = s6.hour == null
+        ? `<div class="hint">לחצו על שעה כדי לפתוח עורך. אפשר לסמן בריבועים או במרכז.</div>`
+        : `<div class="hint">עורכים ${pad(s6.hour)}:xx — ריבועים בעיגול או רבעים במרכז. המספר במרכז סוגר.</div>`;
+      document.querySelector("#s6 [data-stage]").innerHTML = cardShell(clockSvg(s6, true), hint);
+      bindClock("s6", s6, true, render6);
+    }
+
+    function render7() {
+      const hint = s7.hour == null
+        ? `<div class="hint">לחצו על שעה. המרכז נשאר ON — מסמנים רק על הריבועים.</div>`
+        : `<div class="hint">עורכים ${pad(s7.hour)}:xx — לחצו על הריבועים 15 / 30 / 45 / השעה העגולה.</div>`;
+      document.querySelector("#s7 [data-stage]").innerHTML = cardShell(clockSvg(s7, false), hint);
+      bindClock("s7", s7, false, render7);
+    }
+
+    render6();
+    render7();
+  </script>
+</body>
+</html>

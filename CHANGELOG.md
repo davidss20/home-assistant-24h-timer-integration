@@ -7,19 +7,154 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-07
+
 ### Added
-- GitHub Actions CI (`lint` + `build`) on pushes and pull requests to `main`
+- ⏱️ 15-minute slot mode (96 quarters) alongside the classic 30-minute two-ring view
+- 🎛️ Choose 15 or 30 minutes from the Lovelace card editor or timer Configure
+- 🟦 15-minute card: tap an hour to select it (blue), then tap a quarter (`:00` / `:15` / `:30` / `:45`)
+- 🕒 Hover tooltip shows the exact slot time
+- 🖼️ Live clock preview in the Lovelace Add Card picker
 
 ### Changed
-- Repository layout: Lovelace source lives in `src/`, secondary docs in `docs/`, helper scripts in `scripts/`
-- `npm run build` writes the card directly to `custom_components/timer_24h/dist/`
-- README and version metadata aligned to integration version `1.1.3`
+- Timers store 96 quarter-hour slots. Existing 48-slot schedules are migrated (`:00` also turns on `:15`, `:30` also turns on `:45`)
+- New timers default to 15-minute view; existing timers keep 30-minute view until you change the setting
+- In 15-minute view, tapping the outer ring fills the whole hour if any quarter is still off; turning a quarter off affects only that cube
+- 30-minute view shows two rings only (no 15-minute dividing lines)
 
-### Removed
-- Unused frontend experiments (`timer-24h-card-fixed.ts`, `timer-24h-card-clean.js`) and committed `node_modules`
-- `.cursorrules` from the public repository
+## [1.3.0-beta.12] - 2026-09-07
 
-## [1.1.3] - 2025-12-14
+### Fixed
+- 🖼️ Card picker now shows a live clock preview instead of a blank tile
+
+## [1.3.0-beta.11] - 2026-09-07
+
+### Changed
+- ⏱️ 30-minute view uses two rings only; the 15-minute dividing lines are hidden
+
+## [1.3.0-beta.10] - 2026-09-07
+
+### Added
+- ⏱️ 15- and 30-minute views are both available again (card editor and timer Configure)
+
+## [1.3.0-beta.9] - 2026-09-07
+
+### Fixed
+- 🟢 Tapping the outer ring fills the whole hour even if some quarters are already on
+
+## [1.3.0-beta.8] - 2026-09-07
+
+### Added
+- 🕒 Hover tooltip on each slot shows the exact time (for example `22:30`)
+
+## [1.3.0-beta.7] - 2026-09-07
+
+### Changed
+- 🟢 Turning on the outer hour ring lights the whole hour; turning a quarter off affects only that quarter
+
+## [1.3.0-beta.6] - 2026-09-07
+
+### Changed
+- ⏱️ 15-minute view only for now. The 30-minute option is hidden and can be turned back on after community feedback.
+
+## [1.3.0-beta.5] - 2026-09-07
+
+### Fixed
+- 🧭 Hour labels sit in the middle of the outer band (15-min) and the outer half-hour ring (30-min)
+
+## [1.3.0-beta.4] - 2026-09-07
+
+### Changed
+- 🧭 Hour labels sit flush against the outer edge of the clock
+
+## [1.3.0-beta.3] - 2026-09-07
+
+### Fixed
+- 🧭 Hour labels sit in the center of each outer cell (RTL / baseline offset)
+
+## [1.3.0-beta.2] - 2026-09-07
+
+### Added
+- 🎛️ Slot interval (15 / 30 minutes) in the Lovelace card editor; saved to the timer, not card YAML
+
+## [1.3.0-beta.1] - 2026-09-07
+
+### Added
+- ⏱️ Optional 15-minute slot interval (96 slots) alongside the classic 30-minute view
+- 🎛️ Slot interval setting in the timer Configure dialog (`15` or `30` minutes)
+- 🟦 15-minute card: tap an hour to select it, then tap a quarter (`:00` / `:15` / `:30` / `:45`) to toggle
+- 🔴 Current quarter is highlighted in red; the center ON button is unchanged
+
+### Changed
+- Timers store 96 quarter-hour slots internally. Existing 48-slot schedules are migrated (`:00` also turns on `:15`, `:30` also turns on `:45`) and keep the 30-minute UI until you change the setting
+- New timers default to 15-minute interval
+
+## [1.2.8] - 2026-07-24
+
+### Added
+- 🎛️ Edit activation conditions in the Lovelace card editor
+- 📋 Center dialog shows controlled entities and activation conditions together
+
+## [1.2.7] - 2026-07-24
+
+### Added
+- 🎯 Edit activation conditions from the card (click Active/Inactive status)
+- 🔧 Service `timer_24h.set_activation_conditions` — persists to integration options (safe for background control)
+- 📡 Sensor attributes `home_sensors` and `home_logic` exposed for the card UI
+
+## [1.2.6] - 2026-07-24
+
+### Changed
+- 🏷️ Hide climate/fan device name when only one entity is controlled
+- 🎨 Remove gray background from climate/fan control area
+
+## [1.2.5] - 2026-07-24
+
+### Changed
+- 🏷️ Climate/fan controls show only the device `friendly_name` (no section title like "מאוורר"/"מזגן")
+- 🎛️ Temperature/speed and mode controls are on one row, with icons instead of text labels
+
+## [1.2.4] - 2026-07-24
+
+### Changed
+- 🔘 Enable timer switch moves into the header between the title and active/inactive status
+
+### Fixed
+- 🖱️ Entities dialog open/close was delayed/stuck because `shouldUpdate` ignored `showEntitiesDialog` — now updates immediately
+
+## [1.2.3] - 2026-07-24
+
+### Fixed
+- ✅ Manifest keys sorted correctly (`domain`, `name`, then alphabetical)
+
+## [1.2.2] - 2026-07-24
+
+### Fixed
+- ✅ HA quality checks: add `after_dependencies` for `http`/`lovelace`, remove invalid manifest `icon`, add `services.yaml`, define `CONFIG_SCHEMA`
+
+## [1.2.1] - 2026-07-24
+
+### Fixed
+- ⚙️ **#2** Config/options gear crash on HA 2025.12+ (`config_entry` setter removed) — options flow loads again
+- 🏷️ **#5** Entity ID / name duplication (`sensor.name_name`) — entity now uses device name only
+- 🖱️ **#6** Clicking the center circle opens the controlled entities list dialog again
+- 💾 Options save no longer wipes `time_slots` / `enabled` / `entity_settings`
+
+### Changed
+- 🧹 **#4** Stop tracking `node_modules` in git; keep `custom_components/timer_24h/dist` for HACS installs; fix `.gitignore` so root `/dist/` does not ignore integration dist
+
+## [1.2.0] - 2026-07-24
+
+### Added
+- ❄️ **Climate controls on the card** — when a `climate.*` entity is selected, temperature (+/−) and HVAC mode buttons (cool/heat/auto/dry/fan) appear under the timer
+- 🌀 **Fan controls on the card** — when a `fan.*` entity is selected, speed percentage (+/−) controls appear
+- 🔧 Service `timer_24h.set_entity_settings` to save per-entity climate/fan settings
+- Settings are applied automatically when the timer turns the entity on
+
+### Fixed
+- Climate entities are correctly detected as on/off (`heat`/`cool`/… vs only `on`)
+
+## [1.1.1] - 2025-12-14
 
 ### 🎉 Official Release
 
@@ -29,61 +164,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - 🧭 יישור כיתוב השעות/חצאי-השעה לסקטורים (עם שמירה על קריאות בחצי התחתון)
-- 🔠 הגדלה של גודל הכיתוב סביב השעון
-- 🔠 הגדלה נוספת של כיתוב השעות בגלגל החיצוני
+- 🔠 הגדלה קלה של גודל הכיתוב סביב השעון
 
 ### Fixed
 - 🕧 חצאי-שעה מוצגים כראוי כ-`HH:30`
 - 🪟 `build_and_install.py` תוקן ל-Windows כדי להריץ `npm.cmd` בצורה תקינה
-
-## [1.1.0] - 2024-12-08
-
-### 🎉 Official Stable Release
-
-This is the first stable release of version 1.1.0, incorporating all improvements from the beta versions.
-
-### Added
-- 🎛️ **UI Configuration for Enable Switch** - Configure the enable/disable switch through the Home Assistant UI
-  - Go to Settings → Devices & Services → Timer 24H → Configure
-  - Toggle "Show enable/disable switch" option
-  - No need to edit YAML anymore!
-  - Card config still works as override if needed
-- New service: `timer_24h.set_enabled` for automation integration
-- Visual toggle switch in card (optional display)
-- Hebrew and English translations for new features
-
-### How to Use
-
-**Option 1: Configure via UI (Recommended)**
-1. Go to Settings → Devices & Services
-2. Find Timer 24H integration
-3. Click Configure
-4. Check "Show enable/disable switch"
-5. Save - the switch will appear in all cards automatically!
-
-**Option 2: Configure in card YAML (still works)**
-```yaml
-type: custom:timer-24h-card
-entity: sensor.your_timer
-show_enable_switch: true
-```
-
-**Option 3: Use in automations**
-```yaml
-service: timer_24h.set_enabled
-data:
-  entity_id: sensor.your_timer
-  enabled: false  # or true
-```
-
-### Changed
-- Improved configuration flow with UI options
-- Enhanced user experience with visible switch control
-- Better integration with Home Assistant's configuration system
-
-### Fixed
-- All issues from beta testing resolved
-- Stable and ready for production use
 
 ## [1.1.0-beta.4] - 2024-12-08
 

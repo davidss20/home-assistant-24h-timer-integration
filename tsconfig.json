@@ -15,9 +15,14 @@
     "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "outDir": "./custom_components/timer_24h/dist",
-    "rootDir": "./src"
+    "outDir": "./dist"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "custom_components"]
+  "include": [
+    "*.ts",
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

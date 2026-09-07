@@ -1,0 +1,196 @@
+toggle_slot:
+  name: Toggle time slot
+  description: Toggle a time slot on or off (15- or 30-minute view).
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    hour:
+      name: Hour
+      description: Hour of the day (0-23).
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 0
+          max: 23
+          mode: box
+    minute:
+      name: Minute
+      description: Minute of the slot (0, 15, 30, or 45).
+      required: true
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 45
+          step: 15
+          mode: box
+
+set_slots:
+  name: Set time slots
+  description: Set multiple time slots at once.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    slots:
+      name: Slots
+      description: List of slot objects with hour, minute, and isActive.
+      required: true
+      example: '[{"hour": 8, "minute": 0, "isActive": true}]'
+      selector:
+        object:
+
+clear_all:
+  name: Clear all slots
+  description: Clear all active time slots.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+
+set_enabled:
+  name: Set enabled
+  description: Enable or disable timer entity control.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    enabled:
+      name: Enabled
+      description: Whether the timer should control entities.
+      required: true
+      selector:
+        boolean:
+
+set_entity_settings:
+  name: Set entity settings
+  description: Set climate/fan settings applied when the timer turns an entity on.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    target_entity_id:
+      name: Target entity
+      description: The climate or fan entity to configure.
+      required: true
+      selector:
+        entity:
+          domain:
+            - climate
+            - fan
+    temperature:
+      name: Temperature
+      description: Target temperature for climate entities.
+      required: false
+      selector:
+        number:
+          min: 10
+          max: 35
+          step: 0.5
+          mode: box
+    hvac_mode:
+      name: HVAC mode
+      description: HVAC mode for climate entities (cool, heat, auto, dry, fan_only).
+      required: false
+      selector:
+        text:
+    percentage:
+      name: Fan percentage
+      description: Speed percentage for fan entities (0-100).
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+set_activation_conditions:
+  name: Set activation conditions
+  description: >
+    Update activation condition sensors and logic. Changes are saved to the
+    integration options (not the Lovelace card), so the timer keeps working in
+    the background.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    home_sensors:
+      name: Activation conditions
+      description: >
+        Sensors that must be met for the timer to control entities.
+        Leave empty to always allow activation.
+      required: false
+      selector:
+        entity:
+          domain:
+            - person
+            - device_tracker
+            - binary_sensor
+            - sensor
+            - input_boolean
+          multiple: true
+    home_logic:
+      name: Condition logic
+      description: OR = any condition met; AND = all conditions met.
+      required: false
+      selector:
+        select:
+          options:
+            - "OR"
+            - "AND"
+
+set_slot_resolution:
+  name: Set slot interval
+  description: >
+    Switch the timer between 15-minute and 30-minute views. Saved to the
+    integration options, so every card for this timer updates together.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    slot_resolution:
+      name: Slot interval
+      description: 15 minutes (each quarter separately) or 30 minutes (classic two-ring view).
+      required: true
+      selector:
+        select:
+          options:
+            - "15"
+            - "30"

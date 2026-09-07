@@ -6,6 +6,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
+/dist/
 downloads/
 eggs/
 .eggs/
@@ -21,14 +22,12 @@ wheels/
 
 # Virtual Environment
 venv/
-.venv/
 env/
 ENV/
 
-# IDE / editor tooling
+# IDE
 .vscode/
 .idea/
-.cursorrules
 *.swp
 *.swo
 *~
@@ -39,8 +38,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# OS
+# macOS
 .DS_Store
+
+# Windows
 Thumbs.db
 desktop.ini
 
@@ -49,18 +50,17 @@ desktop.ini
 .coverage
 htmlcov/
 
-# Home Assistant local data
+# Home Assistant
 .storage/
 .cloud/
 .uuid
 home-assistant.log
 home-assistant_v2.db*
 
-# Generic build output — do NOT ignore the shipped Lovelace bundle
-/dist/
+# Build files
 *.js.map
 
-# Keep the integration card files that HACS/Home Assistant install
+# Keep integration frontend artifacts for HACS installs (no build step required)
 !custom_components/timer_24h/dist/
 !custom_components/timer_24h/dist/**
 
@@ -68,6 +68,4 @@ home-assistant_v2.db*
 *.tmp
 *.bak
 *.orig
-.env
-.env.local
-*.log
+RELEASE_INSTRUCTIONS.md
