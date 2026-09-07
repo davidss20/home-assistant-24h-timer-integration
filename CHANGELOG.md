@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.12] - 2026-09-07
+
+### Fixed
+- 🖼️ Card picker now shows a live clock preview instead of a blank tile
+
 ## [1.3.0-beta.11] - 2026-09-07
 
 ### Changed

@@ -67,10 +67,18 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return document.createElement('timer-24h-card-editor');
   }
 
-  public static getStubConfig(): Timer24HCardConfig {
+  public static getStubConfig(hass?: HomeAssistant): Timer24HCardConfig {
+    const entity = hass
+      ? Object.keys(hass.states).find((entityId) => {
+          const state = hass.states[entityId];
+          return (
+            entityId.startsWith('sensor.') &&
+            state?.attributes?.time_slots !== undefined
+          );
+        })
+      : undefined;
     return {
-      type: 'custom:timer-24h-card',
-      entity: '',
+      entity: entity || '',
       show_title: true,
     };
   }
@@ -83,14 +91,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     if (!config) {
       throw new Error('Invalid configuration: config is required');
     }
-    
-    if (!config.entity) {
-      throw new Error('Invalid configuration: entity is required');
-    }
 
     this.config = {
       show_title: true,
-      ...config
+      ...config,
+      entity: config.entity || '',
     };
   }
 
@@ -214,17 +219,27 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return this.hass.states[this.config.entity];
   }
 
+  private isDemoPreview(): boolean {
+    return !this.config?.entity || !this.getEntityState();
+  }
+
+  private getDemoTimeSlots(): TimeSlot[] {
+    const slots: TimeSlot[] = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (const minute of [0, 15, 30, 45]) {
+        const index = hour * 4 + minute / 15;
+        const morning = index >= 6 * 4 && index < 8 * 4 + 2;
+        const evening = index >= 17 * 4 && index < 22 * 4;
+        slots.push({ hour, minute, isActive: morning || evening });
+      }
+    }
+    return slots;
+  }
+
   private getTimeSlots(): TimeSlot[] {
     const entity = this.getEntityState();
     if (!entity || !entity.attributes.time_slots) {
-      const slots: TimeSlot[] = [];
-      for (let hour = 0; hour < 24; hour++) {
-        slots.push({ hour, minute: 0, isActive: false });
-        slots.push({ hour, minute: 15, isActive: false });
-        slots.push({ hour, minute: 30, isActive: false });
-        slots.push({ hour, minute: 45, isActive: false });
-      }
-      return slots;
+      return this.getDemoTimeSlots();
     }
     
     // Return server state directly - no optimistic updates
@@ -1395,18 +1410,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   }
 
   protected render(): TemplateResult {
-    if (!this.hass || !this.config.entity) {
-      return html`
-        <ha-card>
-          <div class="warning">
-            ${this.localize('configure_entity')}
-          </div>
-        </ha-card>
-      `;
+    if (!this.config) {
+      return html``;
     }
 
-    const entity = this.getEntityState();
-    if (!entity) {
+    if (this.config.entity && this.hass && !this.getEntityState()) {
       return html`
         <ha-card>
           <div class="warning">
@@ -1416,9 +1424,10 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
       `;
     }
 
-    const homeStatus = this.getHomeStatus();
+    const demo = this.isDemoPreview();
+    const homeStatus = demo ? true : this.getHomeStatus();
     const entityName = this.getEntityName();
-    const timeSlots = this.getTimeSlots();
+    const timeSlots = demo ? this.getDemoTimeSlots() : this.getTimeSlots();
 
     const centerX = 200;
     const centerY = 200;
@@ -1512,6 +1521,27 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
             
             <!-- Center indicator for controlled entities -->
             ${(() => {
+              if (demo) {
+                return svg`
+                <circle 
+                  cx="${centerX}" 
+                  cy="${centerY}" 
+                  r="${innerRadius}" 
+                  fill="#10b981"
+                  style="cursor: default;">
+                </circle>
+                <text 
+                  x="${centerX}" 
+                  y="${centerY + 5}" 
+                  text-anchor="middle" 
+                  font-size="14" 
+                  font-weight="bold"
+                  fill="#ffffff"
+                  style="pointer-events: none; user-select: none;">
+                  ${this.localize('on')}
+                </text>
+                `;
+              }
               const status = this.getControlledEntitiesStatus();
               const homeStatus = this.getHomeStatus();
               
@@ -1673,7 +1703,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         margin: 0;
         padding: 0;
         flex: 1;
-        min-height: 0;
+        min-height: 180px;
       }
       
       .timer-svg {
@@ -2123,7 +2153,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.11  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.3.0-beta.12  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
