@@ -1,6 +1,7 @@
 {
   "domain": "timer_24h",
   "name": "Timer 24H",
+  "after_dependencies": ["http", "lovelace"],
   "codeowners": ["@davidss20"],
   "config_flow": true,
   "documentation": "https://github.com/davidss20/home-assistant-24h-timer-integration",
@@ -8,6 +9,5 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/davidss20/home-assistant-24h-timer-integration/issues",
   "requirements": [],
-  "version": "1.1.3",
-  "icon": "mdi:home-clock"
+  "version": "1.3.0"
 }

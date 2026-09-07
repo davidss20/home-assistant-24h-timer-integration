@@ -158,7 +158,7 @@
         try {
             console.log('📦 Importing timer-24h-card.js...');
             const cacheBuster = '?v=' + Date.now();
-            import('../../custom_components/timer_24h/dist/timer-24h-card.js' + cacheBuster)
+            import('./timer-24h-card.js' + cacheBuster)
                 .then(() => {
                     console.log('✅ timer-24h-card.js imported successfully');
                     updateStatus('✅ קובץ נטען');

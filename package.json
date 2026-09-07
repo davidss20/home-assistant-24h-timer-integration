@@ -1,14 +1,14 @@
 {
   "name": "timer-24h-card",
-  "version": "1.1.3",
+  "version": "3.0.0",
   "type": "module",
   "description": "A 24-hour timer card for Home Assistant with automatic entity control",
-  "main": "custom_components/timer_24h/dist/timer-24h-card.js",
+  "main": "timer-24h-card.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "lint": "eslint src --ext .ts",
-    "format": "prettier --write src/**/*.ts"
+    "lint": "eslint *.ts",
+    "format": "prettier --write *.ts"
   },
   "keywords": [
     "home-assistant",

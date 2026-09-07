@@ -8,7 +8,8 @@
           "name": "Timer Name",
           "entities": "Entities to Control",
           "home_sensors": "Activation Conditions (optional)",
-          "home_logic": "Condition Logic"
+          "home_logic": "Condition Logic",
+          "slot_resolution": "Slot interval"
         }
       }
     },
@@ -28,10 +29,10 @@
           "name": "Timer Name",
           "entities": "Entities to Control",
           "home_sensors": "Activation Conditions (optional)",
-          "home_logic": "Condition Logic"
+          "home_logic": "Condition Logic",
+          "slot_resolution": "Slot interval"
         }
       }
     }
   }
 }
-

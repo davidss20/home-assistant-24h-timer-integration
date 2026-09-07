@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timer 24H — live preview</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #212121;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --green: #10b981;
+      --select: #3b82f6;
+      --now: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    main { max-width: 460px; margin: 0 auto; padding: 20px 12px 48px; }
+    h1 { font-size: 1.25rem; margin: 0 0 6px; text-align: center; }
+    p.lead { color: var(--muted); text-align: center; margin: 0 0 16px; font-size: 0.92rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 8px 8px 14px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px 2px;
+      font-weight: 700;
+    }
+    .status {
+      font-size: 12px;
+      color: #059669;
+      background: #d1fae5;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-weight: 600;
+    }
+    .modes { display: flex; justify-content: center; padding: 4px 8px 8px; }
+    .modes button {
+      min-width: 88px;
+      padding: 6px 12px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      border: 1px solid var(--line);
+      background: #f3f4f6;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .modes button:first-child { border-radius: 8px 0 0 8px; }
+    .modes button:last-child { border-radius: 0 8px 8px 0; margin-inline-start: -1px; }
+    .modes button.active {
+      background: var(--select);
+      border-color: var(--select);
+      color: #fff;
+    }
+    svg.clock { width: 100%; height: auto; display: block; touch-action: manipulation; }
+    svg.clock path { cursor: pointer; }
+    .hint { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 10px 8px 0; min-height: 2.4em; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Timer 24H</h1>
+    <p class="lead">Click the clock. Switch 15 / 30 minutes like in the card editor.</p>
+    <div class="card">
+      <div class="header">
+        <span>Smart lighting</span>
+        <span class="status">Active</span>
+      </div>
+      <div class="modes">
+        <button type="button" id="btn15" class="active">15 min</button>
+        <button type="button" id="btn30">30 min</button>
+      </div>
+      <div id="stage"></div>
+      <p class="hint" id="hint"></p>
+    </div>
+  </main>
+  <script>
+    const CX = 200, CY = 200, R_OUT = 180, R_MID = 115, R_IN = 50;
+    const GREEN = "#10b981", WHITE = "#ffffff", INK = "#374151", MUTED = "#6b7280";
+    const STROKE = "#e5e7eb", SELECT = "#3b82f6", NOW = "#ff6b6b";
+    const BANDS = [
+      { m: 0, a: 147.5, b: 180 },
+      { m: 15, a: 115, b: 147.5 },
+      { m: 30, a: 82.5, b: 115 },
+      { m: 45, a: 50, b: 82.5 }
+    ];
+    const on = new Set();
+    for (const h of [6, 7, 8, 11, 18, 19, 20, 21]) {
+      for (const m of [0, 15, 30, 45]) on.add(h + ":" + m);
+    }
+    on.add("12:0");
+    on.add("12:30");
+    let mode = 15;
+    let selected = 12;
+
+    function pad(n) { return String(n).padStart(2, "0"); }
+    function key(h, m) { return h + ":" + m; }
+    function has(h, m) { return on.has(key(h, m)); }
+    function nowSlot() {
+      const d = new Date();
+      return { h: d.getHours(), m: Math.floor(d.getMinutes() / 15) * 15 };
+    }
+    function sector(i, n, rIn, rOut) {
+      const a0 = (i * 360 / n - 90) * Math.PI / 180;
+      const a1 = ((i + 1) * 360 / n - 90) * Math.PI / 180;
+      const x1 = CX + rIn * Math.cos(a0), y1 = CY + rIn * Math.sin(a0);
+      const x2 = CX + rOut * Math.cos(a0), y2 = CY + rOut * Math.sin(a0);
+      const x3 = CX + rOut * Math.cos(a1), y3 = CY + rOut * Math.sin(a1);
+      const x4 = CX + rIn * Math.cos(a1), y4 = CY + rIn * Math.sin(a1);
+      const large = (a1 - a0) <= Math.PI ? 0 : 1;
+      return `M ${x1} ${y1} L ${x2} ${y2} A ${rOut} ${rOut} 0 ${large} 1 ${x3} ${y3} L ${x4} ${y4} A ${rIn} ${rIn} 0 ${large} 0 ${x1} ${y1}`;
+    }
+    function textPos(i, n, r) {
+      const a = ((i + 0.5) * 360 / n - 90) * Math.PI / 180;
+      return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
+    }
+    function rot(i, n) {
+      let deg = (i + 0.5) * (360 / n) - 90;
+      if (deg > 90 || deg < -90) deg += 180;
+      return deg;
+    }
+    function textEl(i, n, r, str, size, fill, dy) {
+      const p = textPos(i, n, r);
+      const y = p.y + (dy || 3);
+      return `<text x="${p.x}" y="${y}" text-anchor="middle" font-size="${size}" font-weight="700"
+        transform="rotate(${rot(i, n)} ${p.x} ${y})" fill="${fill}" style="pointer-events:none">${str}</text>`;
+    }
+    function toggle(h, minutes) {
+      const allOn = minutes.every((m) => has(h, m));
+      minutes.forEach((m) => {
+        const k = key(h, m);
+        if (allOn) on.delete(k); else on.add(k);
+      });
+    }
+    function render() {
+      const now = nowSlot();
+      let html = `<svg class="clock" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="${CX}" cy="${CY}" r="${R_OUT}" fill="none" stroke="${STROKE}" stroke-width="2"/>
+        <circle cx="${CX}" cy="${CY}" r="${R_MID}" fill="none" stroke="#d1d5db" stroke-width="1.5"/>
+        <circle cx="${CX}" cy="${CY}" r="${R_IN}" fill="none" stroke="${STROKE}" stroke-width="2"/>`;
+      for (let i = 0; i < 24; i++) {
+        const a = (i * 360 / 24 - 90) * Math.PI / 180;
+        html += `<line x1="${CX + R_IN * Math.cos(a)}" y1="${CY + R_IN * Math.sin(a)}"
+          x2="${CX + R_OUT * Math.cos(a)}" y2="${CY + R_OUT * Math.sin(a)}" stroke="${STROKE}"/>`;
+      }
+      for (let h = 0; h < 24; h++) {
+        for (const band of BANDS) {
+          const active = has(h, band.m);
+          const sel = mode === 15 && selected === h;
+          const fill = active ? GREEN : WHITE;
+          const click = mode === 15
+            ? `data-h="${h}" data-m="${band.m}"`
+            : `data-h="${h}" data-m="${band.m <= 15 ? 0 : 30}"`;
+          html += `<path d="${sector(h, 24, band.a, band.b)}" fill="${fill}" stroke="${sel ? SELECT : STROKE}"
+            stroke-width="${sel ? 2.5 : 1}" ${click}/>`;
+          if (sel && band.m !== 0) {
+            html += textEl(h, 24, (band.a + band.b) / 2, String(band.m), 9, active ? "#fff" : INK, 2);
+          }
+        }
+      }
+      for (let h = 0; h < 24; h++) {
+        if (mode === 30) {
+          html += textEl(h, 24, (R_MID + R_OUT) / 2, pad(h) + ":00", 11, has(h, 0) && has(h, 15) ? "#fff" : INK, 3);
+          html += textEl(h, 24, (R_IN + R_MID) / 2, pad(h) + ":30", 9, has(h, 30) && has(h, 45) ? "#fff" : MUTED, 2);
+        } else {
+          const allOn = [0, 15, 30, 45].every((m) => has(h, m));
+          html += textEl(h, 24, (R_MID + R_OUT) / 2, pad(h), 11, allOn ? "#fff" : INK, 3);
+        }
+      }
+      const nowBand = BANDS.find((b) => b.m === now.m);
+      if (mode === 15) {
+        html += `<path d="${sector(now.h, 24, nowBand.a, nowBand.b)}" fill="none" stroke="${NOW}" stroke-width="4" pointer-events="none"/>`;
+      } else {
+        const a = now.m < 30 ? R_MID : R_IN;
+        const b = now.m < 30 ? R_OUT : R_MID;
+        html += `<path d="${sector(now.h, 24, a, b)}" fill="none" stroke="${NOW}" stroke-width="5" pointer-events="none"/>`;
+      }
+      html += `<circle cx="${CX}" cy="${CY}" r="${R_IN}" fill="${GREEN}"/>
+        <text x="${CX}" y="${CY + 5}" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" style="pointer-events:none">ON</text>
+        <text x="${CX}" y="${CY + 22}" text-anchor="middle" font-size="9" fill="#fff" opacity="0.9" style="pointer-events:none">1 entity</text>
+      </svg>`;
+      document.getElementById("stage").innerHTML = html;
+      document.getElementById("hint").textContent = mode === 15
+        ? "Tap an hour to select it (blue), then tap a quarter (00 / 15 / 30 / 45). Red = now."
+        : "Tap :00 to cover the first half-hour, :30 for the second. Red = now.";
+      document.getElementById("stage").querySelector("svg").addEventListener("click", (ev) => {
+        const path = ev.target.closest("path");
+        if (!path || path.dataset.h === undefined) return;
+        const h = Number(path.dataset.h);
+        const m = Number(path.dataset.m);
+        if (mode === 15) {
+          if (selected !== h) selected = h;
+          else toggle(h, [m]);
+        } else {
+          toggle(h, m === 0 ? [0, 15] : [30, 45]);
+        }
+        render();
+      });
+    }
+    document.getElementById("btn15").onclick = () => {
+      mode = 15;
+      document.getElementById("btn15").classList.add("active");
+      document.getElementById("btn30").classList.remove("active");
+      render();
+    };
+    document.getElementById("btn30").onclick = () => {
+      mode = 30;
+      selected = null;
+      document.getElementById("btn30").classList.add("active");
+      document.getElementById("btn15").classList.remove("active");
+      render();
+    };
+    render();
+    setInterval(render, 15000);
+  </script>
+</body>
+</html>
