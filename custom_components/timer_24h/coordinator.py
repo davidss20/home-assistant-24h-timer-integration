@@ -614,8 +614,8 @@ class Timer24HCoordinator(DataUpdateCoordinator):
     def _toggle_target(self, hour: int, minute: int) -> tuple[list[int], bool]:
         """Return minutes and new state for a slot click.
 
-        In 15-minute mode, turning the outer ring on lights the whole hour.
-        Turning any quarter off affects only that quarter.
+        In 15-minute mode, tapping the outer ring fills the whole hour when any
+        quarter is still off. Turning any quarter off affects only that quarter.
         """
         if minute not in SLOT_MINUTES:
             matching = [
@@ -637,15 +637,13 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             return minutes, not all_on
 
         if minute == 0:
-            outer = next(
-                (
-                    slot
-                    for slot in self._time_slots
-                    if slot["hour"] == hour and slot["minute"] == 0
-                ),
-                None,
-            )
-            if outer is not None and not outer["isActive"]:
+            hour_slots = [
+                slot
+                for slot in self._time_slots
+                if slot["hour"] == hour and slot["minute"] in SLOT_MINUTES
+            ]
+            all_on = bool(hour_slots) and all(slot["isActive"] for slot in hour_slots)
+            if not all_on:
                 return list(SLOT_MINUTES), True
             return [0], False
 

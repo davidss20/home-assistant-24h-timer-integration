@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0-beta.9] - 2026-09-07
+
+### Fixed
+- 🟢 Tapping the outer ring fills the whole hour even if some quarters are already on
+
 ## [1.3.0-beta.8] - 2026-09-07
 
 ### Added
