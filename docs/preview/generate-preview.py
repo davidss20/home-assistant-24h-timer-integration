@@ -178,10 +178,12 @@ def main() -> None:
 </svg>
 """
     root = Path(__file__).resolve().parents[2]
-    out = root / "images" / "preview.svg"
-    out.parent.mkdir(exist_ok=True)
-    out.write_text(svg, encoding="utf-8")
-    print(f"wrote {out} ({out.stat().st_size} bytes)")
+    out_dir = root / "images"
+    out_dir.mkdir(exist_ok=True)
+    for name in ("preview.svg", "preview-1.3.0.svg"):
+        out = out_dir / name
+        out.write_text(svg, encoding="utf-8")
+        print(f"wrote {out} ({out.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
