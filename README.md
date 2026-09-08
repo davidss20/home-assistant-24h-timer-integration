@@ -4,7 +4,7 @@
 
 ![Timer 24H Icon](https://github.com/davidss20/home-assistant-24h-timer-integration/raw/main/icon.svg)
 
-[![HACS](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/release/davidss20/home-assistant-24h-timer-integration.svg?style=for-the-badge&color=blue)](https://github.com/davidss20/home-assistant-24h-timer-integration/releases)
 [![License](https://img.shields.io/github/license/davidss20/home-assistant-24h-timer-integration.svg?style=for-the-badge&color=green)](LICENSE)
 
@@ -44,12 +44,19 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 ### Via HACS (Recommended)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=davidss20&repository=home-assistant-24h-timer-integration&category=integration)
+
+Timer 24H is a **custom HACS repository** (not in the default HACS store yet). Add it once, then download:
+
 1. Open **HACS** in Home Assistant
-2. Go to **Integrations**
-3. Search for **Timer 24H**
-4. Click **Download**
-5. **Restart Home Assistant**
-6. **Add the Integration** (Settings → Devices & Services → Add Integration → Timer 24H)
+2. Click the **three dots** (⋮) → **Custom repositories**
+3. Repository: `https://github.com/davidss20/home-assistant-24h-timer-integration`
+4. Type: **Integration**
+5. Click **Add**
+6. Search for **Timer 24H**
+7. Click **Download**
+8. **Restart Home Assistant**
+9. **Add the Integration** (Settings → Devices & Services → Add Integration → Timer 24H)
 
 **✨ That's it!** The Lovelace resource is registered **automatically**!
 
