@@ -44,17 +44,12 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 ### Via HACS (Recommended)
 
-<!-- Use this link to open the repository in HACS and click on Download
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=davidss20&repository=home-assistant-24h-timer-integration&category=integration) -->
-
-1. Open HACS in Home Assistant
-2. Click on "Integrations"
-3. Click the "+" button in the bottom right corner
-4. Search for "Timer 24H Integration"
-5. Click "Install"
-6. **Restart Home Assistant**
-7. **Add the Integration** (Settings → Devices & Services → Add Integration → Timer 24H)
+1. Open **HACS** in Home Assistant
+2. Go to **Integrations**
+3. Search for **Timer 24H**
+4. Click **Download**
+5. **Restart Home Assistant**
+6. **Add the Integration** (Settings → Devices & Services → Add Integration → Timer 24H)
 
 **✨ That's it!** The Lovelace resource is registered **automatically**!
 
