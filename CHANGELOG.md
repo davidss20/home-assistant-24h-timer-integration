@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-13
+
+### Fixed
+- ❄️ **#19** Climate/entities could stay off when a scheduled slot started. The timer remembered a previous “already applied” command and skipped retries even if the ACs were still off. Control now follows the live entity state, retries after a short debounce, and runs at the start of every minute.
+
 ## [1.3.0] - 2026-09-07
 
 ### Added

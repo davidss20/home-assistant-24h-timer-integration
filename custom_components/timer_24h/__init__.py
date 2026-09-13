@@ -128,6 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Setup state listeners for immediate response to condition changes
     coordinator.setup_state_listeners()
+    coordinator.setup_time_listener()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
@@ -156,6 +157,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Cleanup state listeners before unloading
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     coordinator.cleanup_state_listeners()
+    coordinator.cleanup_time_listener()
     
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     
