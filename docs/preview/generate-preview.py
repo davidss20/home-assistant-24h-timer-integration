@@ -12,6 +12,8 @@ INK = "#374151"
 MUTED = "#6b7280"
 STROKE = "#e5e7eb"
 SELECT = "#3b82f6"
+HOUR = "#0f172a"
+QUARTER = "#4338ca"
 NOW = "#ff6b6b"
 HEADER = "#212121"
 OK_BG = "#d1fae5"
@@ -85,9 +87,16 @@ def clock(on: set[tuple[int, int]], mode: int, selected: int | None, now_h: int,
             f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" '
             f'stroke="{STROKE}" stroke-width="1"/>'
         )
-    def label(hour: int, radius: float, text: str, size: int, fill: str) -> None:
+    def label(
+        hour: int,
+        radius: float,
+        text: str,
+        size: float,
+        fill: str,
+        follow_sector: bool = True,
+    ) -> None:
         tx, ty = text_pos(hour, 24, radius)
-        rdeg = rot(hour, 24)
+        rdeg = rot(hour, 24) if follow_sector else 0.0
         parts.append(
             f'<g transform="translate({tx:.2f} {ty:.2f}) rotate({rdeg:.2f})">'
             f'<text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="{size}" '
@@ -103,14 +112,28 @@ def clock(on: set[tuple[int, int]], mode: int, selected: int | None, now_h: int,
                     f'<path d="{sector(hour, 24, inner, outer)}" '
                     f'fill="{GREEN if active else WHITE}" '
                     f'stroke="{SELECT if selected_hour else STROKE}" '
-                    f'stroke-width="{2.5 if selected_hour else 1}"/>'
+                    f'stroke-width="{2 if selected_hour else 1}"/>'
                 )
-                if selected_hour and minute != 0:
-                    label(hour, (inner + outer) / 2, str(minute), 9, "#ffffff" if active else INK)
+                if minute != 0:
+                    label(
+                        hour,
+                        (inner + outer) / 2,
+                        str(minute),
+                        9.5,
+                        "#ffffff" if active else QUARTER,
+                        follow_sector=False,
+                    )
         outer_label_r = (BANDS[0][1] + BANDS[0][2]) / 2
         for hour in range(24):
-            all_on = all((hour, minute) in on for minute in (0, 15, 30, 45))
-            label(hour, outer_label_r, pad(hour), 11, "#ffffff" if all_on else INK)
+            outer_on = (hour, 0) in on
+            label(
+                hour,
+                outer_label_r,
+                pad(hour),
+                13,
+                "#ffffff" if outer_on else HOUR,
+                follow_sector=False,
+            )
     else:
         rings = (
             (0, (0, 15), R_MID, R_OUT),
@@ -174,7 +197,7 @@ def main() -> None:
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 520" width="860" height="520" role="img" aria-label="Timer 24H 15 and 30 minute preview">
   <rect width="860" height="520" fill="#f4f6f8"/>
   {card(8, "Timer 24H", "30-minute view", clock(on, 30, None, 14, 0))}
-  {card(432, "Timer 24H", "15-minute view — hour 12 selected", clock(on, 15, 12, 14, 0))}
+  {card(432, "Timer 24H", "15-minute view — quarter labels always on", clock(on, 15, None, 14, 0))}
 </svg>
 """
     root = Path(__file__).resolve().parents[2]

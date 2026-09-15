@@ -649,19 +649,11 @@ class Timer24HCoordinator(DataUpdateCoordinator):
     def _toggle_target(self, hour: int, minute: int) -> tuple[list[int], bool]:
         """Return minutes and new state for a slot click.
 
-        In 15-minute mode, tapping the outer ring fills the whole hour when any
-        quarter is still off. Turning any quarter off affects only that quarter.
+        In 15-minute mode every tap affects only the tapped quarter, including
+        the outer ring (:00). Use async_toggle_hour for a whole hour.
+        In 30-minute mode a tap still affects the tapped half-hour pair.
         """
-        if minute not in SLOT_MINUTES:
-            matching = [
-                slot
-                for slot in self._time_slots
-                if slot["hour"] == hour and slot["minute"] == minute
-            ]
-            all_on = bool(matching) and all(slot["isActive"] for slot in matching)
-            return [minute], not all_on
-
-        if self.slot_resolution == SLOT_RESOLUTION_30:
+        if minute in SLOT_MINUTES and self.slot_resolution == SLOT_RESOLUTION_30:
             minutes = [0, 15] if minute in (0, 15) else [30, 45]
             matching = [
                 slot
@@ -670,17 +662,6 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             ]
             all_on = bool(matching) and all(slot["isActive"] for slot in matching)
             return minutes, not all_on
-
-        if minute == 0:
-            hour_slots = [
-                slot
-                for slot in self._time_slots
-                if slot["hour"] == hour and slot["minute"] in SLOT_MINUTES
-            ]
-            all_on = bool(hour_slots) and all(slot["isActive"] for slot in hour_slots)
-            if not all_on:
-                return list(SLOT_MINUTES), True
-            return [0], False
 
         matching = [
             slot
@@ -744,6 +725,54 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         )
         
         _LOGGER.info("✅ Toggle slot completed for %s:%02d", hour, minute)
+
+    async def async_toggle_hour(self, hour: int) -> None:
+        """Toggle every quarter of a whole hour (long press in the card).
+
+        Turns the full hour on unless all quarters are already on, in which
+        case the whole hour is turned off.
+
+        Args:
+            hour: Hour of the day (0-23)
+        """
+        _LOGGER.info("🎯 Toggle hour called: hour=%s", hour)
+
+        hour_slots = [
+            slot
+            for slot in self._time_slots
+            if slot["hour"] == hour and slot["minute"] in SLOT_MINUTES
+        ]
+        if not hour_slots:
+            _LOGGER.error("❌ Hour %s NOT FOUND in time_slots!", hour)
+            return
+
+        new_state = not all(slot["isActive"] for slot in hour_slots)
+
+        self._time_slots = [
+            {**slot, "isActive": new_state}
+            if slot["hour"] == hour and slot["minute"] in SLOT_MINUTES
+            else {**slot}
+            for slot in self._time_slots
+        ]
+
+        await self._save_time_slots()
+        self._clear_control_memory()
+        await self._control_entities()
+
+        self.async_set_updated_data(
+            {
+                "time_slots": self._time_slots,
+                "home_status": self._home_status,
+                "enabled": self._enabled,
+            }
+        )
+
+        _LOGGER.info(
+            "✅ Toggle hour completed for %02d:00-%02d:45 → %s",
+            hour,
+            hour,
+            new_state,
+        )
 
     async def async_set_slots(self, slots: list[dict[str, Any]]) -> None:
         """Set multiple time slots."""

@@ -35,6 +35,7 @@ from .const import (
     SERVICE_SET_ENTITY_SETTINGS,
     SERVICE_SET_SLOT_RESOLUTION,
     SERVICE_SET_SLOTS,
+    SERVICE_TOGGLE_HOUR,
     SERVICE_TOGGLE_SLOT,
 )
 from .coordinator import Timer24HCoordinator
@@ -192,6 +193,26 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                         await coordinator.async_toggle_slot(hour, minute)
                         return
         
+        _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
+
+    async def handle_toggle_hour(call: ServiceCall) -> None:
+        """Handle the toggle_hour service call (long press on a quarter)."""
+        entity_id = call.data.get("entity_id")
+        hour = call.data.get(ATTR_HOUR)
+
+        _LOGGER.info("🔵 SERVICE CALLED: toggle_hour(entity=%s, hour=%s)", entity_id, hour)
+
+        for entry_id, data in hass.data[DOMAIN].items():
+            if isinstance(data, dict) and "coordinator" in data:
+                coordinator = data["coordinator"]
+
+                entity_registry = er.async_get(hass)
+                for entity_entry in entity_registry.entities.values():
+                    if (entity_entry.config_entry_id == coordinator.config_entry.entry_id
+                        and entity_entry.entity_id == entity_id):
+                        await coordinator.async_toggle_hour(hour)
+                        return
+
         _LOGGER.warning("❌ No coordinator found for entity_id=%s", entity_id)
 
     async def handle_set_slots(call: ServiceCall) -> None:
@@ -354,6 +375,21 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     vol.Required("entity_id"): cv.entity_id,
                     vol.Required(ATTR_HOUR): cv.positive_int,
                     vol.Required(ATTR_MINUTE): vol.In([0, 15, 30, 45]),
+                }
+            ),
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_TOGGLE_HOUR):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_TOGGLE_HOUR,
+            handle_toggle_hour,
+            schema=vol.Schema(
+                {
+                    vol.Required("entity_id"): cv.entity_id,
+                    vol.Required(ATTR_HOUR): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=23)
+                    ),
                 }
             ),
         )

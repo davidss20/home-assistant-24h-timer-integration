@@ -18,7 +18,7 @@ A custom Home Assistant integration that enables daily timers with automatic ent
 
 <br>
 
-*Left: 30-minute classic rings. Right: 15-minute quarters (blue outline = selected hour). Red = current time.*
+*Left: 30-minute classic rings. Right: 15-minute quarters with the 15 / 30 / 45 labels always visible. Red = current time.*
 
 <br>
 
@@ -122,6 +122,7 @@ The card is automatically installed with the integration.
 type: custom:timer-24h-card
 entity: sensor.timer_24h_lighting  # The entity created by the integration
 show_title: true  # Show the timer name at the top
+quarter_labels: always  # 15-min view: 'always' or 'selected' (only the tapped hour)
 ```
 
 ## ⚙️ Configuration Options
@@ -142,6 +143,7 @@ show_title: true  # Show the timer name at the top
 |----|-----|------------|-------|
 | `entity` | string | - | Timer entity (required) |
 | `show_title` | boolean | `true` | Show title |
+| `quarter_labels` | string | `always` | 15-minute view labels: `always` shows 15 / 30 / 45 on every hour, `selected` shows them only for the hour you tapped |
 
 ### Supported Entity Types for Control
 
@@ -164,7 +166,7 @@ show_title: true  # Show the timer name at the top
 ## 🎯 How It Works
 
 1. **🎨 Setting Times**: Click on segments in the circle
-   - **15-minute view**: tap an hour, then tap a quarter (`:00` / `:15` / `:30` / `:45`)
+   - **15-minute view**: tap a quarter (`:00` / `:15` / `:30` / `:45`) to toggle just that quarter; press and hold to toggle the whole hour
    - **30-minute view**: outer ring = full hours, inner ring = half hours
    - Switch between views from the card editor or timer Configure
 
@@ -465,7 +467,8 @@ The integration includes full Hebrew support:
 
 ### 15 / 30 minutes
 
-- **15 דקות**: לחיצה על שעה בוחרת אותה (מסגרת כחולה), לחיצה על רבע מדליקה/מכבה אותו. לחיצה על הטבעת החיצונית מדליקה את כל השעה.
+- **15 דקות**: לחיצה על רבע מדליקה/מכבה אותו בלבד. לחיצה ארוכה על רבע מדליקה/מכבה את כל השעה.
+- **תוויות 15 / 30 / 45**: בהגדרות הכרטיס אפשר לבחור בין הצגה תמידית על כל השעות לבין הצגה רק בשעה שנלחצה.
 - **30 דקות**: שתי טבעות קלאסיות — שעה בחוץ, חצי שעה בפנים.
 - מחליפים בתפריט עריכת הכרטיס או ב-Configure של הטיימר.
 

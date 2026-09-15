@@ -25,6 +25,7 @@ DEFAULT_FAN_PERCENTAGE: Final = 50
 
 # Services
 SERVICE_TOGGLE_SLOT: Final = "toggle_slot"
+SERVICE_TOGGLE_HOUR: Final = "toggle_hour"
 SERVICE_SET_SLOTS: Final = "set_slots"
 SERVICE_CLEAR_ALL: Final = "clear_all"
 SERVICE_SET_ENABLED: Final = "set_enabled"
