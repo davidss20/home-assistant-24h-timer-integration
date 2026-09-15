@@ -11,11 +11,15 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistant, LovelaceCard, LovelaceCardConfig } from 'custom-card-helpers';
 
 // Types
+// 'always' shows 15/30/45 on every hour, 'selected' only on the tapped hour
+type QuarterLabelsMode = 'always' | 'selected';
+
 interface Timer24HCardConfig extends LovelaceCardConfig {
   entity: string;
   show_title?: boolean;
   custom_title?: string;
   show_enable_switch?: boolean;
+  quarter_labels?: QuarterLabelsMode;
 }
 
 interface TimeSlot {
@@ -45,9 +49,15 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
   @state() private draftConditionLogic: 'OR' | 'AND' = 'OR';
   @state() private conditionsSaving: boolean = false;
   @state() private selectedHour: number | null = null;
+
+  /** Hold duration that turns a quarter tap into a whole-hour toggle */
+  private static readonly LONG_PRESS_MS = 500;
   
   private updateInterval?: number;
   private clickTimeout?: number;
+  private longPressTimeout?: number;
+  private pressedSlot: { hour: number; minute: number } | null = null;
+  private longPressHandled: boolean = false;
 
   public static getLayoutOptions() {
     return {
@@ -94,9 +104,14 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 
     this.config = {
       show_title: true,
+      quarter_labels: 'always',
       ...config,
       entity: config.entity || '',
     };
+  }
+
+  private getQuarterLabelsMode(): QuarterLabelsMode {
+    return this.config?.quarter_labels === 'selected' ? 'selected' : 'always';
   }
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
@@ -458,24 +473,75 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     this.toggleTimeSlot(hour, minute);
   }
 
-  private handleFifteenClick(event: Event, hour: number, minute: number): void {
+  /**
+   * Start tracking a press on a quarter in the 15-minute view.
+   *
+   * A short tap toggles only that quarter; holding for LONG_PRESS_MS toggles
+   * the whole hour. The actual toggle happens on release (or when the long
+   * press timer fires), so a single gesture never does both.
+   */
+  private handleQuarterPointerDown(event: Event, hour: number, minute: number): void {
     event.stopPropagation();
-    event.preventDefault();
+
+    this.pressedSlot = { hour, minute };
+    this.longPressHandled = false;
+
+    window.clearTimeout(this.longPressTimeout);
+    this.longPressTimeout = window.setTimeout(() => {
+      this.longPressTimeout = undefined;
+      if (!this.pressedSlot) return;
+      this.longPressHandled = true;
+      this.selectedHour = hour;
+      this.toggleWholeHour(hour);
+    }, Timer24HCard.LONG_PRESS_MS);
+  }
+
+  private handleQuarterPointerUp(event: Event): void {
+    window.clearTimeout(this.longPressTimeout);
+    this.longPressTimeout = undefined;
+
+    const slot = this.pressedSlot;
+    this.pressedSlot = null;
+
+    // The long press already toggled the hour - ignore the release
+    if (this.longPressHandled) {
+      this.longPressHandled = false;
+      event.preventDefault();
+      return;
+    }
+
+    if (!slot) return;
 
     if (this.clickTimeout) {
       return;
     }
-
     this.clickTimeout = window.setTimeout(() => {
       this.clickTimeout = undefined;
     }, 300);
 
-    if (this.selectedHour !== hour) {
-      this.selectedHour = hour;
-      return;
-    }
+    this.selectedHour = slot.hour;
+    this.toggleTimeSlot(slot.hour, slot.minute);
+  }
 
-    this.toggleTimeSlot(hour, minute);
+  private handleQuarterPointerCancel(): void {
+    window.clearTimeout(this.longPressTimeout);
+    this.longPressTimeout = undefined;
+    this.pressedSlot = null;
+    this.longPressHandled = false;
+  }
+
+  private async toggleWholeHour(hour: number): Promise<void> {
+    if (!this.hass || !this.config.entity) return;
+
+    try {
+      console.log(`🎯 Toggle whole hour: ${hour}`);
+      await this.hass.callService('timer_24h', 'toggle_hour', {
+        entity_id: this.config.entity,
+        hour: hour,
+      });
+    } catch (error) {
+      console.error(`❌ Failed to toggle hour ${hour}:`, error);
+    }
   }
 
   private async toggleTimeSlot(hour: number, minute: number): Promise<void> {
@@ -1136,6 +1202,13 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
 
+  /**
+   * Render a label inside a sector.
+   *
+   * Args:
+   *   followSector: rotate the text with the wedge. Pass false to keep the
+   *     text horizontal, which reads better for short labels.
+   */
   private renderSectorLabel(
     hour: number,
     radius: number,
@@ -1144,11 +1217,12 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     text: string,
     fontSize: number,
     fill: string,
+    followSector: boolean = true,
   ) {
     const pos = this.getTextPosition(hour, 24, radius, centerX, centerY);
-    const rotationDeg = this.getUprightTextRotationDeg(
-      this.getSectorCenterAngleDeg(hour, 24)
-    );
+    const rotationDeg = followSector
+      ? this.getUprightTextRotationDeg(this.getSectorCenterAngleDeg(hour, 24))
+      : 0;
     return svg`
       <text
         x="${pos.x}"
@@ -1244,50 +1318,56 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
     const outerBand = bands[0];
     const outerLabelRadius = (outerBand.a + outerBand.b) / 2;
     const selectColor = '#3b82f6';
+    const quarterColor = '#4338ca';
+    const hourColor = '#0f172a';
+    const alwaysLabels = this.getQuarterLabelsMode() === 'always';
 
     return svg`
       ${Array.from({ length: 24 }, (_, hour) => bands.map(band => {
         const isActive = timeSlots.find(s => s.hour === hour && s.minute === band.m)?.isActive || false;
         const selected = this.selectedHour === hour;
+        const showLabel = alwaysLabels || selected;
         const sectorPath = this.createSectorPath(hour, 24, band.a, band.b, centerX, centerY);
-        const clickHandler = (e: Event) => {
-          this.handleFifteenClick(e, hour, band.m);
-        };
         return svg`
           <path
             d="${sectorPath}"
             fill="${isActive ? '#10b981' : '#ffffff'}"
             stroke="${selected ? selectColor : '#e5e7eb'}"
-            stroke-width="${selected ? '2.5' : '1'}"
+            stroke-width="${selected ? '2' : '1'}"
             style="cursor: pointer; transition: all 0.2s;"
-            @click="${clickHandler}">
+            @pointerdown="${(e: Event) => this.handleQuarterPointerDown(e, hour, band.m)}"
+            @pointerup="${(e: Event) => this.handleQuarterPointerUp(e)}"
+            @pointercancel="${() => this.handleQuarterPointerCancel()}"
+            @contextmenu="${(e: Event) => e.preventDefault()}">
             <title>${this.getTimeLabel(hour, band.m)}</title>
           </path>
-          ${selected && band.m !== 0
+          ${showLabel && band.m !== 0
             ? this.renderSectorLabel(
                 hour,
                 (band.a + band.b) / 2,
                 centerX,
                 centerY,
                 String(band.m),
-                9,
-                isActive ? '#ffffff' : '#374151',
+                9.5,
+                isActive ? '#ffffff' : quarterColor,
+                false,
               )
             : ''}
         `;
       }))}
       ${Array.from({ length: 24 }, (_, hour) => {
-        const allOn = [0, 15, 30, 45].every(m =>
-          timeSlots.find(s => s.hour === hour && s.minute === m)?.isActive
-        );
+        // Colour by the slot the label sits on, so it stays readable either way
+        const outerOn =
+          timeSlots.find(s => s.hour === hour && s.minute === 0)?.isActive || false;
         return this.renderSectorLabel(
           hour,
           outerLabelRadius,
           centerX,
           centerY,
           hour.toString().padStart(2, '0'),
-          11,
-          allOn ? '#ffffff' : '#374151',
+          13,
+          outerOn ? '#ffffff' : hourColor,
+          false,
         );
       })}
     `;
@@ -1715,6 +1795,11 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
         object-fit: contain;
         direction: ltr;
         unicode-bidi: isolate;
+        /* Keep long press from selecting text or opening the touch callout */
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
       }
       
       @container (max-width: 250px) {
@@ -2153,7 +2238,7 @@ export class Timer24HCard extends LitElement implements LovelaceCard {
 }
 
 console.info(
-  '%c  TIMER-24H-CARD  %c  Version 1.3.0  ',
+  '%c  TIMER-24H-CARD  %c  Version 1.4.0  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );

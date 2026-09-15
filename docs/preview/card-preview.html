@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Timer 24H — live preview</title>
-  <!-- preview-labels-v3 -->
+  <title>Timer 24H — דמו 15 דקות</title>
+  <!-- preview-15min-ux-v10 -->
   <style>
     :root {
       --bg: #f4f6f8;
@@ -15,12 +15,11 @@
       --green: #10b981;
       --select: #3b82f6;
       --now: #ff6b6b;
+      --quarter: #6366f1;
     }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
-      direction: ltr;
-      unicode-bidi: isolate;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -50,24 +49,47 @@
       padding: 2px 8px;
       font-weight: 600;
     }
-    .modes { display: flex; justify-content: center; padding: 4px 8px 8px; }
-    .modes button {
-      min-width: 88px;
-      padding: 6px 12px;
+    .row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px 8px 2px;
+    }
+    .row label {
+      width: 100%;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
       font-weight: 700;
-      font-size: 0.8rem;
+      letter-spacing: 0.02em;
+    }
+    .seg button {
+      min-width: 92px;
+      padding: 6px 10px;
+      font-weight: 700;
+      font-size: 0.78rem;
       border: 1px solid var(--line);
       background: #f3f4f6;
       color: var(--muted);
       cursor: pointer;
     }
-    .modes button:first-child { border-radius: 8px 0 0 8px; }
-    .modes button:last-child { border-radius: 0 8px 8px 0; margin-inline-start: -1px; }
-    .modes button.active {
+    .seg button:first-child {
+      border-start-start-radius: 8px;
+      border-end-start-radius: 8px;
+    }
+    .seg button:last-child {
+      border-start-end-radius: 8px;
+      border-end-end-radius: 8px;
+      margin-inline-start: -1px;
+    }
+    .seg button.active {
       background: var(--select);
       border-color: var(--select);
       color: #fff;
     }
+    #opts15 { display: none; }
+    #opts15.show { display: block; }
     svg.clock {
       width: 100%;
       height: auto;
@@ -75,26 +97,45 @@
       touch-action: manipulation;
       direction: ltr;
       unicode-bidi: isolate;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
     svg.clock path { cursor: pointer; }
     svg.clock text { direction: ltr; unicode-bidi: isolate; }
-    .hint { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 10px 8px 0; min-height: 2.4em; }
+    .hint { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 10px 8px 0; min-height: 2.6em; }
+    .action {
+      text-align: center;
+      font-size: 0.78rem;
+      font-family: ui-monospace, Consolas, monospace;
+      color: var(--select);
+      min-height: 1.2em;
+      margin: 4px 8px 0;
+    }
   </style>
 </head>
 <body>
   <main>
     <h1>Timer 24H</h1>
-    <p class="lead">Click the clock. Switch 15 / 30 minutes like in the card editor.</p>
+    <p class="lead">לחיצה על רבע מסמנת רק אותו. לחיצה ארוכה מסמנת את כל השעה. כמו בכרטיס עצמו.</p>
     <div class="card">
       <div class="header">
-        <span>Smart lighting</span>
-        <span class="status">Active</span>
+        <span>תאורה חכמה</span>
+        <span class="status">פעיל</span>
       </div>
-      <div class="modes">
-        <button type="button" id="btn15" class="active">15 min</button>
-        <button type="button" id="btn30">30 min</button>
+      <div class="row seg" id="modeRow">
+        <button type="button" id="btn15" class="active">15 דק׳</button>
+        <button type="button" id="btn30">30 דק׳</button>
+      </div>
+      <div id="opts15">
+        <div class="row seg">
+          <label>תוויות רבעים (15 / 30 / 45)</label>
+          <button type="button" id="lblAlways" class="active">תמיד</button>
+          <button type="button" id="lblFocus">רק בלחיצה</button>
+        </div>
       </div>
       <div id="stage"></div>
+      <p class="action" id="action"></p>
       <p class="hint" id="hint"></p>
     </div>
   </main>
@@ -102,6 +143,8 @@
     const CX = 200, CY = 200, R_OUT = 180, R_MID = 115, R_IN = 50;
     const GREEN = "#10b981", WHITE = "#ffffff", INK = "#374151", MUTED = "#6b7280";
     const STROKE = "#e5e7eb", SELECT = "#3b82f6", NOW = "#ff6b6b";
+    const HOUR = "#0f172a";
+    const QUARTER = "#4338ca";
     const BANDS = [
       { m: 0, a: 147.5, b: 180 },
       { m: 15, a: 115, b: 147.5 },
@@ -115,11 +158,16 @@
     on.add("12:0");
     on.add("12:30");
     let mode = 15;
-    let selected = 12;
-
+    let focused = 12;
+    let labels = "always";
+    let lastAction = "";
+    let pressTimer = null;
+    let pressSlot = null;
+    let longPressDone = false;
     function pad(n) { return String(n).padStart(2, "0"); }
     function key(h, m) { return h + ":" + m; }
     function has(h, m) { return on.has(key(h, m)); }
+    function label(h, m) { return pad(h) + ":" + pad(m); }
     function nowSlot() {
       const d = new Date();
       return { h: d.getHours(), m: Math.floor(d.getMinutes() / 15) * 15 };
@@ -143,13 +191,16 @@
       if (deg > 90 || deg < -90) deg += 180;
       return deg;
     }
-    function textEl(i, n, r, str, size, fill) {
+    function textEl(i, n, r, str, size, fill, weight, followWedge) {
       const p = textPos(i, n, r);
-      const deg = rot(i, n);
+      const deg = followWedge ? rot(i, n) : 0;
       return `<g transform="translate(${p.x} ${p.y}) rotate(${deg})" style="pointer-events:none">
-        <text x="0" y="0" text-anchor="middle" dy="0.35em" font-size="${size}"
-          font-weight="700" fill="${fill}" style="direction:ltr; unicode-bidi:isolate">${str}</text>
+        <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="${size}"
+          font-weight="${weight || 700}" fill="${fill}" style="direction:ltr; unicode-bidi:isolate">${str}</text>
       </g>`;
+    }
+    function contrastOn(active) {
+      return active ? "#ffffff" : HOUR;
     }
     function toggle(h, minutes) {
       const allOn = minutes.every((m) => has(h, m));
@@ -158,7 +209,26 @@
         if (allOn) on.delete(k); else on.add(k);
       });
     }
+    function toggleHour(h) {
+      toggle(h, [0, 15, 30, 45]);
+      const allOn = [0, 15, 30, 45].every((m) => has(h, m));
+      lastAction = allOn
+        ? "שעה שלמה " + pad(h) + ":00–" + pad(h) + ":45"
+        : "בוטלה שעה " + pad(h);
+    }
+    function toggleQuarter(h, m) {
+      toggle(h, [m]);
+      lastAction = (has(h, m) ? "סומן " : "בוטל ") + label(h, m);
+    }
+    function hintText() {
+      if (mode === 30) return "טבעת חיצונית = השעה. טבעת פנימית = חצי השעה. אדום = עכשיו.";
+      const labelsHint = labels === "always"
+        ? "הזמנים 15 / 30 / 45 מוצגים תמיד, קטנים ובסגול."
+        : "הזמנים 15 / 30 / 45 מוצגים רק בשעה האחרונה שלחצתם.";
+      return "לחיצה קצרה על רבע מסמנת רק אותו. לחיצה ארוכה מסמנת/מבטלת את כל השעה. " + labelsHint;
+    }
     function render() {
+      document.getElementById("opts15").classList.toggle("show", mode === 15);
       const now = nowSlot();
       let html = `<svg class="clock" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" direction="ltr">
         <circle cx="${CX}" cy="${CY}" r="${R_OUT}" fill="none" stroke="${STROKE}" stroke-width="2"/>
@@ -171,21 +241,23 @@
       }
       if (mode === 15) {
         for (let h = 0; h < 24; h++) {
+          const showLabels = labels === "always" || focused === h;
           for (const band of BANDS) {
             const active = has(h, band.m);
-            const sel = selected === h;
+            const sel = focused === h;
             html += `<path d="${sector(h, 24, band.a, band.b)}" fill="${active ? GREEN : WHITE}"
-              stroke="${sel ? SELECT : STROKE}" stroke-width="${sel ? 2.5 : 1}"
+              stroke="${sel ? SELECT : STROKE}" stroke-width="${sel ? 2 : 1}"
               data-h="${h}" data-m="${band.m}"/>`;
-            if (sel && band.m !== 0) {
-              html += textEl(h, 24, (band.a + band.b) / 2, String(band.m), 9, active ? "#fff" : INK);
+            if (showLabels && band.m !== 0) {
+              html += textEl(
+                h, 24, (band.a + band.b) / 2, String(band.m), 9.5,
+                active ? "#ffffff" : QUARTER, 700, false
+              );
             }
           }
         }
-        const outerLabelR = (BANDS[0].a + BANDS[0].b) / 2;
         for (let h = 0; h < 24; h++) {
-          const allOn = [0, 15, 30, 45].every((m) => has(h, m));
-          html += textEl(h, 24, outerLabelR, pad(h), 11, allOn ? "#fff" : INK);
+          html += textEl(h, 24, 166, pad(h), 13, contrastOn(has(h, 0)), 800, false);
         }
       } else {
         const rings = [
@@ -199,8 +271,8 @@
             html += `<path d="${sector(h, 24, ring.a, ring.b)}" fill="${fill}" stroke="${STROKE}"
               stroke-width="1" data-h="${h}" data-m="${ring.pair}"/>`;
           }
-          html += textEl(h, 24, (R_MID + R_OUT) / 2, pad(h) + ":00", 11, has(h, 0) && has(h, 15) ? "#fff" : INK);
-          html += textEl(h, 24, (R_IN + R_MID) / 2, pad(h) + ":30", 9, has(h, 30) && has(h, 45) ? "#fff" : MUTED);
+          html += textEl(h, 24, (R_MID + R_OUT) / 2, pad(h) + ":00", 11, contrastOn(has(h, 0) && has(h, 15)), 700, true);
+          html += textEl(h, 24, (R_IN + R_MID) / 2, pad(h) + ":30", 9, has(h, 30) && has(h, 45) ? "#fff" : MUTED, 700, true);
         }
       }
       const nowBand = BANDS.find((b) => b.m === now.m);
@@ -216,42 +288,95 @@
         <text x="${CX}" y="${CY + 22}" text-anchor="middle" font-size="9" fill="#fff" opacity="0.9" style="pointer-events:none">1 entity</text>
       </svg>`;
       document.getElementById("stage").innerHTML = html;
-      document.getElementById("hint").textContent = mode === 15
-        ? "Tap an hour to select it (blue), then tap a quarter (00 / 15 / 30 / 45). Red = now."
-        : "Outer ring = the hour. Inner ring = the half-hour. Red = now.";
-      document.getElementById("stage").querySelector("svg").addEventListener("click", (ev) => {
-        const path = ev.target.closest("path");
-        if (!path || path.dataset.h === undefined) return;
-        const h = Number(path.dataset.h);
-        const m = Number(path.dataset.m);
-        if (mode === 15) {
-          if (selected !== h) selected = h;
-          else if (m === 0) {
-            const allOn = [0, 15, 30, 45].every((min) => has(h, min));
-            if (!allOn) toggle(h, [0, 15, 30, 45]);
-            else toggle(h, [0]);
-          } else {
-            toggle(h, [m]);
-          }
-        } else {
-          toggle(h, m === 0 ? [0, 15] : [30, 45]);
-        }
-        render();
+      document.getElementById("hint").textContent = hintText();
+      document.getElementById("action").textContent = lastAction;
+    }
+    function pathFromEvent(ev) {
+      const path = ev.target.closest("path");
+      if (!path || path.dataset.h === undefined) return null;
+      return { h: Number(path.dataset.h), m: Number(path.dataset.m) };
+    }
+    function handleTap(h, m) {
+      focused = h;
+      if (mode === 30) {
+        toggle(h, m === 0 ? [0, 15] : [30, 45]);
+        lastAction = (m === 0 ? label(h, 0) : label(h, 30));
+      } else {
+        toggleQuarter(h, m);
+      }
+      render();
+    }
+    function bindClock() {
+      const stage = document.getElementById("stage");
+      stage.addEventListener("pointerdown", (ev) => {
+        const slot = pathFromEvent(ev);
+        if (!slot) return;
+        pressSlot = slot;
+        longPressDone = false;
+        if (mode !== 15) return;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(() => {
+          if (!pressSlot) return;
+          longPressDone = true;
+          focused = pressSlot.h;
+          toggleHour(pressSlot.h);
+          render();
+        }, 520);
       });
+      const finishPointer = (ev) => {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        if (longPressDone) {
+          longPressDone = false;
+          pressSlot = null;
+          ev.preventDefault();
+          return;
+        }
+        const slot = pathFromEvent(ev) || pressSlot;
+        pressSlot = null;
+        if (!slot) return;
+        handleTap(slot.h, slot.m);
+      };
+      document.addEventListener("pointerup", finishPointer);
+      document.addEventListener("pointercancel", () => {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        longPressDone = false;
+        pressSlot = null;
+      });
+      stage.addEventListener("contextmenu", (ev) => ev.preventDefault());
+    }
+    function setActive(id, on) {
+      document.getElementById(id).classList.toggle("active", on);
     }
     document.getElementById("btn15").onclick = () => {
       mode = 15;
-      document.getElementById("btn15").classList.add("active");
-      document.getElementById("btn30").classList.remove("active");
+      setActive("btn15", true);
+      setActive("btn30", false);
+      lastAction = "";
       render();
     };
     document.getElementById("btn30").onclick = () => {
       mode = 30;
-      selected = null;
-      document.getElementById("btn30").classList.add("active");
-      document.getElementById("btn15").classList.remove("active");
+      focused = null;
+      setActive("btn15", false);
+      setActive("btn30", true);
+      lastAction = "";
       render();
     };
+    document.getElementById("lblAlways").onclick = () => {
+      labels = "always";
+      setActive("lblAlways", true);
+      setActive("lblFocus", false);
+      render();
+    };
+    document.getElementById("lblFocus").onclick = () => {
+      labels = "focus";
+      setActive("lblAlways", false);
+      setActive("lblFocus", true);
+      render();
+    };
+    bindClock();
     render();
     setInterval(render, 15000);
   </script>

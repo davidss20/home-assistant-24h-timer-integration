@@ -32,6 +32,32 @@ toggle_slot:
           step: 15
           mode: box
 
+toggle_hour:
+  name: Toggle whole hour
+  description: >
+    Toggle every quarter of one hour at once. Turns the full hour on unless all
+    quarters are already on, in which case the whole hour is turned off.
+    Used by the card's long press in the 15-minute view.
+  fields:
+    entity_id:
+      name: Timer entity
+      description: The Timer 24H sensor entity.
+      required: true
+      selector:
+        entity:
+          integration: timer_24h
+          domain: sensor
+    hour:
+      name: Hour
+      description: Hour of the day (0-23).
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 0
+          max: 23
+          mode: box
+
 set_slots:
   name: Set time slots
   description: Set multiple time slots at once.

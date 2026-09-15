@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+import time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback, Event
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_ENTITIES,
@@ -29,6 +31,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Do not re-send the same command while the entity state is still catching up.
+_CONTROL_DEBOUNCE_SECONDS = 15
+
 
 class Timer24HCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Timer 24H data."""
@@ -43,7 +48,9 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self._slot_resolution: int = SLOT_RESOLUTION_15
         self._needs_persist: bool = False
         self._last_controlled_states: dict[str, Any] = {}
+        self._last_command_times: dict[str, float] = {}
         self._state_change_unsubscribe = None
+        self._time_change_unsubscribe = None
 
         saved_slots = config_entry.options.get("time_slots")
         self._time_slots, was_legacy = self._normalize_time_slots(saved_slots)
@@ -290,13 +297,18 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         return self._slot_resolution
 
     def get_current_slot(self) -> dict[str, Any] | None:
-        """Get the current time slot."""
-        now = datetime.now()
+        """Get the current time slot in Home Assistant's local timezone."""
+        now = dt_util.now()
         hour = now.hour
         minute = (now.minute // 15) * 15
-        
+
         for slot in self._time_slots:
-            if slot["hour"] == hour and slot["minute"] == minute:
+            try:
+                slot_hour = int(slot["hour"])
+                slot_minute = int(slot["minute"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if slot_hour == hour and slot_minute == minute:
                 return slot
         return None
 
@@ -404,6 +416,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
 
         current_slot = self.get_current_slot()
         should_be_on = current_slot.get("isActive", False) if current_slot else False
+        now_mono = time.monotonic()
 
         for entity_id in entities:
             entity = self.hass.states.get(entity_id)
@@ -411,13 +424,19 @@ class Timer24HCoordinator(DataUpdateCoordinator):
                 continue
 
             desired = self._build_desired_control(entity_id, should_be_on)
-            last_controlled_state = self._last_controlled_states.get(entity_id)
 
-            if last_controlled_state == desired:
-                continue
-
+            # Always trust the live entity state. Remembering a previous command
+            # must not skip retries when climate/IR devices stayed off.
             if self._entity_matches_desired(entity_id, entity, desired):
                 self._last_controlled_states[entity_id] = desired
+                continue
+
+            last_controlled_state = self._last_controlled_states.get(entity_id)
+            last_command_at = self._last_command_times.get(entity_id, 0.0)
+            if (
+                last_controlled_state == desired
+                and (now_mono - last_command_at) < _CONTROL_DEBOUNCE_SECONDS
+            ):
                 continue
 
             try:
@@ -427,23 +446,42 @@ class Timer24HCoordinator(DataUpdateCoordinator):
                     await self._async_turn_off_entity(entity_id)
 
                 _LOGGER.info(
-                    "%s %s based on timer schedule (desired=%s)",
+                    "%s %s based on timer schedule (desired=%s, state=%s)",
                     "Turned on" if should_be_on else "Turned off",
                     entity_id,
                     desired,
+                    entity.state,
                 )
 
                 self._last_controlled_states[entity_id] = desired
-
-                @callback
-                def _clear_memory(eid=entity_id, payload=desired):
-                    if self._last_controlled_states.get(eid) == payload:
-                        self._last_controlled_states.pop(eid, None)
-
-                self.hass.loop.call_later(30, _clear_memory)
+                self._last_command_times[entity_id] = now_mono
 
             except Exception as err:
                 _LOGGER.error("Failed to control %s: %s", entity_id, err)
+                self._clear_control_memory(entity_id)
+
+    def _clear_control_memory(self, entity_id: str | None = None) -> None:
+        """Forget last commanded state so the next tick can retry."""
+        if entity_id is None:
+            self._last_controlled_states.clear()
+            self._last_command_times.clear()
+            return
+        self._last_controlled_states.pop(entity_id, None)
+        self._last_command_times.pop(entity_id, None)
+
+    def _coordinator_snapshot(self) -> dict[str, Any]:
+        """Return the coordinator payload used to refresh listeners."""
+        return {
+            "time_slots": self._time_slots,
+            "home_status": self._home_status,
+            "enabled": self._enabled,
+        }
+
+    async def _async_on_schedule_tick(self, _now: datetime) -> None:
+        """Re-evaluate the schedule on each local minute (aligned to :00 seconds)."""
+        self._check_home_status()
+        await self._control_entities()
+        self.async_set_updated_data(self._coordinator_snapshot())
 
     async def async_set_entity_settings(
         self,
@@ -491,7 +529,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             self.config_entry, options=new_options
         )
 
-        self._last_controlled_states.pop(target_entity_id, None)
+        self._clear_control_memory(target_entity_id)
         await self._control_entities()
 
         self.async_set_updated_data(
@@ -565,7 +603,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self.setup_state_listeners()
 
         self._check_home_status()
-        self._last_controlled_states.clear()
+        self._clear_control_memory()
         await self._control_entities()
 
         self.async_set_updated_data(
@@ -611,19 +649,11 @@ class Timer24HCoordinator(DataUpdateCoordinator):
     def _toggle_target(self, hour: int, minute: int) -> tuple[list[int], bool]:
         """Return minutes and new state for a slot click.
 
-        In 15-minute mode, tapping the outer ring fills the whole hour when any
-        quarter is still off. Turning any quarter off affects only that quarter.
+        In 15-minute mode every tap affects only the tapped quarter, including
+        the outer ring (:00). Use async_toggle_hour for a whole hour.
+        In 30-minute mode a tap still affects the tapped half-hour pair.
         """
-        if minute not in SLOT_MINUTES:
-            matching = [
-                slot
-                for slot in self._time_slots
-                if slot["hour"] == hour and slot["minute"] == minute
-            ]
-            all_on = bool(matching) and all(slot["isActive"] for slot in matching)
-            return [minute], not all_on
-
-        if self.slot_resolution == SLOT_RESOLUTION_30:
+        if minute in SLOT_MINUTES and self.slot_resolution == SLOT_RESOLUTION_30:
             minutes = [0, 15] if minute in (0, 15) else [30, 45]
             matching = [
                 slot
@@ -632,17 +662,6 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             ]
             all_on = bool(matching) and all(slot["isActive"] for slot in matching)
             return minutes, not all_on
-
-        if minute == 0:
-            hour_slots = [
-                slot
-                for slot in self._time_slots
-                if slot["hour"] == hour and slot["minute"] in SLOT_MINUTES
-            ]
-            all_on = bool(hour_slots) and all(slot["isActive"] for slot in hour_slots)
-            if not all_on:
-                return list(SLOT_MINUTES), True
-            return [0], False
 
         matching = [
             slot
@@ -693,10 +712,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         # Save to config entry options
         await self._save_time_slots()
         
-        # Clear control memory when manually changing settings
-        self._last_controlled_states.clear()
-        
-        # Immediately check and control entities
+        self._clear_control_memory()
         await self._control_entities()
         
         # Update the entity - NOW with a NEW list reference
@@ -709,6 +725,54 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         )
         
         _LOGGER.info("✅ Toggle slot completed for %s:%02d", hour, minute)
+
+    async def async_toggle_hour(self, hour: int) -> None:
+        """Toggle every quarter of a whole hour (long press in the card).
+
+        Turns the full hour on unless all quarters are already on, in which
+        case the whole hour is turned off.
+
+        Args:
+            hour: Hour of the day (0-23)
+        """
+        _LOGGER.info("🎯 Toggle hour called: hour=%s", hour)
+
+        hour_slots = [
+            slot
+            for slot in self._time_slots
+            if slot["hour"] == hour and slot["minute"] in SLOT_MINUTES
+        ]
+        if not hour_slots:
+            _LOGGER.error("❌ Hour %s NOT FOUND in time_slots!", hour)
+            return
+
+        new_state = not all(slot["isActive"] for slot in hour_slots)
+
+        self._time_slots = [
+            {**slot, "isActive": new_state}
+            if slot["hour"] == hour and slot["minute"] in SLOT_MINUTES
+            else {**slot}
+            for slot in self._time_slots
+        ]
+
+        await self._save_time_slots()
+        self._clear_control_memory()
+        await self._control_entities()
+
+        self.async_set_updated_data(
+            {
+                "time_slots": self._time_slots,
+                "home_status": self._home_status,
+                "enabled": self._enabled,
+            }
+        )
+
+        _LOGGER.info(
+            "✅ Toggle hour completed for %02d:00-%02d:45 → %s",
+            hour,
+            hour,
+            new_state,
+        )
 
     async def async_set_slots(self, slots: list[dict[str, Any]]) -> None:
         """Set multiple time slots."""
@@ -723,7 +787,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
                     break
 
         await self._save_time_slots()
-        self._last_controlled_states.clear()
+        self._clear_control_memory()
         await self._control_entities()
         
         self.async_set_updated_data(
@@ -740,7 +804,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             slot["isActive"] = False
 
         await self._save_time_slots()
-        self._last_controlled_states.clear()
+        self._clear_control_memory()
         await self._control_entities()
         
         self.async_set_updated_data(
@@ -769,10 +833,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             self.config_entry, options=new_options
         )
         
-        # Clear control memory when changing enabled state
-        self._last_controlled_states.clear()
-        
-        # Control entities based on new state
+        self._clear_control_memory()
         await self._control_entities()
         
         # Update the entity
@@ -785,6 +846,21 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         )
         
         _LOGGER.info("✅ Timer enabled state updated to: %s", enabled)
+
+    def setup_time_listener(self) -> None:
+        """Run schedule control at the start of every local minute."""
+        self.cleanup_time_listener()
+        self._time_change_unsubscribe = async_track_time_change(
+            self.hass, self._async_on_schedule_tick, second=0
+        )
+        _LOGGER.info("Schedule tick listener configured (every minute at :00)")
+
+    def cleanup_time_listener(self) -> None:
+        """Cleanup minute tick listener."""
+        if self._time_change_unsubscribe:
+            self._time_change_unsubscribe()
+            self._time_change_unsubscribe = None
+            _LOGGER.debug("Schedule tick listener cleaned up")
 
     def setup_state_listeners(self) -> None:
         """Setup state change listeners for home sensors."""
@@ -824,7 +900,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
                     entity_id
                 )
                 
-                # Control entities immediately
+                self._clear_control_memory()
                 self.hass.async_create_task(self._control_entities())
                 
                 # Update the data to refresh UI

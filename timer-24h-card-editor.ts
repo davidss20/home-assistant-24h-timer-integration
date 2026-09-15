@@ -9,11 +9,14 @@ import {
 import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
 
+type QuarterLabelsMode = 'always' | 'selected';
+
 interface Timer24HCardConfig {
   entity: string;
   show_title?: boolean;
   custom_title?: string;
   show_enable_switch?: boolean;
+  quarter_labels?: QuarterLabelsMode;
 }
 
 const CONDITION_DOMAINS = [
@@ -212,10 +215,40 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
                   </button>
                 </div>
                 <div class="help-text">
-                  Saved to the timer (not this card). 15 min: tap each quarter.
-                  30 min: classic two-ring view.
+                  Saved to the timer (not this card). 15 min: tap a quarter to
+                  toggle it, hold it to toggle the whole hour. 30 min: classic
+                  two-ring view.
                 </div>
               </div>
+
+              ${this.getSlotResolution() === 15
+                ? html`
+                    <div class="config-row">
+                      <label>Quarter labels (15 min)</label>
+                      <div class="logic-toggle">
+                        <button
+                          type="button"
+                          class="logic-btn ${this.getQuarterLabels() === 'always' ? 'active' : ''}"
+                          @click=${() => this.setQuarterLabels('always')}
+                        >
+                          Always visible
+                        </button>
+                        <button
+                          type="button"
+                          class="logic-btn ${this.getQuarterLabels() === 'selected' ? 'active' : ''}"
+                          @click=${() => this.setQuarterLabels('selected')}
+                        >
+                          Only on tap
+                        </button>
+                      </div>
+                      <div class="help-text">
+                        Always visible: 15 / 30 / 45 shown on every hour. Only on
+                        tap: shown for the hour you last tapped, keeping the
+                        clock cleaner.
+                      </div>
+                    </div>
+                  `
+                : ''}
             `
           : ''}
 
@@ -340,6 +373,16 @@ export class Timer24HCardEditor extends LitElement implements LovelaceCardEditor
   private handleShowEnableSwitchChange(ev: Event): void {
     const target = ev.target as HTMLInputElement;
     this.config = { ...this.config, show_enable_switch: target.checked };
+    this.configChanged();
+  }
+
+  private getQuarterLabels(): QuarterLabelsMode {
+    return this.config?.quarter_labels === 'selected' ? 'selected' : 'always';
+  }
+
+  private setQuarterLabels(mode: QuarterLabelsMode): void {
+    if (this.getQuarterLabels() === mode) return;
+    this.config = { ...this.config, quarter_labels: mode };
     this.configChanged();
   }
 

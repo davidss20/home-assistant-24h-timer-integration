@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-15
+
+### Added
+- 🏷️ Card option **Quarter labels** for the 15-minute view: `always` shows `15` / `30` / `45` on every hour, `selected` shows them only for the hour you tapped (`quarter_labels` in YAML)
+- ⏳ Long press on a quarter toggles the whole hour (new `timer_24h.toggle_hour` service)
+
+### Changed
+- 👆 15-minute view: a tap now toggles only the quarter you tapped. The outer ring no longer fills the whole hour, which was the main source of confusion
+- 🔢 Hour numbers are larger and stay horizontal instead of rotating with the wedge, and label colours follow the slot underneath so they stay readable when a slot is off
+- 🎨 Quarter labels use their own colour and a smaller size to separate them from the hour number
+
+### Fixed
+- 🖐️ Long press no longer clears the quarter you were holding when you release your finger
+
+## [1.3.1] - 2026-09-13
+
+### Fixed
+- ❄️ **#19** Climate/entities could stay off when a scheduled slot started. The timer remembered a previous “already applied” command and skipped retries even if the ACs were still off. Control now follows the live entity state, retries after a short debounce, and runs at the start of every minute.
+
 ## [1.3.0] - 2026-09-07
 
 ### Added
