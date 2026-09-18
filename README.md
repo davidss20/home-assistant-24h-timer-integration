@@ -178,6 +178,8 @@ quarter_labels: always  # 15-min view: 'always' or 'selected' (only the tapped h
 3. **🔧 Entity Control**: If activation conditions are met and the time is active, entities will turn on automatically
    - For **climate** entities: applies the selected HVAC mode and temperature from the card
    - For **fan** entities: applies the selected speed percentage from the card
+   - When a scheduled slot ends, controlled entities are turned off even if activation conditions are no longer met
+   - If conditions become false during an active slot, entities that are already on stay on until the slot ends; entities that are off are not turned on
 
 4. **❄️ Climate / Fan Buttons**: When a climate or fan entity is in the controlled list, extra buttons appear under the timer to set temperature/mode or fan speed. These settings are used whenever the timer turns that entity on.
 
@@ -471,6 +473,11 @@ The integration includes full Hebrew support:
 - **תוויות 15 / 30 / 45**: בהגדרות הכרטיס אפשר לבחור בין הצגה תמידית על כל השעות לבין הצגה רק בשעה שנלחצה.
 - **30 דקות**: שתי טבעות קלאסיות — שעה בחוץ, חצי שעה בפנים.
 - מחליפים בתפריט עריכת הכרטיס או ב-Configure של הטיימר.
+
+### שליטה בישויות
+
+- כשהסלוט הפעיל מסתיים, הישויות נכבות גם אם תנאי ההפעלה כבר לא מתקיימים.
+- אם תנאי ההפעלה מתבטלים באמצע סלוט פעיל, ישות שכבר דלוקה נשארת דלוקה עד סוף הסלוט; ישות כבויה לא תידלק.
 
 ## 🔧 Troubleshooting
 

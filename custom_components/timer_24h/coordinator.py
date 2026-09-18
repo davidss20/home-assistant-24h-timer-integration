@@ -405,10 +405,6 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         if not self._enabled:
             _LOGGER.debug("Timer is disabled, skipping entity control")
             return
-        
-        if not self._home_status:
-            _LOGGER.debug("Activation conditions not met, skipping entity control")
-            return
 
         entities = self.config_entry.options.get(CONF_ENTITIES, [])
         if not entities:
@@ -416,6 +412,13 @@ class Timer24HCoordinator(DataUpdateCoordinator):
 
         current_slot = self.get_current_slot()
         should_be_on = current_slot.get("isActive", False) if current_slot else False
+
+        # Inactive slots must still turn entities off even if conditions are false.
+        # During an active slot, unmet conditions must not turn entities on or off.
+        if not self._home_status and should_be_on:
+            _LOGGER.debug("Activation conditions not met, skipping entity control")
+            return
+
         now_mono = time.monotonic()
 
         for entity_id in entities:

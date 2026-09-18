@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-09-18
+
+### Fixed
+- ❄️ Climate/entities that were turned on during an active slot are now turned off when that slot ends, even if activation conditions have already become false. Unmet conditions still do not turn an entity on, and they no longer turn it off in the middle of an active slot.
+
 ## [1.4.0] - 2026-09-15
 
 ### Added
