@@ -170,7 +170,7 @@ quarter_labels: always  # 15-min view: 'always' or 'selected' (only the tapped h
    - **30-minute view**: outer ring = full hours, inner ring = half hours
    - Switch between views from the card editor or timer Configure
 
-2. **🎯 Activation Conditions**: The integration checks configured sensors when they change, and again at the start of every minute
+2. **🎯 Activation Conditions**: The integration checks configured sensors when they change. Entity commands run at each slot boundary (every 15 minutes, or every 30 minutes in half-hour mode) and once at startup. It does not poll entities every minute.
    - **OR**: At least one condition must be met (active/on/true)
    - **AND**: All conditions must be met (active/on/true)
    - Leave empty to always activate entities

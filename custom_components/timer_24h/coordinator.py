@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Timer 24H integration."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 import time
 from typing import Any
@@ -27,7 +27,6 @@ from .const import (
     SLOT_RESOLUTION_30,
     CONF_SLOT_RESOLUTION,
     CONF_TIMER_OWNS_ENTITIES,
-    UPDATE_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +84,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=None,
         )
 
     def get_entity_settings(self, entity_id: str | None = None) -> dict[str, Any]:
@@ -320,8 +319,22 @@ class Timer24HCoordinator(DataUpdateCoordinator):
                 return slot
         return None
 
+    def control_minutes(self) -> list[int]:
+        """Minutes of each hour at which entity control runs.
+
+        15-minute timers act on the quarter hour. 30-minute timers act on
+        the half hour. There is no per-minute retry between those boundaries.
+        """
+        if self._slot_resolution == SLOT_RESOLUTION_30:
+            return [0, 30]
+        return [0, 15, 30, 45]
+
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from API endpoint."""
+        """Apply the current slot once.
+
+        The coordinator has no polling interval. This runs at startup so a
+        restart still applies the slot that is already in progress.
+        """
         try:
             # Check home status
             self._check_home_status()
@@ -534,7 +547,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         }
 
     async def _async_on_schedule_tick(self, _now: datetime) -> None:
-        """Re-evaluate the schedule on each local minute (aligned to :00 seconds)."""
+        """Apply entity control when a schedule slot begins."""
         self._check_home_status()
         await self._control_entities()
         self.async_set_updated_data(self._coordinator_snapshot())
@@ -692,6 +705,7 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self.hass.config_entries.async_update_entry(
             self.config_entry, options=new_options
         )
+        self.setup_time_listener()
         self.async_set_updated_data(
             {
                 "time_slots": self._time_slots,
@@ -904,15 +918,22 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         _LOGGER.info("✅ Timer enabled state updated to: %s", enabled)
 
     def setup_time_listener(self) -> None:
-        """Run schedule control at the start of every local minute."""
+        """Run entity control at each slot boundary, not every minute."""
         self.cleanup_time_listener()
+        minutes = self.control_minutes()
         self._time_change_unsubscribe = async_track_time_change(
-            self.hass, self._async_on_schedule_tick, second=0
+            self.hass,
+            self._async_on_schedule_tick,
+            minute=minutes,
+            second=0,
         )
-        _LOGGER.info("Schedule tick listener configured (every minute at :00)")
+        _LOGGER.info(
+            "Schedule tick listener configured (minutes %s)",
+            ", ".join(f":{minute:02d}" for minute in minutes),
+        )
 
     def cleanup_time_listener(self) -> None:
-        """Cleanup minute tick listener."""
+        """Cleanup slot-boundary listener."""
         if self._time_change_unsubscribe:
             self._time_change_unsubscribe()
             self._time_change_unsubscribe = None

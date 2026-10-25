@@ -182,6 +182,20 @@ def make_coordinator(
 
 
 async def run_cases() -> None:
+    coord = make_coordinator()
+    coord._slot_resolution = 15
+    check(
+        "15-minute timer controls on the quarter hour",
+        coord.control_minutes() == [0, 15, 30, 45],
+        f"minutes={coord.control_minutes()}",
+    )
+    coord._slot_resolution = 30
+    check(
+        "30-minute timer controls on the half hour",
+        coord.control_minutes() == [0, 30],
+        f"minutes={coord.control_minutes()}",
+    )
+
     # --- condition change during an active slot ----------------------------
     coord = make_coordinator(
         home_status=False, slot_active=True, climate_state="cool"

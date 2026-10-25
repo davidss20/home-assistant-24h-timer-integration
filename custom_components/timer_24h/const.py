@@ -57,6 +57,4 @@ STATE_ACTIVE: Final = "active"
 STATE_BLOCKED: Final = "blocked"
 STATE_IDLE: Final = "idle"
 
-# Update interval
-UPDATE_INTERVAL: Final = 60  # seconds
 

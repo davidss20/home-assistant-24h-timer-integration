@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-10-25
+
+### Changed
+- ⏱️ Entity commands run when a slot begins (every 15 minutes, or every 30 minutes in half-hour mode), when an activation condition changes, and once after startup. The timer no longer polls entities every minute, so an air conditioner that did not accept a command is not commanded again until the next slot or condition change.
+
 ## [1.4.3] - 2026-10-25
 
 ### Fixed
