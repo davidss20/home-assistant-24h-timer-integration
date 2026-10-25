@@ -421,17 +421,20 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         current_slot = self.get_current_slot()
         should_be_on = current_slot.get("isActive", False) if current_slot else False
 
-        # Unmet conditions block the schedule: do not turn entities on, and do
-        # not turn them off unless this timer turned them on in an earlier
-        # active slot (so they still switch off when that slot ends).
-        if not self._home_status and (should_be_on or not self._timer_owns_entities):
-            _LOGGER.debug(
-                "Activation conditions not met, skipping entity control "
-                "(slot_active=%s, timer_owns=%s)",
-                should_be_on,
-                self._timer_owns_entities,
-            )
-            return
+        # Unmet conditions block the schedule. If this timer turned the
+        # entities on, switch them off now, including in the middle of an
+        # active slot. Otherwise leave them alone, so a blocked timer does
+        # not switch off something it never turned on.
+        if not self._home_status:
+            if not self._timer_owns_entities:
+                _LOGGER.debug(
+                    "Activation conditions not met, skipping entity control "
+                    "(slot_active=%s, timer_owns=%s)",
+                    should_be_on,
+                    self._timer_owns_entities,
+                )
+                return
+            should_be_on = False
 
         if self._home_status and should_be_on:
             self._set_timer_owns_entities(True)

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-10-25
+
+### Fixed
+- 🔌 If the timer had turned entities on and an activation condition then became false during an active slot, entity control was skipped until the slot ended, so the entities stayed on. They now turn off as soon as the condition fails. A blocked timer still does not turn entities on, and it still does not turn off entities it never turned on.
+
 ## [1.4.2] - 2026-09-22
 
 ### Fixed

@@ -1,13 +1,14 @@
 """Check timer entity control when activation conditions change.
 
 Verifies:
-  1. Unmet conditions during an active slot do not turn an already-on climate off
+  1. Unmet conditions during an active slot do not turn off a climate the timer does not own
   2. Unmet conditions during an active slot do not turn an off climate on
   3. An inactive slot does not turn entities off when the timer never turned them on
   4. An inactive slot still turns entities off if the timer turned them on earlier
   5. An inactive slot with conditions true still turns entities off
   6. An active slot with conditions true still turns entities on
   7. A disabled timer still skips all entity control
+  8. A condition drop during an active slot turns off a climate the timer owns
 
 Run: python scripts/verify_entity_control.py
 """
@@ -279,8 +280,8 @@ async def run_cases() -> None:
     await coord._async_on_schedule_tick(None)  # type: ignore[arg-type]
     mid_calls = list(coord.hass.services.calls)
     check(
-        "minute tick during active slot after condition drop: leave climate on",
-        climate_off_calls(coord.hass) == []
+        "minute tick during active slot after condition drop: turn climate off",
+        len(climate_off_calls(coord.hass)) == 1
         and coord._home_status is False
         and coord._timer_owns_entities is True,
         f"home_status={coord._home_status} owns={coord._timer_owns_entities} calls={mid_calls}",
@@ -294,9 +295,21 @@ async def run_cases() -> None:
     coord.hass.services.calls.clear()
     await coord._async_on_schedule_tick(None)  # type: ignore[arg-type]
     check(
-        "minute tick into inactive slot with conditions still false: turn climate off",
-        len(climate_off_calls(coord.hass)) == 1,
-        f"calls={coord.hass.services.calls}",
+        "immediate next tick while the off command is still settling: no duplicate off",
+        climate_off_calls(coord.hass) == []
+        and coord._home_status is False
+        and coord._timer_owns_entities is True,
+        f"home_status={coord._home_status} owns={coord._timer_owns_entities} calls={coord.hass.services.calls}",
+    )
+
+    coord._last_command_times.clear()
+    coord.hass.states.set(CLIMATE_ID, "off", {"temperature": 24, "hvac_mode": "off"})
+    coord.hass.services.calls.clear()
+    await coord._async_on_schedule_tick(None)  # type: ignore[arg-type]
+    check(
+        "entity reached off after the condition drop: ownership is released",
+        coord.hass.services.calls == [] and coord._timer_owns_entities is False,
+        f"owns={coord._timer_owns_entities} calls={coord.hass.services.calls}",
     )
 
     # --- weekday: Shabbat condition false under AND ------------------------

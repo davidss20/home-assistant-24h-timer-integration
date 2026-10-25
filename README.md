@@ -170,7 +170,7 @@ quarter_labels: always  # 15-min view: 'always' or 'selected' (only the tapped h
    - **30-minute view**: outer ring = full hours, inner ring = half hours
    - Switch between views from the card editor or timer Configure
 
-2. **🎯 Activation Conditions**: The integration checks configured sensors every minute
+2. **🎯 Activation Conditions**: The integration checks configured sensors when they change, and again at the start of every minute
    - **OR**: At least one condition must be met (active/on/true)
    - **AND**: All conditions must be met (active/on/true)
    - Leave empty to always activate entities
@@ -178,8 +178,8 @@ quarter_labels: always  # 15-min view: 'always' or 'selected' (only the tapped h
 3. **🔧 Entity Control**: If activation conditions are met and the time is active, entities will turn on automatically
    - For **climate** entities: applies the selected HVAC mode and temperature from the card
    - For **fan** entities: applies the selected speed percentage from the card
-   - If activation conditions are not met, the timer does not turn entities on or off
-   - If the timer already turned entities on and a condition later becomes false, they stay on until the active slot ends, then turn off
+   - If activation conditions are not met, the timer does not turn entities on
+   - If the timer already turned entities on and a condition later becomes false, it turns them off immediately, even in the middle of an active slot
    - A white (inactive) hour does not turn entities off while the timer is blocked and never turned them on
 
 4. **❄️ Climate / Fan Buttons**: When a climate or fan entity is in the controlled list, extra buttons appear under the timer to set temperature/mode or fan speed. These settings are used whenever the timer turns that entity on.
