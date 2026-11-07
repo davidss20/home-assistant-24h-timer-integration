@@ -26,7 +26,6 @@ from .const import (
     SLOT_RESOLUTION_15,
     SLOT_RESOLUTION_30,
     CONF_SLOT_RESOLUTION,
-    CONF_TIMER_OWNS_ENTITIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,13 +48,6 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         self._needs_persist: bool = False
         self._last_controlled_states: dict[str, Any] = {}
         self._last_command_times: dict[str, float] = {}
-        # True only after this timer turned entities on while conditions were met.
-        # An inactive slot may turn them off later even if a condition dropped.
-        # It must not turn off entities the timer never activated (for example a
-        # weekday while a Shabbat AND-condition is false).
-        self._timer_owns_entities: bool = bool(
-            config_entry.options.get(CONF_TIMER_OWNS_ENTITIES, False)
-        )
         self._state_change_unsubscribe = None
         self._time_change_unsubscribe = None
 
@@ -431,26 +423,14 @@ class Timer24HCoordinator(DataUpdateCoordinator):
         if not entities:
             return
 
+        # Unmet conditions block the schedule completely. Do not turn
+        # entities on or off, including at the next slot boundary.
+        if not self._home_status:
+            _LOGGER.debug("Activation conditions not met, skipping entity control")
+            return
+
         current_slot = self.get_current_slot()
         should_be_on = current_slot.get("isActive", False) if current_slot else False
-
-        # Unmet conditions block the schedule. If this timer turned the
-        # entities on, switch them off now, including in the middle of an
-        # active slot. Otherwise leave them alone, so a blocked timer does
-        # not switch off something it never turned on.
-        if not self._home_status:
-            if not self._timer_owns_entities:
-                _LOGGER.debug(
-                    "Activation conditions not met, skipping entity control "
-                    "(slot_active=%s, timer_owns=%s)",
-                    should_be_on,
-                    self._timer_owns_entities,
-                )
-                return
-            should_be_on = False
-
-        if self._home_status and should_be_on:
-            self._set_timer_owns_entities(True)
 
         now_mono = time.monotonic()
 
@@ -495,39 +475,6 @@ class Timer24HCoordinator(DataUpdateCoordinator):
             except Exception as err:
                 _LOGGER.error("Failed to control %s: %s", entity_id, err)
                 self._clear_control_memory(entity_id)
-
-        if not should_be_on and self._controlled_entities_match(entities, False):
-            self._set_timer_owns_entities(False)
-
-    def _controlled_entities_match(
-        self, entities: list[str], should_be_on: bool
-    ) -> bool:
-        """Return True when every available controlled entity matches the schedule."""
-        for entity_id in entities:
-            entity = self.hass.states.get(entity_id)
-            if not entity:
-                continue
-            desired = self._build_desired_control(entity_id, should_be_on)
-            if not self._entity_matches_desired(entity_id, entity, desired):
-                return False
-        return True
-
-    def _set_timer_owns_entities(self, owns: bool) -> None:
-        """Persist whether the timer is responsible for switching entities off."""
-        if self._timer_owns_entities == owns:
-            return
-        self._timer_owns_entities = owns
-        config_entries = getattr(self.hass, "config_entries", None)
-        updater = getattr(config_entries, "async_update_entry", None)
-        if updater is None:
-            return
-        updater(
-            self.config_entry,
-            options={
-                **self.config_entry.options,
-                CONF_TIMER_OWNS_ENTITIES: owns,
-            },
-        )
 
     def _clear_control_memory(self, entity_id: str | None = None) -> None:
         """Forget last commanded state so the next tick can retry."""

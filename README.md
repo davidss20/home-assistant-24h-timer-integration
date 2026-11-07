@@ -178,9 +178,8 @@ quarter_labels: always  # 15-min view: 'always' or 'selected' (only the tapped h
 3. **🔧 Entity Control**: If activation conditions are met and the time is active, entities will turn on automatically
    - For **climate** entities: applies the selected HVAC mode and temperature from the card
    - For **fan** entities: applies the selected speed percentage from the card
-   - If activation conditions are not met, the timer does not turn entities on
-   - If the timer already turned entities on and a condition later becomes false, it turns them off immediately, even in the middle of an active slot
-   - A white (inactive) hour does not turn entities off while the timer is blocked and never turned them on
+   - If activation conditions are not met, the timer does not turn entities on or off. That includes the moment a condition becomes false, and every later slot boundary, until the conditions are met again
+   - When the conditions are met, an active slot turns entities on and an inactive slot turns them off
 
 4. **❄️ Climate / Fan Buttons**: When a climate or fan entity is in the controlled list, extra buttons appear under the timer to set temperature/mode or fan speed. These settings are used whenever the timer turns that entity on.
 
@@ -477,9 +476,8 @@ The integration includes full Hebrew support:
 
 ### שליטה בישויות
 
-- אם תנאי ההפעלה לא מתקיימים, הטיימר לא מדליק ולא מכבה ישויות.
-- אם הטיימר כבר הדליק ישויות ואחר כך תנאי מתבטל, הן נשארות דלוקות עד סוף הסלוט הפעיל ואז נכבות.
-- שעה כבויה בלוח לא מכבה ישויות כל עוד הטיימר חסום והוא לא הדליק אותן.
+- אם תנאי ההפעלה לא מתקיימים, הטיימר לא מדליק ולא מכבה ישויות. זה כולל את הרגע שבו תנאי מתבטל, וגם כל גבול משבצת שאחריו, עד שהתנאים מתקיימים שוב.
+- כשהתנאים מתקיימים, משבצת פעילה מדליקה ישויות ומשבצת כבויה מכבה אותן.
 
 ## 🔧 Troubleshooting
 

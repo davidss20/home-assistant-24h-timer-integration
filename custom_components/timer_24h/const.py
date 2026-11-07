@@ -11,7 +11,6 @@ CONF_HOME_SENSORS: Final = "home_sensors"
 CONF_HOME_LOGIC: Final = "home_logic"
 CONF_ENTITY_SETTINGS: Final = "entity_settings"
 CONF_SLOT_RESOLUTION: Final = "slot_resolution"
-CONF_TIMER_OWNS_ENTITIES: Final = "timer_owns_entities"
 
 # Defaults
 DEFAULT_NAME: Final = "Timer 24H"

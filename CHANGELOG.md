@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.5] - 2026-11-07
+
+### Fixed
+- 🛑 A blocked timer no longer turns entities off when an activation condition becomes false, or again at the next slot boundary. While conditions are unmet it sends no on or off commands. When the conditions are met again, an active slot turns entities on and an inactive slot turns them off.
+
 ## [1.4.4] - 2026-10-25
 
 ### Changed
